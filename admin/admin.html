@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rezeptbuch – Admin</title>
+<style>
+  :root {
+    --accent: #e8590c; --accent-soft: #ffe3d1; --bg: #fff8f0;
+    --card: #fff; --text: #33251c; --muted: #8a7566; --border: #f0e2d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  h1 { font-size: 20px; }
+  .layout {
+    display: grid; grid-template-columns: 300px 1fr;
+    gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto;
+  }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .list-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; text-align: left; width: 100%;
+    font-size: 14px;
+  }
+  .list-item.active { border-color: var(--accent); background: var(--accent-soft); }
+  .list-item img, .list-item .thumb {
+    width: 44px; height: 33px; border-radius: 6px; object-fit: cover;
+    background: var(--accent-soft); flex: 0 0 44px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .list-item .cat { color: var(--muted); font-size: 12px; }
+
+  form {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+  input[type=text], textarea {
+    width: 100%; padding: 9px 12px; font-size: 14px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+    color: var(--text);
+  }
+  textarea { resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  button {
+    padding: 10px 18px; font-size: 14px; font-weight: 600; border: none;
+    border-radius: 10px; cursor: pointer; background: var(--accent-soft);
+    color: var(--accent); font-family: inherit;
+  }
+  button.primary { background: var(--accent); color: #fff; }
+  button.danger { background: #fdecea; color: #c0392b; }
+  .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+
+  #photo-preview {
+    max-width: 260px; border-radius: 10px; display: none; margin-top: 8px;
+  }
+  #publish-log {
+    white-space: pre-wrap; font-family: ui-monospace, monospace;
+    font-size: 12px; background: #2a211c; color: #f3e9e1;
+    border-radius: 10px; padding: 14px; margin: 0 20px 20px;
+    max-width: 1060px; display: none;
+  }
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; padding: 10px 20px;
+    border-radius: 999px; font-size: 14px; display: none; z-index: 10;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍳 Rezeptbuch – Admin</h1>
+  <div class="buttons">
+    <button id="btn-new">＋ Neues Rezept</button>
+    <button id="btn-publish" class="primary">🚀 Veröffentlichen</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <form id="form">
+    <input type="hidden" id="f-id">
+    <div>
+      <label for="f-title">Titel *</label>
+      <input type="text" id="f-title" required placeholder="z. B. Spaghetti Carbonara">
+    </div>
+    <div class="row">
+      <div>
+        <label for="f-category">Kategorie</label>
+        <input type="text" id="f-category" list="cats" placeholder="z. B. Pasta">
+        <datalist id="cats"></datalist>
+      </div>
+      <div>
+        <label for="f-time">Zeit</label>
+        <input type="text" id="f-time" placeholder="z. B. 30 Min.">
+      </div>
+      <div>
+        <label for="f-servings">Portionen</label>
+        <input type="text" id="f-servings" placeholder="z. B. 2 Portionen">
+      </div>
+    </div>
+    <div>
+      <label for="f-ingredients">Zutaten</label>
+      <textarea id="f-ingredients" rows="7" placeholder="Eine Zutat pro Zeile"></textarea>
+      <div class="hint">Eine Zutat pro Zeile, z. B. „250 g Spaghetti“</div>
+    </div>
+    <div>
+      <label for="f-steps">Zubereitung</label>
+      <textarea id="f-steps" rows="8" placeholder="Ein Schritt pro Zeile"></textarea>
+      <div class="hint">Ein Schritt pro Zeile – wird automatisch nummeriert</div>
+    </div>
+    <div>
+      <label for="f-notes">Notizen (optional)</label>
+      <input type="text" id="f-notes" placeholder="z. B. Tipp oder Variante">
+    </div>
+    <div>
+      <label for="f-photo">Foto</label>
+      <input type="file" id="f-photo" accept="image/*">
+      <img id="photo-preview" alt="">
+      <div class="hint">Wird automatisch verkleinert. Neues Foto ersetzt das alte.</div>
+    </div>
+    <div class="buttons">
+      <button type="submit" class="primary">💾 Speichern</button>
+      <button type="button" id="btn-remove-photo">Foto entfernen</button>
+      <span class="spacer"></span>
+      <button type="button" id="btn-delete" class="danger">🗑 Löschen</button>
+    </div>
+  </form>
+</div>
+
+<pre id="publish-log"></pre>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+let data = { recipes: [] };
+let currentId = null;      // null = neues Rezept
+let photoDataUrl = null;   // neues Foto (data:-URL) oder null
+let removeImage = false;
+
+const CATEGORY_EMOJI = { 'Pasta':'🍝','Suppe':'🍲','Salat':'🥗','Fleisch':'🥩',
+  'Fisch':'🐟','Vegetarisch':'🥦','Süßes':'🍮','Backen':'🥐','Frühstück':'🍳' };
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2600);
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body) }
+    : undefined);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error + (json.log ? '\n' + json.log : ''));
+  return json;
+}
+
+function renderList() {
+  const list = $('#list');
+  list.innerHTML = '';
+  const sorted = [...data.recipes].sort((a, b) => a.title.localeCompare(b.title, 'de'));
+  for (const r of sorted) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'list-item' + (r.id === currentId ? ' active' : '');
+    const img = r.image
+      ? `<img src="${r.image}" alt="">`
+      : `<span class="thumb">${CATEGORY_EMOJI[r.category] || '🍽️'}</span>`;
+    btn.innerHTML = `${img}<span>${r.title}<br><span class="cat">${r.category || ''}</span></span>`;
+    btn.onclick = () => loadRecipe(r.id);
+    list.appendChild(btn);
+  }
+  const cats = [...new Set(data.recipes.map(r => r.category).filter(Boolean))];
+  $('#cats').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+}
+
+function loadRecipe(id) {
+  const r = data.recipes.find(x => x.id === id);
+  if (!r) return;
+  currentId = id;
+  photoDataUrl = null;
+  removeImage = false;
+  $('#f-id').value = r.id;
+  $('#f-title').value = r.title || '';
+  $('#f-category').value = r.category || '';
+  $('#f-time').value = r.time || '';
+  $('#f-servings').value = r.servings || '';
+  $('#f-ingredients').value = (r.ingredients || []).join('\n');
+  $('#f-steps').value = (r.steps || []).join('\n');
+  $('#f-notes').value = r.notes || '';
+  $('#f-photo').value = '';
+  const prev = $('#photo-preview');
+  if (r.image) { prev.src = r.image; prev.style.display = 'block'; }
+  else prev.style.display = 'none';
+  renderList();
+}
+
+function newRecipe() {
+  currentId = null;
+  photoDataUrl = null;
+  removeImage = false;
+  $('#form').reset();
+  $('#f-id').value = '';
+  $('#photo-preview').style.display = 'none';
+  renderList();
+  $('#f-title').focus();
+}
+
+$('#f-photo').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoDataUrl = reader.result;
+    removeImage = false;
+    const prev = $('#photo-preview');
+    prev.src = photoDataUrl;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+$('#btn-remove-photo').onclick = () => {
+  photoDataUrl = null;
+  removeImage = true;
+  $('#f-photo').value = '';
+  $('#photo-preview').style.display = 'none';
+};
+
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const lines = v => v.split('\n').map(s => s.trim()).filter(Boolean);
+  const recipe = {
+    id: $('#f-id').value || undefined,
+    title: $('#f-title').value.trim(),
+    category: $('#f-category').value.trim(),
+    time: $('#f-time').value.trim(),
+    servings: $('#f-servings').value.trim(),
+    ingredients: lines($('#f-ingredients').value),
+    steps: lines($('#f-steps').value),
+    notes: $('#f-notes').value.trim(),
+  };
+  try {
+    const res = await api('/api/save', { recipe, imageDataUrl: photoDataUrl, removeImage });
+    data = res.data;
+    const saved = data.recipes.find(r => r.title === recipe.title);
+    if (saved) loadRecipe(saved.id); else renderList();
+    toast('Gespeichert ✓ (denk ans Veröffentlichen)');
+  } catch (err) { toast('Fehler: ' + err.message); }
+});
+
+$('#btn-delete').onclick = async () => {
+  if (!currentId) return toast('Kein Rezept ausgewählt');
+  const r = data.recipes.find(x => x.id === currentId);
+  if (!confirm(`„${r.title}“ wirklich löschen?`)) return;
+  try {
+    const res = await api('/api/delete', { id: currentId });
+    data = res.data;
+    newRecipe();
+    toast('Gelöscht ✓');
+  } catch (err) { toast('Fehler: ' + err.message); }
+};
+
+$('#btn-new').onclick = newRecipe;
+
+$('#btn-publish').onclick = async () => {
+  const log = $('#publish-log');
+  log.style.display = 'block';
+  log.textContent = 'Veröffentliche …';
+  try {
+    const res = await api('/api/publish', {});
+    log.textContent = res.log;
+    toast('Veröffentlicht ✓ – am Handy auf ⟳ tippen');
+  } catch (err) {
+    log.textContent = err.message;
+    toast('Veröffentlichen fehlgeschlagen');
+  }
+};
+
+(async () => {
+  data = await api('/api/recipes');
+  renderList();
+  newRecipe();
+})();
+</script>
+</body>
+</html>

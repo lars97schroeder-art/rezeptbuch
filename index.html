@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unser Rezeptbuch</title>
+<meta name="theme-color" content="#e8590c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rezeptbuch">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <h1>🍳 Unser Rezeptbuch</h1>
+    <div class="actions">
+      <button id="btn-random" title="Zufallsrezept" aria-label="Zufallsrezept">🎲</button>
+      <button id="btn-update" title="Aktualisieren" aria-label="Aktualisieren">⟳</button>
+    </div>
+  </div>
+  <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
+  <nav id="chips" aria-label="Kategorien"></nav>
+</header>
+
+<main id="grid"></main>
+<p id="status"></p>
+
+<div id="detail" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

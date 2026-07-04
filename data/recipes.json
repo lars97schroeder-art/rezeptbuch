@@ -1,0 +1,80 @@
+{
+  "version": 3,
+  "updated": "2026-07-04",
+  "recipes": [
+    {
+      "id": "spaghetti-carbonara",
+      "title": "Spaghetti Carbonara",
+      "category": "Pasta",
+      "time": "25 Min.",
+      "servings": "2 Portionen",
+      "image": "",
+      "ingredients": [
+        "250 g Spaghetti",
+        "100 g Guanciale oder Pancetta",
+        "2 Eier + 1 Eigelb",
+        "60 g Pecorino, gerieben",
+        "Schwarzer Pfeffer",
+        "Salz"
+      ],
+      "steps": [
+        "Spaghetti in reichlich Salzwasser al dente kochen.",
+        "Guanciale in Würfel schneiden und in der Pfanne knusprig auslassen.",
+        "Eier, Eigelb und Pecorino mit viel Pfeffer verquirlen.",
+        "Nudeln abgießen (etwas Nudelwasser aufheben) und in die Pfanne geben.",
+        "Pfanne vom Herd nehmen, Ei-Käse-Mischung unterrühren, mit Nudelwasser cremig rühren."
+      ],
+      "notes": "Die Pfanne muss vom Herd sein, sonst gibt es Rührei!"
+    },
+    {
+      "id": "kuerbissuppe",
+      "title": "Kürbissuppe mit Ingwer",
+      "category": "Suppe",
+      "time": "40 Min.",
+      "servings": "4 Portionen",
+      "image": "",
+      "ingredients": [
+        "1 Hokkaido-Kürbis",
+        "1 Zwiebel",
+        "1 Stück Ingwer (ca. 2 cm)",
+        "800 ml Gemüsebrühe",
+        "200 ml Kokosmilch",
+        "Salz, Pfeffer, Muskat",
+        "Kürbiskerne zum Bestreuen"
+      ],
+      "steps": [
+        "Kürbis waschen, entkernen und in Würfel schneiden (Hokkaido muss nicht geschält werden).",
+        "Zwiebel und Ingwer fein hacken und in etwas Öl glasig dünsten.",
+        "Kürbis dazugeben, kurz mitbraten, mit Brühe ablöschen.",
+        "Ca. 20 Minuten köcheln, bis der Kürbis weich ist.",
+        "Kokosmilch dazu, fein pürieren und abschmecken.",
+        "Mit gerösteten Kürbiskernen servieren."
+      ],
+      "notes": ""
+    },
+    {
+      "id": "pfannkuchen",
+      "title": "Klassische Pfannkuchen",
+      "category": "Süßes",
+      "time": "30 Min.",
+      "servings": "ca. 8 Stück",
+      "image": "",
+      "ingredients": [
+        "250 g Mehl",
+        "500 ml Milch",
+        "3 Eier",
+        "1 Prise Salz",
+        "1 EL Zucker",
+        "Butter zum Braten"
+      ],
+      "steps": [
+        "Alle Zutaten zu einem glatten Teig verrühren.",
+        "Teig 15 Minuten quellen lassen.",
+        "Butter in der Pfanne erhitzen, dünn Teig hineingeben.",
+        "Von beiden Seiten goldbraun backen.",
+        "Mit Apfelmus, Zimtzucker oder Nutella servieren."
+      ],
+      "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen."
+    }
+  ]
+}
