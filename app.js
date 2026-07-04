@@ -4,10 +4,12 @@ const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const CATEGORY_EMOJI = {
-  'Pasta': '🍝', 'Nudeln': '🍝', 'Suppe': '🍲', 'Salat': '🥗',
-  'Fleisch': '🥩', 'Fisch': '🐟', 'Vegetarisch': '🥦', 'Vegan': '🌱',
-  'Dessert': '🍰', 'Süßes': '🍮', 'Backen': '🥐', 'Frühstück': '🍳',
-  'Auflauf': '🥘', 'Asiatisch': '🍜', 'Pizza': '🍕', 'Snack': '🥪',
+  'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
+  'Asia': '🍜', 'Asiatisch': '🍜', 'Streetfood': '🍔',
+  'Zünftig': '🥨', 'Eintöpfe & Suppen': '🍲', 'Suppe': '🍲',
+  'Ofen & Pfanne': '🥘', 'Ist das Kochen?': '🥗', 'Salat': '🥗',
+  'Breakky': '🍳', 'Frühstück': '🍳', 'Süßes': '🍮', 'Dessert': '🍰',
+  'Fleisch': '🥩', 'Fisch': '🐟', 'Vegetarisch': '🥦', 'Backen': '🥐',
 };
 
 let data = { version: 0, updated: '', recipes: [] };
@@ -17,7 +19,7 @@ let query = '';
 const $ = s => document.querySelector(s);
 
 function emojiFor(recipe) {
-  return CATEGORY_EMOJI[recipe.category] || '🍽️';
+  return recipe.emoji || CATEGORY_EMOJI[recipe.category] || '🍽️';
 }
 
 function esc(s) {

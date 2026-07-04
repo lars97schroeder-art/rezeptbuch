@@ -53,7 +53,7 @@
     color: var(--text);
   }
   textarea { resize: vertical; }
-  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 90px; gap: 12px; }
   @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
   .hint { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
@@ -117,6 +117,10 @@
         <label for="f-servings">Portionen</label>
         <input type="text" id="f-servings" placeholder="z. B. 2 Portionen">
       </div>
+      <div>
+        <label for="f-emoji">Emoji</label>
+        <input type="text" id="f-emoji" placeholder="🍕">
+      </div>
     </div>
     <div>
       <label for="f-ingredients">Zutaten</label>
@@ -158,8 +162,9 @@ let currentId = null;      // null = neues Rezept
 let photoDataUrl = null;   // neues Foto (data:-URL) oder null
 let removeImage = false;
 
-const CATEGORY_EMOJI = { 'Pasta':'🍝','Suppe':'🍲','Salat':'🥗','Fleisch':'🥩',
-  'Fisch':'🐟','Vegetarisch':'🥦','Süßes':'🍮','Backen':'🥐','Frühstück':'🍳' };
+const CATEGORY_EMOJI = { 'Pasta & Gnocchi':'🍝','Spätzle':'🧀','Asia':'🍜',
+  'Streetfood':'🍔','Zünftig':'🥨','Eintöpfe & Suppen':'🍲','Ofen & Pfanne':'🥘',
+  'Ist das Kochen?':'🥗','Breakky':'🍳','Süßes':'🍮' };
 
 function toast(msg) {
   const t = $('#toast');
@@ -187,7 +192,7 @@ function renderList() {
     btn.className = 'list-item' + (r.id === currentId ? ' active' : '');
     const img = r.image
       ? `<img src="${r.image}" alt="">`
-      : `<span class="thumb">${CATEGORY_EMOJI[r.category] || '🍽️'}</span>`;
+      : `<span class="thumb">${r.emoji || CATEGORY_EMOJI[r.category] || '🍽️'}</span>`;
     btn.innerHTML = `${img}<span>${r.title}<br><span class="cat">${r.category || ''}</span></span>`;
     btn.onclick = () => loadRecipe(r.id);
     list.appendChild(btn);
@@ -207,6 +212,7 @@ function loadRecipe(id) {
   $('#f-category').value = r.category || '';
   $('#f-time').value = r.time || '';
   $('#f-servings').value = r.servings || '';
+  $('#f-emoji').value = r.emoji || '';
   $('#f-ingredients').value = (r.ingredients || []).join('\n');
   $('#f-steps').value = (r.steps || []).join('\n');
   $('#f-notes').value = r.notes || '';
@@ -258,6 +264,7 @@ $('#form').addEventListener('submit', async e => {
     category: $('#f-category').value.trim(),
     time: $('#f-time').value.trim(),
     servings: $('#f-servings').value.trim(),
+    emoji: $('#f-emoji').value.trim(),
     ingredients: lines($('#f-ingredients').value),
     steps: lines($('#f-steps').value),
     notes: $('#f-notes').value.trim(),
