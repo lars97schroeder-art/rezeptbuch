@@ -1,4 +1,4 @@
-# 🍳 Unser Rezeptbuch
+# 🍳 Schrödamskis Schlemmerliste
 
 Eine Offline-Rezept-App fürs iPhone (als Web-App / PWA) plus ein
 Admin-Tool für den Mac zum Pflegen der Rezepte.

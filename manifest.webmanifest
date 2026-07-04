@@ -1,6 +1,6 @@
 {
-  "name": "Unser Rezeptbuch",
-  "short_name": "Rezeptbuch",
+  "name": "Schrödamskis Schlemmerliste",
+  "short_name": "Schlemmerliste",
   "description": "Unsere Rezeptsammlung – Inspiration, was wir heute kochen",
   "start_url": "./",
   "scope": "./",
