@@ -173,9 +173,9 @@ function render() {
 
 /* ---------- Detailansicht ---------- */
 
-function openRecipe(id) {
-  renderDetail(id);
-  history.pushState({ view: 'recipe', id }, '');
+function openRecipe(id, opts = {}) {
+  renderDetail(id, opts);
+  history.pushState({ view: 'recipe', id, random: !!opts.random }, '');
 }
 
 function openGroup(name) {
@@ -211,13 +211,14 @@ function renderGroup(name) {
   document.body.style.overflow = 'hidden';
 }
 
-function renderDetail(id) {
+function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
   const el = $('#detail');
   const meta = [r.category, r.time, r.servings].filter(Boolean).join(' · ');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
+    ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
     ${r.image
       ? `<img class="detail-photo" src="${esc(r.image)}" alt="">`
       : `<div class="detail-photo placeholder">${emojiFor(r)}</div>`}
@@ -231,6 +232,17 @@ function renderDetail(id) {
       ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
     </div>`;
   el.querySelector('.detail-close').onclick = () => history.back();
+  const rnd = el.querySelector('.detail-random');
+  if (rnd) {
+    rnd.onclick = () => {
+      const list = filtered().filter(x => x.id !== id);
+      if (!list.length) return toast('Mehr gibt es nicht 🤷');
+      const next = list[Math.floor(Math.random() * list.length)];
+      renderDetail(next.id, { random: true });
+      // ersetzt den Verlaufseintrag: einmal zurück führt immer zur Übersicht
+      history.replaceState({ view: 'recipe', id: next.id, random: true }, '');
+    };
+  }
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }
@@ -245,8 +257,164 @@ window.addEventListener('popstate', e => {
   const s = e.state;
   if (!s) return closeOverlay();
   if (s.view === 'group') renderGroup(s.group);
-  else if (s.view === 'recipe') renderDetail(s.id);
+  else if (s.view === 'recipe') renderDetail(s.id, { random: s.random });
+  else if (s.view === 'tinder') renderTinder();
+  else if (s.view === 'tinder-result') renderTinderResult(s.ids || []);
 });
+
+/* ---------- Rezept-Tinder 🔥 ---------- */
+
+let tinder = null; // { deck: [Rezepte], likes: [Rezepte] }
+
+function openTinder() {
+  renderTinder();
+  history.pushState({ view: 'tinder' }, '');
+}
+
+function renderTinder() {
+  const pool = filtered().slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  tinder = { deck: pool, likes: [] };
+  renderTinderCard();
+}
+
+function tinderCardHTML(r, cls) {
+  return `<div class="t-card ${cls}">
+    ${r.image
+      ? `<img src="${esc(r.image)}" alt="" draggable="false">`
+      : `<div class="t-emoji">${emojiFor(r)}</div>`}
+    <div class="t-info">
+      <div class="t-title">${esc(r.title)}</div>
+      <div class="t-meta">${esc([r.category, r.time].filter(Boolean).join(' · '))}</div>
+    </div>
+    <div class="t-badge like">Will ich! 😍</div>
+    <div class="t-badge nope">Nö 🙅</div>
+  </div>`;
+}
+
+function renderTinderCard() {
+  if (tinder.likes.length >= 3 || !tinder.deck.length) {
+    return showTinderResult(tinder.likes.map(r => r.id));
+  }
+  const [top, next] = tinder.deck;
+  const el = $('#detail');
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="tinder">
+      <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
+      <div class="tinder-stack">
+        ${next ? tinderCardHTML(next, 'behind') : ''}
+        ${tinderCardHTML(top, 'top')}
+      </div>
+      <div class="tinder-buttons">
+        <button class="t-nope" aria-label="Nö">👎</button>
+        <button class="t-like" aria-label="Will ich">❤️</button>
+      </div>
+      <div class="tinder-hint">Wischen oder tippen: links = nö, rechts = will ich!</div>
+    </div>`;
+  el.querySelector('.detail-close').onclick = () => history.back();
+  const card = el.querySelector('.t-card.top');
+  attachSwipe(card, dir => swipeTinder(dir));
+  el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
+  el.querySelector('.t-like').onclick = () => flyOut(card, 1);
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function swipeTinder(dir) {
+  const r = tinder.deck.shift();
+  if (dir > 0) tinder.likes.push(r);
+  renderTinderCard();
+}
+
+function flyOut(card, dir) {
+  card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+  card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
+  card.style.opacity = '0';
+  setTimeout(() => swipeTinder(dir), 260);
+}
+
+function attachSwipe(card, onSwipe) {
+  let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
+  const badgeLike = card.querySelector('.t-badge.like');
+  const badgeNope = card.querySelector('.t-badge.nope');
+
+  card.addEventListener('pointerdown', e => {
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    card.style.transition = 'none';
+    try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+  });
+
+  card.addEventListener('pointermove', e => {
+    if (!dragging || done) return;
+    dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 12}deg)`;
+    badgeLike.style.opacity = Math.min(1, Math.max(0, dx / 80));
+    badgeNope.style.opacity = Math.min(1, Math.max(0, -dx / 80));
+  });
+
+  const end = () => {
+    if (!dragging || done) return;
+    dragging = false;
+    if (Math.abs(dx) > 90) {
+      done = true;
+      flyOut(card, dx > 0 ? 1 : -1);
+    } else {
+      card.style.transition = 'transform 0.25s ease';
+      card.style.transform = '';
+      badgeLike.style.opacity = 0;
+      badgeNope.style.opacity = 0;
+    }
+    dx = 0;
+  };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+}
+
+function showTinderResult(ids) {
+  history.replaceState({ view: 'tinder-result', ids }, '');
+  renderTinderResult(ids);
+}
+
+function renderTinderResult(ids) {
+  const winners = ids.map(id => data.recipes.find(r => r.id === id)).filter(Boolean);
+  const el = $('#detail');
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="detail-body group-body">
+      <h2>${winners.length ? `Eure Top ${winners.length} ❤️` : 'Alles weggewischt 😅'}</h2>
+      <div class="detail-meta">${winners.length
+        ? 'Such dir eins aus – das wird gekocht!'
+        : 'Vielleicht ist beim nächsten Mischen was dabei.'}</div>
+      <div class="variant-list">
+        ${winners.map(m => `
+          <button class="variant" data-id="${esc(m.id)}">
+            ${m.image
+              ? `<img src="${esc(m.image)}" alt="">`
+              : `<span class="v-emoji">${emojiFor(m)}</span>`}
+            <span class="v-text">${esc(m.title)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
+            <span class="v-arrow">›</span>
+          </button>`).join('')}
+      </div>
+      <button class="tinder-again">🔀 Nochmal mischen</button>
+    </div>`;
+  el.querySelector('.detail-close').onclick = () => history.back();
+  for (const b of el.querySelectorAll('.variant')) {
+    b.onclick = () => openRecipe(b.dataset.id);
+  }
+  el.querySelector('.tinder-again').onclick = () => {
+    history.replaceState({ view: 'tinder' }, '');
+    renderTinder();
+  };
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
 
 /* ---------- Toast ---------- */
 
@@ -266,7 +434,12 @@ $('#btn-update').onclick = () => update();
 $('#btn-random').onclick = () => {
   const list = filtered();
   if (!list.length) return toast('Keine Rezepte da 🤷');
-  openRecipe(list[Math.floor(Math.random() * list.length)].id);
+  openRecipe(list[Math.floor(Math.random() * list.length)].id, { random: true });
+};
+
+$('#btn-tinder').onclick = () => {
+  if (filtered().length < 2) return toast('Zu wenige Rezepte zum Tindern 🤷');
+  openTinder();
 };
 
 $('#search').addEventListener('input', e => {

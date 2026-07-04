@@ -2,7 +2,7 @@
 
 // Bei Änderungen an index.html/app.js/style.css die Versionsnummer erhöhen,
 // damit die Handys die neue App-Version bekommen.
-const SHELL_CACHE = 'rezeptbuch-shell-v2';
+const SHELL_CACHE = 'rezeptbuch-shell-v3';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const SHELL_FILES = [
@@ -19,7 +19,8 @@ const SHELL_FILES = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(SHELL_CACHE)
-      .then(cache => cache.addAll(SHELL_FILES))
+      // "reload" erzwingt frische Dateien vom Server statt aus dem HTTP-Cache
+      .then(cache => cache.addAll(SHELL_FILES.map(f => new Request(f, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -55,11 +56,13 @@ self.addEventListener('fetch', event => {
   // recipes.json geht immer übers Netz – die App verwaltet ihre eigene Kopie
   if (url.pathname.endsWith('/data/recipes.json')) return;
 
-  // App-Dateien: sofort aus dem Cache, im Hintergrund frisch nachladen
+  // App-Dateien: sofort aus dem Cache, im Hintergrund frisch nachladen.
+  // "no-cache" umgeht den HTTP-Cache des Browsers (fragt beim Server nach),
+  // sonst bleiben alte Versionen von app.js & Co. hängen.
   event.respondWith((async () => {
     const cache = await caches.open(SHELL_CACHE);
     const hit = await cache.match(event.request, { ignoreSearch: true });
-    const network = fetch(event.request)
+    const network = fetch(event.request, { cache: 'no-cache' })
       .then(res => {
         if (res.ok) cache.put(event.request, res.clone());
         return res;
