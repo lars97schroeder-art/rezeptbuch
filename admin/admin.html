@@ -123,6 +123,13 @@
       </div>
     </div>
     <div>
+      <label for="f-group">Gruppe (optional)</label>
+      <input type="text" id="f-group" list="groups" placeholder="z. B. Spätzle">
+      <datalist id="groups"></datalist>
+      <div class="hint">Rezepte mit derselben Gruppe erscheinen in der App als eine
+        Kachel – beim Antippen kann man die Variante auswählen</div>
+    </div>
+    <div>
       <label for="f-ingredients">Zutaten</label>
       <textarea id="f-ingredients" rows="7" placeholder="Eine Zutat pro Zeile"></textarea>
       <div class="hint">Eine Zutat pro Zeile, z. B. „250 g Spaghetti“</div>
@@ -199,6 +206,8 @@ function renderList() {
   }
   const cats = [...new Set(data.recipes.map(r => r.category).filter(Boolean))];
   $('#cats').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+  const groups = [...new Set(data.recipes.map(r => r.group).filter(Boolean))];
+  $('#groups').innerHTML = groups.map(g => `<option value="${g}">`).join('');
 }
 
 function loadRecipe(id) {
@@ -213,6 +222,7 @@ function loadRecipe(id) {
   $('#f-time').value = r.time || '';
   $('#f-servings').value = r.servings || '';
   $('#f-emoji').value = r.emoji || '';
+  $('#f-group').value = r.group || '';
   $('#f-ingredients').value = (r.ingredients || []).join('\n');
   $('#f-steps').value = (r.steps || []).join('\n');
   $('#f-notes').value = r.notes || '';
@@ -265,6 +275,7 @@ $('#form').addEventListener('submit', async e => {
     time: $('#f-time').value.trim(),
     servings: $('#f-servings').value.trim(),
     emoji: $('#f-emoji').value.trim(),
+    group: $('#f-group').value.trim(),
     ingredients: lines($('#f-ingredients').value),
     steps: lines($('#f-steps').value),
     notes: $('#f-notes').value.trim(),

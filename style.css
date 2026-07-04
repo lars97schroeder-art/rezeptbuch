@@ -274,6 +274,70 @@ h1 { font-size: 22px; }
   justify-content: center;
 }
 
+/* Varianten-Auswahl (Gruppen wie „Spätzle") */
+
+.group-body {
+  padding-top: calc(env(safe-area-inset-top) + 72px);
+}
+
+.variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.variant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px 10px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+  box-shadow: var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.variant:active { transform: scale(0.98); }
+
+.variant img,
+.variant .v-emoji {
+  width: 64px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex: 0 0 64px;
+}
+
+.variant .v-text {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.variant .v-text small {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.variant .v-arrow {
+  color: var(--muted);
+  font-size: 22px;
+}
+
 .detail-notes {
   margin-top: 20px;
   padding: 14px;

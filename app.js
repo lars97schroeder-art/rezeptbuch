@@ -96,6 +96,22 @@ function filtered() {
   });
 }
 
+// Rezepte mit gleicher "group" werden zu einer Kachel zusammengefasst.
+// Bei aktiver Suche werden Einzelrezepte gezeigt, damit Treffer direkt sichtbar sind.
+function groupedList() {
+  const list = filtered();
+  if (query.trim()) return list.map(r => ({ recipe: r }));
+  const items = [];
+  const seen = new Set();
+  for (const r of list) {
+    if (!r.group) { items.push({ recipe: r }); continue; }
+    if (seen.has(r.group)) continue;
+    seen.add(r.group);
+    items.push({ group: r.group, members: list.filter(x => x.group === r.group) });
+  }
+  return items;
+}
+
 function render() {
   // Kategorie-Chips
   const chips = $('#chips');
@@ -111,28 +127,42 @@ function render() {
   // Rezept-Karten
   const grid = $('#grid');
   grid.innerHTML = '';
-  const list = filtered();
+  const items = groupedList();
 
   if (!data.recipes.length) {
     grid.innerHTML = `<div class="empty">Noch keine Rezepte geladen.<br>
       Tippe oben auf <strong>⟳</strong>, wenn du Internet hast.</div>`;
-  } else if (!list.length) {
+  } else if (!items.length) {
     grid.innerHTML = `<div class="empty">Nichts gefunden 🤷</div>`;
   }
 
-  for (const r of list) {
+  for (const item of items) {
     const card = document.createElement('article');
     card.className = 'card';
-    card.innerHTML = r.image
-      ? `<img class="photo" src="${esc(r.image)}" alt="" loading="lazy">`
-      : `<div class="photo placeholder">${emojiFor(r)}</div>`;
-    const info = document.createElement('div');
-    info.className = 'info';
-    const meta = [r.category, r.time].filter(Boolean).join(' · ');
-    info.innerHTML = `<div class="title">${esc(r.title)}</div>` +
-      (meta ? `<div class="meta">${esc(meta)}</div>` : '');
-    card.appendChild(info);
-    card.onclick = () => openRecipe(r.id);
+    if (item.group) {
+      const withImage = item.members.find(m => m.image);
+      card.innerHTML = withImage
+        ? `<img class="photo" src="${esc(withImage.image)}" alt="" loading="lazy">`
+        : `<div class="photo placeholder">${emojiFor(item.members[0])}</div>`;
+      const info = document.createElement('div');
+      info.className = 'info';
+      info.innerHTML = `<div class="title">${esc(item.group)}</div>
+        <div class="meta">${item.members.length} Varianten ›</div>`;
+      card.appendChild(info);
+      card.onclick = () => openGroup(item.group);
+    } else {
+      const r = item.recipe;
+      card.innerHTML = r.image
+        ? `<img class="photo" src="${esc(r.image)}" alt="" loading="lazy">`
+        : `<div class="photo placeholder">${emojiFor(r)}</div>`;
+      const info = document.createElement('div');
+      info.className = 'info';
+      const meta = [r.category, r.time].filter(Boolean).join(' · ');
+      info.innerHTML = `<div class="title">${esc(r.title)}</div>` +
+        (meta ? `<div class="meta">${esc(meta)}</div>` : '');
+      card.appendChild(info);
+      card.onclick = () => openRecipe(r.id);
+    }
     grid.appendChild(card);
   }
 
@@ -144,6 +174,44 @@ function render() {
 /* ---------- Detailansicht ---------- */
 
 function openRecipe(id) {
+  renderDetail(id);
+  history.pushState({ view: 'recipe', id }, '');
+}
+
+function openGroup(name) {
+  renderGroup(name);
+  history.pushState({ view: 'group', group: name }, '');
+}
+
+function renderGroup(name) {
+  const members = data.recipes.filter(r => r.group === name);
+  if (!members.length) return;
+  const el = $('#detail');
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="detail-body group-body">
+      <h2>${esc(name)}</h2>
+      <div class="detail-meta">${members.length} Varianten – such dir eine aus</div>
+      <div class="variant-list">
+        ${members.map(m => `
+          <button class="variant" data-id="${esc(m.id)}">
+            ${m.image
+              ? `<img src="${esc(m.image)}" alt="">`
+              : `<span class="v-emoji">${emojiFor(m)}</span>`}
+            <span class="v-text">${esc(m.title)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
+            <span class="v-arrow">›</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+  el.querySelector('.detail-close').onclick = () => history.back();
+  for (const b of el.querySelectorAll('.variant')) {
+    b.onclick = () => openRecipe(b.dataset.id);
+  }
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function renderDetail(id) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
   const el = $('#detail');
@@ -165,15 +233,20 @@ function openRecipe(id) {
   el.querySelector('.detail-close').onclick = () => history.back();
   el.hidden = false;
   document.body.style.overflow = 'hidden';
-  history.pushState({ recipe: id }, '');
 }
 
-function closeDetail() {
+function closeOverlay() {
   $('#detail').hidden = true;
   document.body.style.overflow = '';
 }
 
-window.addEventListener('popstate', closeDetail);
+// Zurück-Navigation: null = Übersicht, sonst Gruppe oder Rezept wiederherstellen
+window.addEventListener('popstate', e => {
+  const s = e.state;
+  if (!s) return closeOverlay();
+  if (s.view === 'group') renderGroup(s.group);
+  else if (s.view === 'recipe') renderDetail(s.id);
+});
 
 /* ---------- Toast ---------- */
 

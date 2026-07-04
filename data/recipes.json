@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "updated": "2026-07-04",
   "recipes": [
     {
@@ -12,7 +12,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "group": "Spätzle"
     },
     {
       "id": "krautspaetzle",
@@ -24,7 +25,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "group": "Spätzle"
     },
     {
       "id": "spitzkohlspaetzle",
@@ -36,7 +38,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": "Mit Hack oder Bacon"
+      "notes": "Mit Hack oder Bacon",
+      "group": "Spätzle"
     },
     {
       "id": "spaetzle-mit-lauch-und-hack",
@@ -48,7 +51,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "group": "Spätzle"
     },
     {
       "id": "basic-bitch-pasta",
