@@ -67,8 +67,20 @@
   .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
   .spacer { flex: 1; }
 
-  #photo-preview {
-    max-width: 260px; border-radius: 10px; display: none; margin-top: 8px;
+  #photo-list {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;
+  }
+  #photo-list .thumb-box {
+    position: relative;
+  }
+  #photo-list img {
+    width: 120px; height: 90px; object-fit: cover; border-radius: 10px;
+    border: 1px solid var(--border); display: block;
+  }
+  #photo-list .thumb-x {
+    position: absolute; top: -6px; right: -6px; width: 24px; height: 24px;
+    border-radius: 50%; border: none; background: #c0392b; color: #fff;
+    font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
   }
   #publish-log {
     white-space: pre-wrap; font-family: ui-monospace, monospace;
@@ -152,14 +164,15 @@
       <input type="text" id="f-notes" placeholder="z. B. Tipp oder Variante">
     </div>
     <div>
-      <label for="f-photo">Foto</label>
-      <input type="file" id="f-photo" accept="image/*">
-      <img id="photo-preview" alt="">
-      <div class="hint">Wird automatisch verkleinert. Neues Foto ersetzt das alte.</div>
+      <label for="f-photo">Fotos</label>
+      <div id="photo-list"></div>
+      <input type="file" id="f-photo" accept="image/*" multiple>
+      <div class="hint">Mehrere Fotos möglich (werden automatisch verkleinert).
+        In der Übersicht wird zufällig eines als Titelbild gezeigt,
+        in der Detailansicht kann man durchwischen. ✕ entfernt ein Foto.</div>
     </div>
     <div class="buttons">
       <button type="submit" class="primary">💾 Speichern</button>
-      <button type="button" id="btn-remove-photo">Foto entfernen</button>
       <span class="spacer"></span>
       <button type="button" id="btn-delete" class="danger">🗑 Löschen</button>
     </div>
@@ -174,8 +187,8 @@
 const $ = s => document.querySelector(s);
 let data = { recipes: [] };
 let currentId = null;      // null = neues Rezept
-let photoDataUrl = null;   // neues Foto (data:-URL) oder null
-let removeImage = false;
+let keepImages = [];       // vorhandene Fotos (Pfade), die behalten werden
+let newPhotos = [];        // neu hinzugefügte Fotos (data:-URLs)
 
 const CATEGORY_EMOJI = { 'Pasta & Gnocchi':'🍝','Spätzle':'🧀','Asia':'🍜',
   'Streetfood':'🍔','Zünftig':'🥨','Eintöpfe & Suppen':'🍲','Ofen & Pfanne':'🥘',
@@ -222,8 +235,8 @@ function loadRecipe(id) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
   currentId = id;
-  photoDataUrl = null;
-  removeImage = false;
+  keepImages = r.images ? [...r.images] : (r.image ? [r.image] : []);
+  newPhotos = [];
   $('#f-id').value = r.id;
   $('#f-title').value = r.title || '';
   $('#f-category').value = r.category || '';
@@ -236,43 +249,43 @@ function loadRecipe(id) {
   $('#f-steps').value = (r.steps || []).join('\n');
   $('#f-notes').value = r.notes || '';
   $('#f-photo').value = '';
-  const prev = $('#photo-preview');
-  if (r.image) { prev.src = r.image; prev.style.display = 'block'; }
-  else prev.style.display = 'none';
+  renderPhotoList();
   renderList();
 }
 
 function newRecipe() {
   currentId = null;
-  photoDataUrl = null;
-  removeImage = false;
+  keepImages = [];
+  newPhotos = [];
   $('#form').reset();
   $('#f-id').value = '';
-  $('#photo-preview').style.display = 'none';
+  renderPhotoList();
   renderList();
   $('#f-title').focus();
 }
 
-$('#f-photo').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    photoDataUrl = reader.result;
-    removeImage = false;
-    const prev = $('#photo-preview');
-    prev.src = photoDataUrl;
-    prev.style.display = 'block';
+function renderPhotoList() {
+  const list = $('#photo-list');
+  list.innerHTML = '';
+  const add = (src, onRemove) => {
+    const box = document.createElement('div');
+    box.className = 'thumb-box';
+    box.innerHTML = `<img src="${src}" alt=""><button type="button" class="thumb-x">✕</button>`;
+    box.querySelector('.thumb-x').onclick = onRemove;
+    list.appendChild(box);
   };
-  reader.readAsDataURL(file);
-});
+  keepImages.forEach((p, i) => add(p, () => { keepImages.splice(i, 1); renderPhotoList(); }));
+  newPhotos.forEach((d, i) => add(d, () => { newPhotos.splice(i, 1); renderPhotoList(); }));
+}
 
-$('#btn-remove-photo').onclick = () => {
-  photoDataUrl = null;
-  removeImage = true;
-  $('#f-photo').value = '';
-  $('#photo-preview').style.display = 'none';
-};
+$('#f-photo').addEventListener('change', e => {
+  for (const file of e.target.files) {
+    const reader = new FileReader();
+    reader.onload = () => { newPhotos.push(reader.result); renderPhotoList(); };
+    reader.readAsDataURL(file);
+  }
+  e.target.value = '';
+});
 
 $('#form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -291,7 +304,7 @@ $('#form').addEventListener('submit', async e => {
     notes: $('#f-notes').value.trim(),
   };
   try {
-    const res = await api('/api/save', { recipe, imageDataUrl: photoDataUrl, removeImage });
+    const res = await api('/api/save', { recipe, keepImages, newImages: newPhotos });
     data = res.data;
     const saved = data.recipes.find(r => r.title === recipe.title);
     if (saved) loadRecipe(saved.id); else renderList();

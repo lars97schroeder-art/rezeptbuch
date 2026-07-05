@@ -48,7 +48,7 @@ def slugify(title):
     return t or "rezept"
 
 
-def save_image(data_url, slug):
+def save_image(data_url, slug, n=0):
     """Bild aus einer data:-URL speichern, per sips auf max. 1200px verkleinern.
 
     Der Dateiname bekommt einen Zeitstempel, damit die Handys ein ersetztes
@@ -56,7 +56,7 @@ def save_image(data_url, slug):
     """
     raw = base64.b64decode(data_url.split(",", 1)[-1])
     IMG_DIR.mkdir(parents=True, exist_ok=True)
-    out = IMG_DIR / f"{slug}-{int(time.time())}.jpg"
+    out = IMG_DIR / f"{slug}-{int(time.time())}-{n}.jpg"
     with tempfile.NamedTemporaryFile(suffix=".img", delete=False) as f:
         f.write(raw)
         tmp = Path(f.name)
@@ -71,12 +71,23 @@ def save_image(data_url, slug):
     return f"data/images/{out.name}"
 
 
-def delete_image(recipe):
-    img = recipe.get("image", "")
-    if img:
-        path = ROOT / img
-        if path.is_file() and IMG_DIR in path.parents:
-            path.unlink()
+def images_of(recipe):
+    """Alle Fotos eines Rezepts (unterstützt altes Einzel-Feld und neue Liste)."""
+    imgs = recipe.get("images")
+    if imgs:
+        return list(imgs)
+    return [recipe["image"]] if recipe.get("image") else []
+
+
+def delete_image_file(rel_path):
+    path = ROOT / rel_path
+    if path.is_file() and IMG_DIR in path.parents:
+        path.unlink()
+
+
+def delete_images(recipe):
+    for rel in images_of(recipe):
+        delete_image_file(rel)
 
 
 def run_git(*args):
@@ -158,16 +169,18 @@ class Handler(BaseHTTPRequestHandler):
                 candidate, n = f"{slug}-{n}", n + 1
             recipe["id"] = candidate
 
-        if payload.get("imageDataUrl"):
-            if existing:
-                delete_image(existing)
-            recipe["image"] = save_image(payload["imageDataUrl"], recipe["id"])
-        elif existing and not payload.get("removeImage"):
-            recipe["image"] = existing.get("image", "")
-        else:
-            if existing and payload.get("removeImage"):
-                delete_image(existing)
-            recipe["image"] = ""
+        # Fotos: behalten, was in keepImages steht; Rest löschen; Neue anhängen
+        old_imgs = images_of(existing) if existing else []
+        keep = [p for p in payload.get("keepImages", []) if p in old_imgs]
+        for p in old_imgs:
+            if p not in keep:
+                delete_image_file(p)
+        new_imgs = [
+            save_image(url, recipe["id"], i)
+            for i, url in enumerate(payload.get("newImages", []))
+        ]
+        recipe["images"] = keep + new_imgs
+        recipe["image"] = recipe["images"][0] if recipe["images"] else ""
 
         if existing:
             data["recipes"][data["recipes"].index(existing)] = recipe
@@ -184,7 +197,7 @@ class Handler(BaseHTTPRequestHandler):
         )
         if not recipe:
             return self.send_json({"error": "Rezept nicht gefunden"}, 404)
-        delete_image(recipe)
+        delete_images(recipe)
         data["recipes"].remove(recipe)
         save_data(data)
         self.send_json({"ok": True, "data": data})

@@ -41,6 +41,18 @@ function titleWithEmoji(recipe) {
   return esc(recipe.title) + (recipe.emoji ? ' ' + esc(recipe.emoji) : '');
 }
 
+// Alle Fotos eines Rezepts (unterstützt altes Einzel-Feld und neue Liste)
+function imagesOf(r) {
+  if (r.images && r.images.length) return r.images;
+  return r.image ? [r.image] : [];
+}
+
+// Zufälliges Titelbild für die Übersicht
+function randomImage(r) {
+  const imgs = imagesOf(r);
+  return imgs.length ? imgs[Math.floor(Math.random() * imgs.length)] : '';
+}
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -72,13 +84,14 @@ async function update(showErrors = true) {
     const cache = await caches.open(IMG_CACHE);
     const wanted = new Set();
     for (const r of fresh.recipes) {
-      if (!r.image) continue;
-      wanted.add(new URL(r.image, location.href).href);
-      if (await cache.match(r.image)) continue;
-      try {
-        const imgRes = await fetch(r.image, { cache: 'no-store' });
-        if (imgRes.ok) await cache.put(r.image, imgRes);
-      } catch (e) { /* einzelnes Bild fehlgeschlagen – beim nächsten Update erneut */ }
+      for (const img of imagesOf(r)) {
+        wanted.add(new URL(img, location.href).href);
+        if (await cache.match(img)) continue;
+        try {
+          const imgRes = await fetch(img, { cache: 'no-store' });
+          if (imgRes.ok) await cache.put(img, imgRes);
+        } catch (e) { /* einzelnes Bild fehlgeschlagen – beim nächsten Update erneut */ }
+      }
     }
     // Nicht mehr benötigte Bilder aufräumen
     for (const req of await cache.keys()) {
@@ -161,9 +174,9 @@ function render() {
     const card = document.createElement('article');
     card.className = 'card';
     if (item.group) {
-      const withImage = item.members.find(m => m.image);
-      card.innerHTML = withImage
-        ? `<img class="photo" src="${esc(withImage.image)}" alt="" loading="lazy">`
+      const groupImgs = item.members.flatMap(m => imagesOf(m));
+      card.innerHTML = groupImgs.length
+        ? `<img class="photo" src="${esc(groupImgs[Math.floor(Math.random() * groupImgs.length)])}" alt="" loading="lazy">`
         : `<div class="photo placeholder">${emojiFor(item.members[0])}</div>`;
       const info = document.createElement('div');
       info.className = 'info';
@@ -173,8 +186,9 @@ function render() {
       card.onclick = () => openGroup(item.group);
     } else {
       const r = item.recipe;
-      card.innerHTML = r.image
-        ? `<img class="photo" src="${esc(r.image)}" alt="" loading="lazy">`
+      const cover = randomImage(r);
+      card.innerHTML = cover
+        ? `<img class="photo" src="${esc(cover)}" alt="" loading="lazy">`
         : `<div class="photo placeholder">${emojiFor(r)}</div>`;
       const info = document.createElement('div');
       info.className = 'info';
@@ -216,8 +230,8 @@ function renderGroup(name) {
       <div class="variant-list">
         ${members.map(m => `
           <button class="variant" data-id="${esc(m.id)}">
-            ${m.image
-              ? `<img src="${esc(m.image)}" alt="">`
+            ${imagesOf(m).length
+              ? `<img src="${esc(imagesOf(m)[0])}" alt="">`
               : `<span class="v-emoji">${emojiFor(m)}</span>`}
             <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
             <span class="v-arrow">›</span>
@@ -232,6 +246,27 @@ function renderGroup(name) {
   document.body.style.overflow = 'hidden';
 }
 
+// Foto-Bereich der Detailansicht: ein Foto, oder Wisch-Galerie mit Punkten
+function detailPhotosHTML(r) {
+  const imgs = imagesOf(r);
+  if (!imgs.length) return `<div class="detail-photo placeholder">${emojiFor(r)}</div>`;
+  if (imgs.length === 1) return `<img class="detail-photo" src="${esc(imgs[0])}" alt="">`;
+  return `<div class="detail-photos">
+      ${imgs.map(i => `<img class="detail-photo" src="${esc(i)}" alt="">`).join('')}
+    </div>
+    <div class="photo-dots">${imgs.map((_, i) => `<span${i === 0 ? ' class="on"' : ''}></span>`).join('')}</div>`;
+}
+
+function wirePhotoDots(el) {
+  const strip = el.querySelector('.detail-photos');
+  if (!strip) return;
+  const dots = el.querySelectorAll('.photo-dots span');
+  strip.addEventListener('scroll', () => {
+    const i = Math.round(strip.scrollLeft / strip.clientWidth);
+    dots.forEach((d, n) => d.classList.toggle('on', n === i));
+  }, { passive: true });
+}
+
 function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
@@ -240,9 +275,7 @@ function renderDetail(id, opts = {}) {
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
-    ${r.image
-      ? `<img class="detail-photo" src="${esc(r.image)}" alt="">`
-      : `<div class="detail-photo placeholder">${emojiFor(r)}</div>`}
+    ${detailPhotosHTML(r)}
     <div class="detail-body">
       <h2>${titleWithEmoji(r)}</h2>
       ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
@@ -264,6 +297,7 @@ function renderDetail(id, opts = {}) {
       history.replaceState({ view: 'recipe', id: next.id, random: true }, '');
     };
   }
+  wirePhotoDots(el);
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }
@@ -304,8 +338,8 @@ function renderTinder() {
 
 function tinderCardHTML(r, cls) {
   return `<div class="t-card ${cls}">
-    ${r.image
-      ? `<img src="${esc(r.image)}" alt="" draggable="false">`
+    ${imagesOf(r).length
+      ? `<img src="${esc(randomImage(r))}" alt="" draggable="false">`
       : `<div class="t-emoji">${emojiFor(r)}</div>`}
     <div class="t-info">
       <div class="t-title">${titleWithEmoji(r)}</div>
@@ -430,8 +464,8 @@ function renderTinderResult(ids) {
       <div class="variant-list">
         ${winners.map(m => `
           <button class="variant" data-id="${esc(m.id)}">
-            ${m.image
-              ? `<img src="${esc(m.image)}" alt="">`
+            ${imagesOf(m).length
+              ? `<img src="${esc(imagesOf(m)[0])}" alt="">`
               : `<span class="v-emoji">${emojiFor(m)}</span>`}
             <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
             <span class="v-arrow">›</span>

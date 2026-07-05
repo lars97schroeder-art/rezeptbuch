@@ -249,6 +249,44 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   background: var(--accent-soft);
 }
 
+/* Wisch-Galerie bei mehreren Fotos */
+.detail-photos {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.detail-photos::-webkit-scrollbar { display: none; }
+
+.detail-photos .detail-photo {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+.photo-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+  margin-top: -22px;
+  margin-bottom: 10px;
+  pointer-events: none;
+}
+
+.photo-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.photo-dots span.on { background: #fff; }
+
 .detail-photo.placeholder {
   display: flex;
   align-items: center;
