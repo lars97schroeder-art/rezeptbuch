@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "updated": "2026-07-04",
   "recipes": [
     {
@@ -9,7 +9,7 @@
       "time": "",
       "servings": "",
       "emoji": "🧀",
-      "image": "",
+      "image": "data/images/kaesespaetzle-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": "",
@@ -61,7 +61,7 @@
       "time": "",
       "servings": "",
       "emoji": "💅",
-      "image": "",
+      "image": "data/images/basic-bitch-pasta-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": "Rucola, Pesto, Tomaten"
@@ -84,7 +84,7 @@
       "category": "Pasta & Gnocchi",
       "time": "25 Min.",
       "servings": "2 Portionen",
-      "image": "",
+      "image": "data/images/spaghetti-carbonara-1783240941.jpg",
       "ingredients": [
         "250 g Spaghetti",
         "100 g Guanciale oder Pancetta",
@@ -145,7 +145,7 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/tuerkische-pasta-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -277,7 +277,7 @@
       "time": "",
       "servings": "",
       "emoji": "🥙",
-      "image": "",
+      "image": "data/images/gyros-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": "Varianten: im Pita, mit Reis oder mit griechischem Salat"
@@ -301,7 +301,19 @@
       "time": "",
       "servings": "",
       "emoji": "🍖",
-      "image": "",
+      "image": "data/images/spareribs-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": ""
+    },
+    {
+      "id": "chicken-wings",
+      "title": "Chicken Wings",
+      "category": "Streetfood",
+      "time": "",
+      "servings": "",
+      "emoji": "🍗",
+      "image": "data/images/chicken-wings-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -325,7 +337,7 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/kaspressknoedel-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -373,7 +385,7 @@
       "time": "",
       "servings": "",
       "emoji": "🌭",
-      "image": "",
+      "image": "data/images/wuerstelgulasch-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -385,7 +397,7 @@
       "time": "",
       "servings": "",
       "emoji": "🇸🇪",
-      "image": "",
+      "image": "data/images/koettbullar-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -398,6 +410,18 @@
       "servings": "",
       "emoji": "",
       "image": "",
+      "ingredients": [],
+      "steps": [],
+      "notes": ""
+    },
+    {
+      "id": "bratwuerste-mit-sauerkraut",
+      "title": "Bratwürste mit Sauerkraut & Püree",
+      "category": "Zünftig",
+      "time": "",
+      "servings": "",
+      "emoji": "🌭",
+      "image": "data/images/bratwuerste-mit-sauerkraut-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
@@ -525,6 +549,30 @@
       "notes": ""
     },
     {
+      "id": "shakshuka",
+      "title": "Shakshuka",
+      "category": "Ofen & Pfanne",
+      "time": "",
+      "servings": "",
+      "emoji": "🍳",
+      "image": "data/images/shakshuka-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": "Eier in Tomatensoße, mit Käse überbacken – Brot dazu"
+    },
+    {
+      "id": "haehnchen-mit-gruenem-spargel",
+      "title": "Hähnchen mit grünem Spargel",
+      "category": "Ofen & Pfanne",
+      "time": "",
+      "servings": "",
+      "emoji": "🍗",
+      "image": "data/images/haehnchen-mit-gruenem-spargel-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": "Mit Kartoffeln und Quark-Dip"
+    },
+    {
       "id": "wraps",
       "title": "Wraps",
       "category": "Ist das Kochen?",
@@ -585,6 +633,18 @@
       "notes": ""
     },
     {
+      "id": "italienisches-baguette",
+      "title": "Italienisches Baguette",
+      "category": "Ist das Kochen?",
+      "time": "",
+      "servings": "",
+      "emoji": "🥖",
+      "image": "data/images/italienisches-baguette-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": "Baguette mit Parmaschinken und Mozzarella"
+    },
+    {
       "id": "breakfast-wrap",
       "title": "Breakfast Wrap",
       "category": "Breakky",
@@ -633,6 +693,18 @@
       "notes": ""
     },
     {
+      "id": "granola",
+      "title": "Granola",
+      "category": "Breakky",
+      "time": "",
+      "servings": "",
+      "emoji": "🥣",
+      "image": "data/images/granola-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst"
+    },
+    {
       "id": "pfannkuchen",
       "title": "Klassische Pfannkuchen",
       "category": "Süßes",
@@ -655,6 +727,18 @@
         "Mit Apfelmus, Zimtzucker oder Nutella servieren."
       ],
       "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen."
+    },
+    {
+      "id": "milchreis",
+      "title": "Milchreis mit Zimt",
+      "category": "Süßes",
+      "time": "",
+      "servings": "",
+      "emoji": "🍚",
+      "image": "data/images/milchreis-1783240941.jpg",
+      "ingredients": [],
+      "steps": [],
+      "notes": ""
     }
   ]
 }
