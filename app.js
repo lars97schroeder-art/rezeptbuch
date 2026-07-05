@@ -290,8 +290,8 @@ function tinderCardHTML(r, cls) {
       <div class="t-title">${esc(r.title)}</div>
       <div class="t-meta">${esc([r.category, r.time].filter(Boolean).join(' · '))}</div>
     </div>
-    <div class="t-badge like">Will ich! 😍</div>
-    <div class="t-badge nope">Nö 🙅</div>
+    <div class="t-badge like">WILL ICH 😍</div>
+    <div class="t-badge nope">NÖ 🙅</div>
   </div>`;
 }
 
@@ -331,10 +331,14 @@ function swipeTinder(dir) {
 }
 
 function flyOut(card, dir) {
-  card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+  // Passenden Stempel groß einblenden, dann Karte rausfliegen lassen
+  const badge = card.querySelector(dir > 0 ? '.t-badge.like' : '.t-badge.nope');
+  badge.style.opacity = 1;
+  badge.style.transform = `rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
+  card.style.transition = 'transform 0.35s ease, opacity 0.35s ease';
   card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
   card.style.opacity = '0';
-  setTimeout(() => swipeTinder(dir), 260);
+  setTimeout(() => swipeTinder(dir), 300);
 }
 
 function attachSwipe(card, onSwipe) {
@@ -355,8 +359,18 @@ function attachSwipe(card, onSwipe) {
     dx = e.clientX - startX;
     const dy = e.clientY - startY;
     card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 12}deg)`;
-    badgeLike.style.opacity = Math.min(1, Math.max(0, dx / 80));
-    badgeNope.style.opacity = Math.min(1, Math.max(0, -dx / 80));
+    // Stempel wächst und wird kräftiger, je weiter man zieht (wie bei Tinder)
+    const p = Math.min(1, Math.abs(dx) / 100);
+    const scale = 0.6 + 0.55 * p;
+    if (dx > 0) {
+      badgeLike.style.opacity = p;
+      badgeLike.style.transform = `rotate(-14deg) scale(${scale})`;
+      badgeNope.style.opacity = 0;
+    } else {
+      badgeNope.style.opacity = p;
+      badgeNope.style.transform = `rotate(14deg) scale(${scale})`;
+      badgeLike.style.opacity = 0;
+    }
   });
 
   const end = () => {

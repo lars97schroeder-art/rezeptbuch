@@ -436,29 +436,34 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
 
 .t-badge {
   position: absolute;
-  top: 24px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 18px;
+  top: 28px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 29px;
+  letter-spacing: 1px;
   opacity: 0;
-  border: 3px solid;
-  background: var(--card);
+  border: 5px solid;
+  background: rgba(255, 255, 255, 0.75);
   pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  white-space: nowrap;
 }
 
 .t-badge.like {
-  left: 16px;
+  left: 14px;
   color: #2f9e44;
   border-color: #2f9e44;
-  transform: rotate(-12deg);
+  transform: rotate(-14deg) scale(0.6);
+  transform-origin: top left;
 }
 
 .t-badge.nope {
-  right: 16px;
+  right: 14px;
   color: #c0392b;
   border-color: #c0392b;
-  transform: rotate(12deg);
+  transform: rotate(14deg) scale(0.6);
+  transform-origin: top right;
 }
 
 .tinder-buttons {
