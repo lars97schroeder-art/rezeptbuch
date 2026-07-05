@@ -15,13 +15,17 @@
 <body>
 <header>
   <div class="topbar">
-    <h1>Schrödamskis Schlemmerliste 👨🏻‍🍳👩🏼‍🍳</h1>
+    <button id="mode-btn" aria-label="Bereich wechseln">
+      <h1>Schrödamskis Schlemmerliste 👨🏻‍🍳👩🏼‍🍳</h1>
+      <span id="mode-label"></span>
+    </button>
     <div class="actions">
       <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder">🔥</button>
       <button id="btn-random" title="Zufallsrezept" aria-label="Zufallsrezept">🎲</button>
       <button id="btn-update" title="Aktualisieren" aria-label="Aktualisieren">⟳</button>
     </div>
   </div>
+  <div id="mode-menu" hidden></div>
   <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
   <nav id="chips" aria-label="Kategorien"></nav>
 </header>

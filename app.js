@@ -12,9 +12,23 @@ const CATEGORY_EMOJI = {
   'Fleisch': '🥩', 'Fisch': '🐟', 'Vegetarisch': '🥦', 'Backen': '🥐',
 };
 
+// Drei Welten: umschaltbar per Tipp auf den Titel
+const MODE_KEY = 'rezeptbuch-mode';
+const MODES = {
+  fruehstueck: { label: 'Frühstück', emoji: '🥐' },
+  kochen: { label: 'Kochen', emoji: '🍳' },
+  backen: { label: 'Backen', emoji: '🧁' },
+};
+
 let data = { version: 0, updated: '', recipes: [] };
 let activeCategory = 'Alle';
 let query = '';
+let mode = localStorage.getItem(MODE_KEY) || 'kochen';
+if (!MODES[mode]) mode = 'kochen';
+
+function recipeMode(r) {
+  return r.bereich || 'kochen';
+}
 
 const $ = s => document.querySelector(s);
 
@@ -86,7 +100,8 @@ async function update(showErrors = true) {
 /* ---------- Anzeige ---------- */
 
 function categories() {
-  const cats = [...new Set(data.recipes.map(r => r.category).filter(Boolean))];
+  const inMode = data.recipes.filter(r => recipeMode(r) === mode);
+  const cats = [...new Set(inMode.map(r => r.category).filter(Boolean))];
   cats.sort((a, b) => a.localeCompare(b, 'de'));
   return ['Alle', ...cats];
 }
@@ -94,6 +109,7 @@ function categories() {
 function filtered() {
   const q = query.trim().toLowerCase();
   return data.recipes.filter(r => {
+    if (recipeMode(r) !== mode) return false;
     if (activeCategory !== 'Alle' && r.category !== activeCategory) return false;
     if (!q) return true;
     const hay = [r.title, r.category, ...(r.ingredients || [])].join(' ').toLowerCase();
@@ -466,6 +482,42 @@ $('#search').addEventListener('input', e => {
   render();
 });
 
+/* ---------- Bereichs-Umschalter (Frühstück / Kochen / Backen) ---------- */
+
+function renderModeUI() {
+  $('#mode-label').textContent = `${MODES[mode].emoji} ${MODES[mode].label} ▾`;
+  const menu = $('#mode-menu');
+  menu.innerHTML = '';
+  for (const [key, m] of Object.entries(MODES)) {
+    const b = document.createElement('button');
+    b.className = key === mode ? 'active' : '';
+    b.textContent = `${m.emoji} ${m.label}`;
+    b.onclick = () => {
+      mode = key;
+      localStorage.setItem(MODE_KEY, mode);
+      activeCategory = 'Alle';
+      menu.hidden = true;
+      renderModeUI();
+      render();
+    };
+    menu.appendChild(b);
+  }
+}
+
+$('#mode-btn').onclick = e => {
+  e.stopPropagation();
+  const menu = $('#mode-menu');
+  menu.hidden = !menu.hidden;
+};
+
+// Tipp irgendwo anders hin schließt das Menü
+document.addEventListener('click', e => {
+  if (!e.target.closest('#mode-menu') && !e.target.closest('#mode-btn')) {
+    $('#mode-menu').hidden = true;
+  }
+});
+
+renderModeUI();
 loadLocal();
 render();
 if (!data.recipes.length) update(false); // Erststart: still versuchen zu laden

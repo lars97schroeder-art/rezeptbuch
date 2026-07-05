@@ -51,6 +51,59 @@ header {
 
 h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
 
+#mode-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#mode-label {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#mode-menu {
+  position: absolute;
+  z-index: 15;
+  margin-top: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(80, 40, 10, 0.2);
+  overflow: hidden;
+  min-width: 200px;
+}
+
+#mode-menu button {
+  display: block;
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+#mode-menu button:last-child { border-bottom: none; }
+
+#mode-menu button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .actions { display: flex; gap: 8px; }
 
 .actions button {

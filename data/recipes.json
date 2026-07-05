@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "updated": "2026-07-04",
   "recipes": [
     {
@@ -647,62 +647,67 @@
     {
       "id": "breakfast-wrap",
       "title": "Breakfast Wrap",
-      "category": "Breakky",
+      "category": "",
       "time": "",
       "servings": "",
       "emoji": "🌯",
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "fruehstueck"
     },
     {
       "id": "maxvorstadt-sandwich",
       "title": "Maxvorstadt Sandwich",
-      "category": "Breakky",
+      "category": "",
       "time": "",
       "servings": "",
       "emoji": "🥪",
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "fruehstueck"
     },
     {
       "id": "many-man",
       "title": "Many Man",
-      "category": "Breakky",
+      "category": "",
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "fruehstueck"
     },
     {
       "id": "strammer-max-nach-annikas-art",
       "title": "Strammer Max nach Annikas Art",
-      "category": "Breakky",
+      "category": "",
       "time": "",
       "servings": "",
       "emoji": "🍞",
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "fruehstueck"
     },
     {
       "id": "granola",
       "title": "Granola",
-      "category": "Breakky",
+      "category": "",
       "time": "",
       "servings": "",
       "emoji": "🥣",
       "image": "data/images/granola-1783240941.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst"
+      "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
+      "bereich": "fruehstueck"
     },
     {
       "id": "pfannkuchen",
@@ -739,6 +744,19 @@
       "ingredients": [],
       "steps": [],
       "notes": ""
+    },
+    {
+      "id": "kaesekuchen",
+      "title": "Käsekuchen",
+      "category": "Kuchen",
+      "time": "",
+      "servings": "",
+      "emoji": "🍰",
+      "image": "",
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "backen"
     }
   ]
 }
