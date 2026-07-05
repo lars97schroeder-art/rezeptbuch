@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "updated": "2026-07-04",
   "recipes": [
     {
@@ -301,7 +301,7 @@
       "time": "",
       "servings": "",
       "emoji": "🍖",
-      "image": "data/images/spareribs-1783240941.jpg",
+      "image": "data/images/spareribs-1783243065.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
