@@ -22,6 +22,11 @@ function emojiFor(recipe) {
   return recipe.emoji || CATEGORY_EMOJI[recipe.category] || '🍽️';
 }
 
+// Titel mit Emoji dahinter, z. B. "Pizzaaaaa 🍕" (nur bei eigenem Emoji)
+function titleWithEmoji(recipe) {
+  return esc(recipe.title) + (recipe.emoji ? ' ' + esc(recipe.emoji) : '');
+}
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -158,7 +163,7 @@ function render() {
       const info = document.createElement('div');
       info.className = 'info';
       const meta = [r.category, r.time].filter(Boolean).join(' · ');
-      info.innerHTML = `<div class="title">${esc(r.title)}</div>` +
+      info.innerHTML = `<div class="title">${titleWithEmoji(r)}</div>` +
         (meta ? `<div class="meta">${esc(meta)}</div>` : '');
       card.appendChild(info);
       card.onclick = () => openRecipe(r.id);
@@ -198,7 +203,7 @@ function renderGroup(name) {
             ${m.image
               ? `<img src="${esc(m.image)}" alt="">`
               : `<span class="v-emoji">${emojiFor(m)}</span>`}
-            <span class="v-text">${esc(m.title)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
+            <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
             <span class="v-arrow">›</span>
           </button>`).join('')}
       </div>
@@ -223,7 +228,7 @@ function renderDetail(id, opts = {}) {
       ? `<img class="detail-photo" src="${esc(r.image)}" alt="">`
       : `<div class="detail-photo placeholder">${emojiFor(r)}</div>`}
     <div class="detail-body">
-      <h2>${esc(r.title)}</h2>
+      <h2>${titleWithEmoji(r)}</h2>
       ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
       ${(r.ingredients || []).length ? `<h3>Zutaten</h3>
         <ul>${r.ingredients.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
@@ -287,7 +292,7 @@ function tinderCardHTML(r, cls) {
       ? `<img src="${esc(r.image)}" alt="" draggable="false">`
       : `<div class="t-emoji">${emojiFor(r)}</div>`}
     <div class="t-info">
-      <div class="t-title">${esc(r.title)}</div>
+      <div class="t-title">${titleWithEmoji(r)}</div>
       <div class="t-meta">${esc([r.category, r.time].filter(Boolean).join(' · '))}</div>
     </div>
     <div class="t-badge like">WILL ICH 😍</div>
@@ -412,7 +417,7 @@ function renderTinderResult(ids) {
             ${m.image
               ? `<img src="${esc(m.image)}" alt="">`
               : `<span class="v-emoji">${emojiFor(m)}</span>`}
-            <span class="v-text">${esc(m.title)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
+            <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
             <span class="v-arrow">›</span>
           </button>`).join('')}
       </div>
