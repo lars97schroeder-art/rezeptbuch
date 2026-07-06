@@ -1,8 +1,8 @@
 'use strict';
 
-// APP-FUNKTIONALITÄTS-VERSION: erhöhen bei JEDER Änderung (unabhängig von Rezepten!)
-// Format: YYYYMMDD-HHMM (z.B. 20260707-1930)
-const APP_BUILD_VERSION = '20260706-2007';
+// FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
+// ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
+const APP_BUILD_TIME = '2026-07-06T20:20:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -456,6 +456,7 @@ function openWeekplan() {
 }
 
 const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
+const WEEKPLAN_UPDATED_KEY = 'rezeptbuch-weekplan-updated';
 
 function getWeekplan() {
   try {
@@ -483,6 +484,8 @@ function getWeekplan() {
 
 function saveWeekplan(plan) {
   localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(plan));
+  // Daten-Timestamp der Wochenplan-Einträge (ISO, gleiche Logik wie bei den Rezepten)
+  localStorage.setItem(WEEKPLAN_UPDATED_KEY, new Date().toISOString());
 }
 
 let draggedTag = null;
@@ -1592,15 +1595,18 @@ document.addEventListener('click', e => {
   let shouldReload = false;
   let reloadReason = '';
 
-  // 1. Überprüfe APP-VERSION (Funktionalitäten, nicht Rezepte!)
-  const lastAppVersion = localStorage.getItem(LAST_APP_VERSION_KEY);
-  if (lastAppVersion !== APP_BUILD_VERSION) {
+  // 1. FUNKTIONALITÄTEN-CHECK: App allgemein, Wochenplan, Tindern (alles Code in app.js)
+  // Vergleich über ISO-Parsing: altes/ungültiges Format ergibt NaN und triggert damit automatisch ein Update
+  const lastBuildTime = new Date(localStorage.getItem(LAST_APP_VERSION_KEY)).getTime();
+  const currentBuildTime = new Date(APP_BUILD_TIME).getTime();
+  if (lastBuildTime !== currentBuildTime) {
     shouldReload = true;
-    reloadReason = `App-Version geändert: ${lastAppVersion} → ${APP_BUILD_VERSION}`;
+    reloadReason = `Funktionalitäten geändert: ${localStorage.getItem(LAST_APP_VERSION_KEY)} → ${APP_BUILD_TIME}`;
     console.log('🔄 FORCE-REFRESH: ' + reloadReason);
   }
 
-  // 2. Überprüfe REZEPTE-TIMESTAMP (falls App-Version gleich)
+  // 2. DATEN-CHECK: Rezepte-Timestamp vom Server (falls Funktionalitäten gleich)
+  // Wochenplan-Einträge sind rein lokal (rezeptbuch-weekplan) und werden bei Reloads nie angetastet
   if (!shouldReload) {
     try {
       const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
@@ -1630,7 +1636,7 @@ document.addEventListener('click', e => {
   if (shouldReload) {
     console.log('  Grund:', reloadReason);
     localStorage.removeItem(DATA_KEY);
-    localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_VERSION);
+    localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_TIME);
 
     // Service Worker unregistrieren
     if ('serviceWorker' in navigator) {
@@ -1655,7 +1661,7 @@ document.addEventListener('click', e => {
   }
 
   // Speichere aktuelle App-Version
-  localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_VERSION);
+  localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_TIME);
 
   // Wenn KEIN Update: normal laden
   renderModeUI();
