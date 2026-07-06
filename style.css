@@ -942,12 +942,28 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   max-width: 700px;
   margin: 0 auto;
   padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 40px);
+  padding-left: clamp(20px, 12vw, 60px);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 .ed-body h2 { font-size: 22px; }
+
+.ed-close {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 12px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 26;
+}
 
 .ed-text { font-size: 15px; line-height: 1.5; color: var(--muted); }
 

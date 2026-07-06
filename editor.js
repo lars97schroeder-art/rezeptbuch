@@ -147,6 +147,7 @@ function openEditor(id) {
 
   const el = edEl();
   el.innerHTML = `
+  <button class="detail-close ed-close" aria-label="Zurück">←</button>
   <div class="ed-body">
     <h2>${r ? 'Rezept bearbeiten' : 'Neues Rezept'}</h2>
     <div class="ed-field"><label>Titel *</label>
@@ -199,6 +200,8 @@ function openEditor(id) {
   renderGroupsContainer();
 
   renderEdPhotos();
+  el.querySelector('.ed-close').onclick = closeEditor;
+
   $('#ed-photo-input').onchange = async e => {
     for (const file of e.target.files) {
       try { edNeu.push(await resizePhoto(file)); }
