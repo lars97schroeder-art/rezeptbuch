@@ -506,28 +506,28 @@ function spinSlot(winners) {
   btn.disabled = true;
   btn.textContent = '⏳ …';
 
-  // Slot-Machine-Animation: schnell durchdrehen, dann abbremsen
-  const spins = 30 + Math.random() * 20;
   const pick = Math.floor(Math.random() * winners.length);
-  const duration = 1500;
   let count = 0;
+  const maxSpins = 25 + Math.random() * 15;
 
   const animate = () => {
-    if (count < spins) {
+    if (count < maxSpins) {
       const offset = ((count % winners.length) * -120);
       slots.style.transform = `translateY(${offset}px)`;
       slots.style.transition = 'none';
       count++;
-      setTimeout(animate, 40 + count * 2);
+      const delay = Math.min(60, 30 + count * 3);
+      setTimeout(animate, delay);
     } else {
+      // Final spin zur gewählten Position
       const offset = (pick * -120);
-      slots.style.transition = `transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)`;
+      slots.style.transition = `transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)`;
       slots.style.transform = `translateY(${offset}px)`;
       setTimeout(() => {
         btn.textContent = '✨ ' + titleWithEmoji(winners[pick]);
         btn.disabled = false;
         btn.onclick = () => openRecipe(winners[pick].id);
-      }, 650);
+      }, 750);
     }
   };
   animate();
