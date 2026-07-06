@@ -1,5 +1,5 @@
 {
-  "version": 34,
+  "version": 35,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -811,6 +811,22 @@
       "steps": [],
       "notes": "",
       "bereich": "backen"
+    },
+    {
+      "id": "weisswurst",
+      "title": "Weißwurst",
+      "category": "",
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/weisswurst-1783328545-0.jpg",
+      "images": [
+        "data/images/weisswurst-1783328545-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "O’zapft is",
+      "bereich": "fruehstueck"
     },
     {
       "id": "pfannkuchen",
