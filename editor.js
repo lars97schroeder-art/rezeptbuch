@@ -9,6 +9,12 @@ const TOKEN_KEY = 'rezeptbuch-token';
 
 const ghToken = () => localStorage.getItem(TOKEN_KEY) || '';
 
+window.clearToken = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  render();
+  toast('Token entfernt');
+};
+
 /* ---------- GitHub-API ---------- */
 
 function ghHeaders() {

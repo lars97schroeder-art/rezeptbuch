@@ -72,8 +72,6 @@ function saveLocal() {
 /* ---------- Aktualisieren ---------- */
 
 async function update(showErrors = true) {
-  const btn = $('#btn-update');
-  btn.classList.add('spinning');
   try {
     const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -106,7 +104,9 @@ async function update(showErrors = true) {
   } catch (e) {
     if (showErrors) toast('Keine Verbindung – gespeicherte Rezepte bleiben da 📴');
   } finally {
-    btn.classList.remove('spinning');
+    // Letztes Update-Datum speichern
+    const now = new Date().toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem(LAST_UPDATE_KEY, now);
   }
 }
 
@@ -547,7 +547,87 @@ function toast(msg) {
 
 /* ---------- Start ---------- */
 
-$('#btn-update').onclick = () => update();
+/* ---------- Einstellungen ---------- */
+
+const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
+
+function openSettings() {
+  const hasToken = ghToken && ghToken();
+  const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
+  const editMode = hasToken;
+
+  const el = $('#editor'); // Reuse editor div für Modal
+  el.innerHTML = `
+  <div class="ed-body settings-body">
+    <h2>⚙️ Einstellungen</h2>
+
+    <div class="settings-section">
+      <h3>Bearbeiten</h3>
+      <div class="settings-row">
+        <label class="setting-label">
+          <input type="checkbox" id="edit-toggle" ${editMode ? 'checked' : ''}>
+          <span>Bearbeitungsmodus aktiviert</span>
+        </label>
+        <div class="setting-hint">Token wird verwendet, um Rezepte zu bearbeiten</div>
+      </div>
+      ${editMode ? `<button class="setting-btn" id="clear-token">Token entfernen</button>` : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
+    </div>
+
+    <div class="settings-section">
+      <h3>Datenbank</h3>
+      <button class="setting-btn primary" id="refresh-btn">⟳ Aktualisieren</button>
+      <div class="setting-info">
+        <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>
+        <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
+        <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
+      </div>
+    </div>
+
+    <button class="ed-cancel">Schließen</button>
+  </div>`;
+
+  el.querySelector('.ed-cancel').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };
+
+  const editToggle = el.querySelector('#edit-toggle');
+  if (editToggle) {
+    editToggle.onchange = () => {
+      if (editToggle.checked) {
+        // Settings-Dialog schließen und Token-Setup öffnen
+        el.hidden = true;
+        document.body.style.overflow = '';
+        if (window.openTokenSetup) window.openTokenSetup();
+      } else {
+        // Token entfernen
+        if (window.clearToken) {
+          window.clearToken();
+          el.hidden = true;
+          document.body.style.overflow = '';
+        }
+      }
+    };
+  }
+
+  el.querySelector('#clear-token')?.addEventListener('click', () => {
+    if (window.clearToken) {
+      window.clearToken();
+      openSettings();
+    }
+  });
+
+  el.querySelector('#setup-token')?.addEventListener('click', () => {
+    el.hidden = true;
+    document.body.style.overflow = '';
+    if (window.openTokenSetup) window.openTokenSetup();
+  });
+
+  el.querySelector('#refresh-btn').onclick = () => update();
+
+  el.hidden = false;
+  el.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+$('#btn-settings').onclick = openSettings;
 
 $('#btn-tinder').onclick = () => {
   if (filtered().length < 2) return toast('Zu wenige Rezepte zum Tindern 🤷');
