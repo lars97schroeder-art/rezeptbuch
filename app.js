@@ -649,24 +649,37 @@ function attachTagHandlers(selectedDiv, dayKey) {
     tag.ontouchend = (e) => {
       if (!dragGhost) return;
 
-      // Finde Tag unter der aktuellen Position
       const endY = e.changedTouches[0].clientY;
       const endX = e.changedTouches[0].clientX;
-      const element = document.elementFromPoint(endX, endY);
-      const targetDay = element?.closest('.weekplan-day')?.dataset.day;
 
-      // Cleanup
+      // Cleanup Ghost ZUERST damit elementFromPoint nicht den Ghost findet
       dragGhost.remove();
       dragGhost = null;
-      draggedElement.style.opacity = '1';
 
-      // Verschiebe wenn anderer Tag gefunden
-      if (targetDay && targetDay !== dayKey) {
-        performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
-      }
+      // Warte kurz damit Ghost weg ist
+      setTimeout(() => {
+        // Finde Tag unter der aktuellen Position
+        let element = document.elementFromPoint(endX, endY);
+        let targetDay = element?.closest('.weekplan-day')?.dataset.day;
 
-      draggedTag = null;
-      draggedElement = null;
+        // Fallback: Wenn nichts gefunden, versuch die .weekplan-day direkt
+        if (!targetDay) {
+          element = document.elementFromPoint(endX, endY);
+          const dayEl = element?.closest('.weekplan-day');
+          targetDay = dayEl?.dataset.day;
+        }
+
+        draggedElement.style.opacity = '1';
+
+        // Verschiebe wenn anderer Tag gefunden
+        if (targetDay && targetDay !== dayKey) {
+          console.log('Verschiebe von', dayKey, 'zu', targetDay);
+          performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
+        }
+
+        draggedTag = null;
+        draggedElement = null;
+      }, 50);
     };
   }
 }
