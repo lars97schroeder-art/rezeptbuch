@@ -1285,39 +1285,50 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = async () => {
-    showToastWithoutTimeout('🔄 Überprüfe Updates...');
+    showToastWithoutTimeout('🔄 Cache wird geleert und Updates werden geprüft...');
     try {
-      // Lade frische Version vom Server zum Vergleichen
+      // SCHRITT 1: Lösche Cache VOR dem Update
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('✓ Alle Caches gelöscht');
+      }
+
+      // SCHRITT 2: Unregister alte Service Workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        registrations.forEach(reg => reg.unregister());
+        console.log('✓ Service Worker unregistriert');
+      }
+
+      // SCHRITT 3: Lade frische Version vom Server zum Vergleichen
       const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const fresh = await res.json();
 
-      // Auto-Check: Rezepte auf Updates prüfen (nur veraltete updaten)
+      // SCHRITT 4: Auto-Check: Rezepte auf Updates prüfen
       const hasUpdates = await checkAndUpdateIfNeeded();
 
-      // Service Worker Update checken
+      // SCHRITT 5: Service Worker Update checken (neue registrieren)
       if ('serviceWorker' in navigator) {
         try {
-          const reg = await navigator.serviceWorker.getRegistration();
-          if (reg) {
-            await reg.update();
-            console.log('✓ Service Worker Update geprüft');
-          }
+          await navigator.serviceWorker.register('/sw.js');
+          console.log('✓ Service Worker neu registriert');
         } catch (e) {
-          console.log('Service Worker Update Check fehlgeschlagen:', e);
+          console.log('Service Worker registrieren fehlgeschlagen:', e);
         }
       }
 
-      // Speichere Version + Timestamp um zu prüfen ob richtige Version geladen wurde
+      // Speichere Version + Timestamp
       localStorage.setItem(APP_VERSION_KEY, fresh.version + '@' + new Date().toISOString());
 
       // Feedback
       if (hasUpdates) {
-        toast('✅ Updates verfügbar - v' + fresh.version);
+        toast('✅ Cache geleert & Updates geladen - v' + fresh.version);
       } else if (fresh.version !== data.version) {
-        toast('⚠️ Neue Version v' + fresh.version + ' verfügbar (Cache könnte alt sein)');
+        toast('✅ Cache geleert! Neue Version v' + fresh.version + ' verfügbar');
       } else {
-        toast('✅ Alles auf aktuellem Stand');
+        toast('✅ Cache geleert - alles auf aktuellem Stand (v' + fresh.version + ')');
       }
     } catch (err) {
       console.error('Update-Fehler:', err);
