@@ -596,6 +596,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 .t-badge {
+  display: none; /* Verstecke die großen Stempel - nutze stattdessen t-card-badge-text */
   position: absolute;
   top: 50%;
   left: 50%;
