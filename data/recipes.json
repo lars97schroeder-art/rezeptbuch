@@ -1,5 +1,5 @@
 {
-  "version": 30,
+  "version": 31,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -194,10 +194,14 @@
       "time": "",
       "servings": "",
       "emoji": "🎃",
-      "image": "",
+      "image": "data/images/kuerbispasta-mit-unternehmensburrata-1783327827-0.jpg",
+      "images": [
+        "data/images/kuerbispasta-mit-unternehmensburrata-1783327827-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "lasagne",
