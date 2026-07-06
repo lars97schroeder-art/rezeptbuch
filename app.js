@@ -1447,8 +1447,10 @@ function openSettings() {
         `;
         document.body.appendChild(reloadDialog);
 
-        document.getElementById('reload-now').onclick = () => {
-          location.reload(true);
+        document.getElementById('reload-now').onclick = async () => {
+          // Totales Reload mit URL Parameter um HTTP Cache zu umgehen
+          const randomParam = '?t=' + Date.now() + '&r=' + Math.random();
+          window.location.href = window.location.pathname + randomParam;
         };
       } else {
         toast('✅ Alles auf aktuellem Stand');
