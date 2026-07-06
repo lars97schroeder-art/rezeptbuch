@@ -719,6 +719,56 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   font-size: 32px;
 }
 
+/* Foto-Preview für Tindern */
+.tinder-photo-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.preview-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.preview-emoji {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  background: var(--accent-soft);
+}
+
+.preview-title {
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .slot-buttons {
   display: flex;
   flex-direction: column;
@@ -942,7 +992,7 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   display: block;
   width: 100%;
   padding: 12px;
-  margin: 12px 0;
+  margin: 8px 0;
   border: none;
   border-radius: 12px;
   background: var(--accent-soft);
@@ -957,6 +1007,8 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   background: var(--accent);
   color: #fff;
   font-size: 16px;
+  padding: 14px;
+  margin: 0 0 10px 0;
 }
 
 .setting-info {
