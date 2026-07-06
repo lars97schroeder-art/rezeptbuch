@@ -64,10 +64,14 @@ function loadLocal() {
     if (raw) {
       data = JSON.parse(raw);
 
-      // AUTO-RECOVERY: Wenn alte Version erkannt, sofort löschen + Reload erzwingen
-      if (data.version && parseFloat(data.version) < 3.3) {
-        console.error('🚨 ALTE VERSION ERKANNT:', data.version);
-        console.log('🔄 Lösche alte Daten und lade neu...');
+      // AUTO-RECOVERY: Wenn alte/kaputte Version erkannt, sofort löschen + Reload erzwingen
+      // Kaputt = nicht exakt '3.3' (auch 3.3111, 3.0, etc sind kaputt)
+      const expectedVersion = '3.3';
+      const hasCorruptVersion = data.version && data.version !== expectedVersion;
+
+      if (hasCorruptVersion) {
+        console.error('🚨 KAPUTTE VERSION ERKANNT:', data.version, '(erwartet: ' + expectedVersion + ')');
+        console.log('🔄 Lösche kaputte Daten und lade neu...');
         localStorage.removeItem(DATA_KEY);
         // Erzwinge Neuload aller Caches
         if ('serviceWorker' in navigator) {
