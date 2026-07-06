@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T18:55:44.789Z",
+  "updated": "2026-07-06T20:19:33.576Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -508,14 +508,21 @@
     {
       "id": "sellerieschnitzel",
       "title": "Sellerieschnitzel",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/sellerieschnitzel-1783369170-0.jpg",
+      "images": [
+        "data/images/sellerieschnitzel-1783369170-0.jpg",
+        "data/images/sellerieschnitzel-1783369170-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Auf dem Foto mit süßkartoffelpüree",
+      "bereich": "kochen"
     },
     {
       "id": "bratwuerste-mit-sauerkraut",
