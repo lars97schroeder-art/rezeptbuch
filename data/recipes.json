@@ -1,6 +1,6 @@
 {
-  "version": 11,
-  "updated": "2026-07-05",
+  "version": 12,
+  "updated": "2026-07-06",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -10,9 +10,17 @@
       "servings": "",
       "emoji": "🧀",
       "image": "data/images/kaesespaetzle-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/kaesespaetzle-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Spätzle",
+        "Käse",
+        "Zwiebeln oder Röstzwiebeln"
+      ],
       "steps": [],
       "notes": "",
+      "bereich": "kochen",
       "group": "Spätzle"
     },
     {
