@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:04:35.159Z",
+  "updated": "2026-07-06T22:05:19.593Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1108,6 +1108,24 @@
       "emoji": "",
       "image": "",
       "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "zucchini-puffer",
+      "title": "Zucchini Puffer",
+      "category": [
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/zucchini-puffer-1783375518-0.jpg",
+      "images": [
+        "data/images/zucchini-puffer-1783375518-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
       "notes": "",
