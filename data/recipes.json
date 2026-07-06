@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:13:32.289Z",
+  "updated": "2026-07-06T21:13:57.991Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -686,14 +686,20 @@
     {
       "id": "zwiebelkuchen",
       "title": "Zwiebelkuchen",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🧅",
-      "image": "",
+      "image": "data/images/zwiebelkuchen-1783372436-0.jpg",
+      "images": [
+        "data/images/zwiebelkuchen-1783372436-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "shakshuka",
