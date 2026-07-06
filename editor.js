@@ -152,7 +152,7 @@ function openEditor(id) {
   const r = id ? data.recipes.find(x => x.id === id) : null;
   edKeep = r ? [...imagesOf(r)] : [];
   edNeu = [];
-  const cats = [...new Set(data.recipes.map(x => x.category).filter(Boolean))];
+  const cats = [...new Set(data.recipes.flatMap(x => Array.isArray(x.category) ? x.category : (x.category ? [x.category] : [])).filter(Boolean))];
   const groups = [...new Set(data.recipes.map(x => x.group).filter(Boolean))];
   const bereich = r ? (r.bereich || 'kochen') : mode;
 
@@ -293,9 +293,10 @@ async function saveFromEditor(existingId) {
     if (old) {
       remote.recipes[remote.recipes.indexOf(old)] = recipe;
     } else {
-      // ans Ende der eigenen Kategorie einsortieren
+      // ans Ende der eigenen Kategorie einsortieren (erste Kategorie zählt, String oder Array)
+      const firstCat = x => Array.isArray(x.category) ? x.category[0] : x.category;
       let idx = -1;
-      remote.recipes.forEach((r, i) => { if (r.category === recipe.category) idx = i; });
+      remote.recipes.forEach((r, i) => { if (firstCat(r) && firstCat(r) === firstCat(recipe)) idx = i; });
       if (idx >= 0) remote.recipes.splice(idx + 1, 0, recipe);
       else remote.recipes.push(recipe);
     }

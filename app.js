@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-06T20:20:00+02:00';
+const APP_BUILD_TIME = '2026-07-06T20:26:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -39,8 +39,18 @@ function recipeMode(r) {
 
 const $ = s => document.querySelector(s);
 
+// Kategorien immer als Array behandeln: der Editor speichert Arrays, ältere Daten sind Strings
+function recipeCategories(r) {
+  if (Array.isArray(r.category)) return r.category.filter(Boolean);
+  return r.category ? [r.category] : [];
+}
+
+function categoryLabel(r) {
+  return recipeCategories(r).join(', ');
+}
+
 function emojiFor(recipe) {
-  return recipe.emoji || CATEGORY_EMOJI[recipe.category] || '🍽️';
+  return recipe.emoji || CATEGORY_EMOJI[recipeCategories(recipe)[0]] || '🍽️';
 }
 
 // Titel mit Emoji dahinter, z. B. "Pizzaaaaa 🍕" (nur bei eigenem Emoji)
@@ -214,11 +224,7 @@ async function update(showErrors = true) {
 
 function categories() {
   const inMode = data.recipes.filter(r => recipeMode(r) === mode);
-  const cats = [...new Set(inMode.map(r => {
-    // Handle both array and string categories
-    if (Array.isArray(r.category)) return r.category[0];
-    return r.category;
-  }).filter(Boolean))];
+  const cats = [...new Set(inMode.flatMap(r => recipeCategories(r)))];
   cats.sort((a, b) => String(a).localeCompare(String(b), 'de'));
   return ['Alle', ...cats];
 }
@@ -227,9 +233,9 @@ function filtered() {
   const q = query.trim().toLowerCase();
   return data.recipes.filter(r => {
     if (recipeMode(r) !== mode) return false;
-    if (activeCategory !== 'Alle' && r.category !== activeCategory) return false;
+    if (activeCategory !== 'Alle' && !recipeCategories(r).includes(activeCategory)) return false;
     if (!q) return true;
-    const hay = [r.title, r.category, ...(r.ingredients || [])].join(' ').toLowerCase();
+    const hay = [r.title, ...recipeCategories(r), ...(r.ingredients || [])].join(' ').toLowerCase();
     return hay.includes(q);
   });
 }
@@ -296,7 +302,7 @@ function render() {
         : `<div class="photo placeholder">${emojiFor(r)}</div>`;
       const info = document.createElement('div');
       info.className = 'info';
-      const meta = [r.category, r.time].filter(Boolean).join(' · ');
+      const meta = [categoryLabel(r), r.time].filter(Boolean).join(' · ');
       info.innerHTML = `<div class="title">${titleWithEmoji(r)}</div>` +
         (meta ? `<div class="meta">${esc(meta)}</div>` : '');
       card.appendChild(info);
@@ -388,7 +394,7 @@ function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
   const el = $('#detail');
-  const meta = [r.category, r.time, r.servings].filter(Boolean).join(' · ');
+  const meta = [categoryLabel(r), r.time, r.servings].filter(Boolean).join(' · ');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <button class="detail-home" aria-label="Startseite">🏠</button>
@@ -936,7 +942,7 @@ function tinderCardHTML(r, cls) {
       : `<div class="t-emoji">${emojiFor(r)}</div>`}
     <div class="t-info">
       <div class="t-title">${titleWithEmoji(r)}</div>
-      <div class="t-meta">${esc([r.category, r.time].filter(Boolean).join(' · '))}</div>
+      <div class="t-meta">${esc([categoryLabel(r), r.time].filter(Boolean).join(' · '))}</div>
     </div>
     <div class="t-badge like">WILL ICH 😍</div>
     <div class="t-badge nope">NÖ 🙅</div>
