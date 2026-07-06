@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0",
+  "version": "3.4.1",
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -625,14 +625,20 @@
     {
       "id": "shakshuka",
       "title": "Shakshuka",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍳",
       "image": "data/images/shakshuka-1783240941.jpg",
+      "images": [
+        "data/images/shakshuka-1783240941.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": "Eier in Tomatensoße, mit Käse überbacken – Brot dazu"
+      "notes": "Eier in Tomatensoße, mit Käse überbacken – Brot dazu",
+      "bereich": "fruehstueck"
     },
     {
       "id": "haehnchen-mit-gruenem-spargel",
