@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -200,11 +200,13 @@
       "category": "Pasta & Gnocchi",
       "time": "",
       "servings": "",
-      "emoji": "",
+      "emoji": "Gg",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "cannelloni",
