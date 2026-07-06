@@ -47,14 +47,24 @@
     {
       "id": "spitzkohlspaetzle",
       "title": "Spitzkohlspätzle",
-      "category": "Spätzle",
+      "category": [
+        "Spätzle"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Spätzle",
+        "Spitzkohl",
+        "Zwiebeln ?!?",
+        "Sahne ?",
+        "Fleiiiischhhhhh"
+      ],
       "steps": [],
       "notes": "Mit Hack oder Bacon",
+      "bereich": "kochen",
       "group": "Spätzle"
     },
     {
