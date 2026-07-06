@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:58:21.249Z",
+  "updated": "2026-07-06T22:03:47.144Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1139,6 +1139,22 @@
       "images": [
         "data/images/chicken-wings-2-1783373862-0.jpg",
         "data/images/chicken-wings-2-1783373862-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "weihnachtsgans",
+      "title": "Weihnachtsgans",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/weihnachtsgans-1783375425-0.jpg",
+      "images": [
+        "data/images/weihnachtsgans-1783375425-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
