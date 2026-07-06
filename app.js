@@ -497,7 +497,11 @@ function renderTinderResult(ids) {
         <div class="detail-meta">Wer gewinnt?</div>
 
         <div class="slot-machine" id="slot-container" style="display:none;">
-          <div class="slots">${winners.map(w => `<div class="slot-item">${titleWithEmoji(w)}</div>`).join('')}</div>
+          <div class="slots">${winners.map((w, i) => {
+            const degPerItem = 360 / winners.length;
+            const deg = i * degPerItem;
+            return `<div class="slot-item" style="transform: rotateX(${deg}deg) translateZ(300px);">${titleWithEmoji(w)}</div>`;
+          }).join('')}</div>
         </div>
 
         <div class="slot-buttons">
@@ -547,17 +551,20 @@ function spinSlot(winners) {
 
   const animate = () => {
     if (count < maxSpins) {
-      const offset = ((count % winners.length) * -itemHeight);
-      slots.style.transform = `translateY(${offset}px)`;
+      // Rad-Rotation: jedes Item ist 360/winners.length Grad
+      const degPerItem = 360 / winners.length;
+      const rotation = (count % winners.length) * degPerItem;
+      slots.style.transform = `rotateX(${rotation}deg)`;
       slots.style.transition = 'none';
       count++;
       const delay = Math.min(35, 15 + count * 1.5);
       setTimeout(animate, delay);
     } else {
-      // Final spin zur gewählten Position (Mitte ist immer sichtbar)
-      const offset = (pick * -itemHeight);
+      // Final spin zur gewählten Position
+      const degPerItem = 360 / winners.length;
+      const finalRotation = (pick * degPerItem) + (3 * 360); // 3 volle Umdrehungen + Ziel
       slots.style.transition = `transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)`;
-      slots.style.transform = `translateY(${offset}px)`;
+      slots.style.transform = `rotateX(${finalRotation}deg)`;
       setTimeout(() => {
         btn.textContent = '✨ ' + titleWithEmoji(winners[pick]);
         btn.disabled = false;
