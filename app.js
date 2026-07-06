@@ -106,14 +106,14 @@ async function update(showErrors = true) {
 
     // Check für neue Version
     if (fresh.version !== oldData.version) {
-      messages.push(`Update: v${fresh.version}`);
+      messages.push(`✅ Update: v${fresh.version}`);
     }
 
     // Check für neue/aktualisierte Rezepte
     const oldIds = new Set(oldData.recipes.map(r => r.id));
     const newRecipes = fresh.recipes.filter(r => !oldIds.has(r.id));
     if (newRecipes.length > 0) {
-      messages.push(`${newRecipes.length} neue ${newRecipes.length === 1 ? 'Rezept' : 'Rezepte'}`);
+      messages.push(`✅ ${newRecipes.length} neue ${newRecipes.length === 1 ? 'Rezept' : 'Rezepte'}`);
     }
 
     // Check für aktualisierte Rezepte
@@ -123,14 +123,14 @@ async function update(showErrors = true) {
       return old && JSON.stringify(old) !== JSON.stringify(r);
     });
     if (updatedRecipes.length > 0) {
-      messages.push(`${updatedRecipes.length} ${updatedRecipes.length === 1 ? 'Rezept aktualisiert' : 'Rezepte aktualisiert'}`);
+      messages.push(`✅ ${updatedRecipes.length} ${updatedRecipes.length === 1 ? 'Rezept aktualisiert' : 'Rezepte aktualisiert'}`);
     }
 
     // Zeige Nachricht an
     if (messages.length > 0) {
-      toast(messages.join('\n') + ' ✓');
+      toast(messages.join('\n'));
     } else {
-      toast('Alles schon aktuell ✓');
+      toast('✅ Alles schon aktuell');
     }
   } catch (e) {
     if (showErrors) toast('Keine Verbindung – gespeicherte Rezepte bleiben da 📴');
