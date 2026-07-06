@@ -176,6 +176,7 @@ async function update(showErrors = true) {
       toast('✅ Alles schon aktuell');
     }
   } catch (e) {
+    console.error('🔴 FEHLER in update():', e.message, e.stack);
     if (showErrors) toast('Keine Verbindung – gespeicherte Rezepte bleiben da 📴');
   } finally {
     // Letztes Update-Datum speichern
