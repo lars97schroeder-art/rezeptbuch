@@ -138,6 +138,11 @@ function renderEdPhotos() {
 }
 
 function openEditor(id) {
+  // Auto-Check: Falls bestehendes Rezept, checke auf Updates
+  if (id) {
+    window.checkAndUpdateIfNeeded?.();
+  }
+
   const r = id ? data.recipes.find(x => x.id === id) : null;
   edKeep = r ? [...imagesOf(r)] : [];
   edNeu = [];

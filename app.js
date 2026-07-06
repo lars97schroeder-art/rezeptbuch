@@ -107,6 +107,46 @@ function saveLocal() {
   }
 }
 
+// Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
+async function checkAndUpdateIfNeeded() {
+  try {
+    const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const fresh = await res.json();
+
+    // Vergleiche global updated Datum
+    if (fresh.updated === data.updated) {
+      console.log('✅ Rezepte sind aktuell');
+      return; // Nichts geändert
+    }
+
+    console.log('🔄 Neue Rezepte verfügbar (lokal:', data.updated, 'remote:', fresh.updated + ')');
+
+    // Finde geänderte Rezepte
+    const oldMap = new Map(data.recipes.map(r => [r.id, r]));
+    const updated = [];
+
+    for (const newRecipe of fresh.recipes) {
+      const oldRecipe = oldMap.get(newRecipe.id);
+      if (!oldRecipe || JSON.stringify(oldRecipe) !== JSON.stringify(newRecipe)) {
+        // Rezept ist neu oder geändert
+        updated.push(newRecipe.id);
+      }
+    }
+
+    if (updated.length > 0) {
+      // Update: ganze recipes ersetzen
+      data.recipes = fresh.recipes;
+      data.updated = fresh.updated;
+      saveLocal();
+      console.log('🔄 ' + updated.length + ' Rezept(e) aktualisiert: ' + updated.join(', '));
+      toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
+    }
+  } catch (e) {
+    console.log('ℹ️ Konnte nicht nach Updates prüfen (offline?)');
+  }
+}
+
 /* ---------- Aktualisieren ---------- */
 
 async function update(showErrors = true) {
@@ -293,6 +333,8 @@ function render() {
 function openRecipe(id, opts = {}) {
   renderDetail(id, opts);
   history.pushState({ view: 'recipe', id, random: !!opts.random }, '');
+  // Auto-Check im Hintergrund
+  checkAndUpdateIfNeeded();
 }
 
 function openGroup(name) {
@@ -441,6 +483,9 @@ function saveWeekplan(plan) {
 }
 
 function renderWeekplan() {
+  // Auto-Check im Hintergrund
+  checkAndUpdateIfNeeded();
+
   const el = $('#detail');
   const weekplan = getWeekplan();
   const days = [
@@ -1015,49 +1060,23 @@ function openSettings() {
   el.querySelector('#refresh-btn').onclick = async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
-      // Erst neue Rezepte vom Server checken
-      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const fresh = await res.json();
+      // Auto-Check: Rezepte auf Updates prüfen (nur veraltete updaten)
+      await checkAndUpdateIfNeeded();
 
-      // Checke ob es ein echtes Update gibt
-      const recipesUpdated = fresh.version !== data.version || fresh.recipes.length !== data.recipes.length;
-
-      // Checke ob neue Service Worker Version verfügbar ist
-      let swUpdated = false;
+      // Service Worker Update checken
       if ('serviceWorker' in navigator) {
         try {
           const reg = await navigator.serviceWorker.getRegistration();
           if (reg) {
-            const updateResult = await reg.update();
-            swUpdated = updateResult && updateResult.active && updateResult.installing;
-            console.log('Service Worker Update geprüft:', swUpdated ? 'neue Version da' : 'aktuell');
+            await reg.update();
+            console.log('✓ Service Worker Update geprüft');
           }
         } catch (e) {
           console.log('Service Worker Update Check fehlgeschlagen:', e);
         }
       }
 
-      // Nur wenn es ein echtes Update gibt (Rezepte ODER Service Worker)
-      if (recipesUpdated || swUpdated) {
-        console.log('📢 Update verfügbar - Rezepte:', recipesUpdated, 'Service Worker:', swUpdated);
-
-        // Cache nur löschen wenn Rezepte aktualisiert
-        if (recipesUpdated) {
-          const cacheNames = await caches.keys();
-          const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
-          await Promise.all(toDelete.map(name => caches.delete(name)));
-          console.log('✓ ' + toDelete.length + ' Cache(s) gelöscht (wegen Rezept-Update)');
-        }
-
-        // Rezepte neu laden (aber alte bleiben sichtbar während Update lädt)
-        await update(false);
-        console.log('✓ Update abgeschlossen');
-      } else {
-        console.log('✅ Bereits aktuell - kein Update nötig');
-        toast('✅ Alles schon aktuell');
-      }
-
+      toast('✅ Update abgeschlossen');
     } catch (err) {
       console.error('Update-Fehler:', err);
       toast('❌ Fehler: ' + err.message);
