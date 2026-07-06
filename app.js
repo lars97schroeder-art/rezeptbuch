@@ -513,6 +513,17 @@ function saveWeekplan(plan) {
   localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(plan));
 }
 
+function removeDayEntry(dayKey, entry, e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const idx = weekplan[dayKey].indexOf(entry);
+  if (idx > -1) {
+    weekplan[dayKey].splice(idx, 1);
+    saveWeekplan(weekplan);
+    e.target.closest('.weekplan-tag').remove();
+  }
+}
+
 let draggedTag = null;
 let draggedElement = null;
 let dragGhost = null;
@@ -716,7 +727,7 @@ function renderWeekplan() {
       }
 
       if (displayName) {
-        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}">${esc(displayName)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}">✕</button></span>`;
+        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}" onclick="event.target.closest('.weekplan-tag-remove') && removeDayEntry('${dayKey}', '${esc(entry)}', event)">${esc(displayName)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}" onclick="event.stopPropagation(); removeDayEntry('${dayKey}', '${esc(entry)}', event)">✕</button></span>`;
       }
     }
 
