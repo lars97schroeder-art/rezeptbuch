@@ -52,6 +52,26 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== location.origin) return;
 
+  // index.html: IMMER vom Netz (Network-First)
+  // Das ist KRITISCH um zu verhindern, dass alte Service Worker v3.1 alte index.html servieren
+  if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
+    event.respondWith((async () => {
+      try {
+        const res = await fetch(event.request, { cache: 'no-cache', cache: 'no-store' });
+        if (res.ok) {
+          const cache = await caches.open(SHELL_CACHE);
+          cache.put(event.request, res.clone());
+        }
+        return res;
+      } catch (err) {
+        // Fallback auf Cache wenn offline
+        const cache = await caches.open(SHELL_CACHE);
+        return await cache.match(event.request) || new Response('Offline', { status: 503 });
+      }
+    })());
+    return;
+  }
+
   // Rezeptfotos: erst Cache (fürs Offline-Kochen), sonst Netz + merken
   if (url.pathname.includes('/data/images/')) {
     event.respondWith((async () => {
@@ -68,7 +88,7 @@ self.addEventListener('fetch', event => {
   // recipes.json geht immer übers Netz – die App verwaltet ihre eigene Kopie
   if (url.pathname.endsWith('/data/recipes.json')) return;
 
-  // App-Dateien: sofort aus dem Cache, im Hintergrund frisch nachladen.
+  // App-Dateien (app.js, style.css, etc.): sofort aus dem Cache, im Hintergrund frisch nachladen.
   // "no-cache" umgeht den HTTP-Cache des Browsers (fragt beim Server nach),
   // sonst bleiben alte Versionen von app.js & Co. hängen.
   event.respondWith((async () => {
