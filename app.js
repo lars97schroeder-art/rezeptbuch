@@ -726,7 +726,28 @@ function openSettings() {
     if (window.openTokenSetup) window.openTokenSetup();
   });
 
-  el.querySelector('#refresh-btn').onclick = () => update();
+  el.querySelector('#refresh-btn').onclick = async () => {
+    toast('Aktualisiere App...');
+    try {
+      // Lösche alle Caches
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-')).map(name => caches.delete(name)));
+
+      // Update Service Worker
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) await reg.update();
+      }
+
+      // Update Datenbank
+      await update();
+
+      // Neu laden
+      setTimeout(() => location.reload(), 500);
+    } catch (err) {
+      toast('Fehler beim Update: ' + err.message);
+    }
+  };
 
   // Theme-Switcher
   for (const radio of el.querySelectorAll('input[name="theme"]')) {
