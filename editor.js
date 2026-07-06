@@ -376,20 +376,24 @@ function openTokenSetup() {
 
 /* ---------- Anbindung an die App ---------- */
 
-// Wird von render() aufgerufen: „＋ Neues Rezept“-Kachel, wenn Token da ist
+// Wird von render() aufgerufen: „＋ Neues Rezept”-Kachel, wenn Edit-Mode aktiviert ist
 window.editorGridCard = () => {
-  if (!ghToken()) return null;
+  const token = ghToken();
+  const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
+  if (!token || !editEnabled) return null;
   const card = document.createElement('article');
   card.className = 'card add-card';
-  card.innerHTML = `<div class="photo placeholder">＋</div>
-    <div class="info"><div class="title">Neues Rezept</div></div>`;
+  card.innerHTML = `<div class=”photo placeholder”>＋</div>
+    <div class=”info”><div class=”title”>Neues Rezept</div></div>`;
   card.onclick = () => openEditor(null);
   return card;
 };
 
 // Wird von renderDetail() aufgerufen: ✏️-Knopf in der Rezept-Ansicht
 window.editorEnhanceDetail = (el, id) => {
-  if (!ghToken()) return;
+  const token = ghToken();
+  const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
+  if (!token || !editEnabled) return;
   const b = document.createElement('button');
   b.className = 'detail-edit';
   b.textContent = '✏️';

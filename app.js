@@ -551,6 +551,11 @@ function toast(msg) {
 
 const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
 const THEME_KEY = 'rezeptbuch-theme';
+const EDIT_ENABLED_KEY = 'rezeptbuch-edit-enabled';
+
+function isEditModeEnabled() {
+  return ghToken && ghToken() && localStorage.getItem(EDIT_ENABLED_KEY) !== 'false';
+}
 
 function applyTheme(theme) {
   const html = document.documentElement;
@@ -570,7 +575,7 @@ function applyTheme(theme) {
 function openSettings() {
   const hasToken = ghToken && ghToken();
   const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
-  const editMode = hasToken;
+  const editEnabled = localStorage.getItem(EDIT_ENABLED_KEY) !== 'false' && hasToken;
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
 
   const el = $('#editor'); // Reuse editor div für Modal
@@ -598,14 +603,16 @@ function openSettings() {
 
     <div class="settings-section">
       <h3>Bearbeiten</h3>
-      <div class="settings-row">
-        <label class="setting-label">
-          <input type="checkbox" id="edit-toggle" ${editMode ? 'checked' : ''}>
-          <span>Bearbeitungsmodus aktiviert</span>
-        </label>
-        <div class="setting-hint">Token wird verwendet, um Rezepte zu bearbeiten</div>
-      </div>
-      ${editMode ? `<button class="setting-btn" id="clear-token">Token entfernen</button>` : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
+      ${hasToken
+        ? `<div class="settings-row">
+            <label class="setting-label">
+              <input type="checkbox" id="edit-toggle" ${editEnabled ? 'checked' : ''}>
+              <span>Bearbeitungsmodus aktiviert</span>
+            </label>
+            <div class="setting-hint">Token ist gespeichert – schalte Bearbeiten an/aus</div>
+          </div>
+          <button class="setting-btn" id="clear-token">Token entfernen</button>`
+        : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
     <div class="settings-section">
@@ -626,19 +633,8 @@ function openSettings() {
   const editToggle = el.querySelector('#edit-toggle');
   if (editToggle) {
     editToggle.onchange = () => {
-      if (editToggle.checked) {
-        // Settings-Dialog schließen und Token-Setup öffnen
-        el.hidden = true;
-        document.body.style.overflow = '';
-        if (window.openTokenSetup) window.openTokenSetup();
-      } else {
-        // Token entfernen
-        if (window.clearToken) {
-          window.clearToken();
-          el.hidden = true;
-          document.body.style.overflow = '';
-        }
-      }
+      localStorage.setItem(EDIT_ENABLED_KEY, editToggle.checked ? 'true' : 'false');
+      render();
     };
   }
 
