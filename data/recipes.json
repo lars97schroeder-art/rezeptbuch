@@ -1,5 +1,5 @@
 {
-  "version": 18,
+  "version": 19,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -514,10 +514,14 @@
       "time": "",
       "servings": "",
       "emoji": "🐭",
-      "image": "",
+      "image": "data/images/rattatatatatatouille-1783326809-0.jpg",
+      "images": [
+        "data/images/rattatatatatatouille-1783326809-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": "Auch Maustartouille genannt"
+      "notes": "Mit Nudeln oder Reis, Auch Maustartouille genannt",
+      "bereich": "kochen"
     },
     {
       "id": "kartoffel-hackfleisch-pfanne",
