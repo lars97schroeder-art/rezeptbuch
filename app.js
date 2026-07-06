@@ -3,6 +3,7 @@
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
 const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
+const APP_VERSION_KEY = 'rezeptbuch-app-version';
 
 const CATEGORY_EMOJI = {
   'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
@@ -109,22 +110,23 @@ function saveLocal() {
 }
 
 // Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
+// Gibt true zurück wenn Updates gefunden wurden, false wenn aktuell
 async function checkAndUpdateIfNeeded() {
   // Skip wenn Offline-Modus aktiv
   if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') {
     console.log('ℹ️ Offline-Modus aktiv - kein Abgleich mit Server');
-    return;
+    return false;
   }
 
   try {
     const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) return;
+    if (!res.ok) return false;
     const fresh = await res.json();
 
     // Vergleiche global updated Datum
     if (fresh.updated === data.updated) {
       console.log('✅ Rezepte sind aktuell');
-      return; // Nichts geändert
+      return false; // Nichts geändert
     }
 
     console.log('🔄 Neue Rezepte verfügbar (lokal:', data.updated, 'remote:', fresh.updated + ')');
@@ -148,9 +150,12 @@ async function checkAndUpdateIfNeeded() {
       saveLocal();
       console.log('🔄 ' + updated.length + ' Rezept(e) aktualisiert: ' + updated.join(', '));
       toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
+      return true;
     }
+    return true; // Auch wenn keine Rezepte geändert, aber Struktur aktualisiert
   } catch (e) {
     console.log('ℹ️ Konnte nicht nach Updates prüfen (offline?)');
+    return false;
   }
 }
 
@@ -1092,8 +1097,13 @@ function openSettings() {
   el.querySelector('#refresh-btn').onclick = async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
+      // Lade frische Version vom Server zum Vergleichen
+      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const fresh = await res.json();
+
       // Auto-Check: Rezepte auf Updates prüfen (nur veraltete updaten)
-      await checkAndUpdateIfNeeded();
+      const hasUpdates = await checkAndUpdateIfNeeded();
 
       // Service Worker Update checken
       if ('serviceWorker' in navigator) {
@@ -1108,7 +1118,17 @@ function openSettings() {
         }
       }
 
-      toast('✅ Update abgeschlossen');
+      // Speichere Version + Timestamp um zu prüfen ob richtige Version geladen wurde
+      localStorage.setItem(APP_VERSION_KEY, fresh.version + '@' + new Date().toISOString());
+
+      // Feedback
+      if (hasUpdates) {
+        toast('✅ Updates verfügbar - v' + fresh.version);
+      } else if (fresh.version !== data.version) {
+        toast('⚠️ Neue Version v' + fresh.version + ' verfügbar (Cache könnte alt sein)');
+      } else {
+        toast('✅ Alles auf aktuellem Stand');
+      }
     } catch (err) {
       console.error('Update-Fehler:', err);
       toast('❌ Fehler: ' + err.message);
