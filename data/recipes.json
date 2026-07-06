@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:19:33.576Z",
+  "updated": "2026-07-06T20:19:50.885Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -251,18 +251,6 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
-    },
-    {
-      "id": "cannelloni",
-      "title": "Cannelloni",
-      "category": "Pasta & Gnocchi",
-      "time": "",
-      "servings": "",
-      "emoji": "",
-      "image": "",
-      "ingredients": [],
-      "steps": [],
-      "notes": "Noch ausprobieren!"
     },
     {
       "id": "nasty-gnocchi",
