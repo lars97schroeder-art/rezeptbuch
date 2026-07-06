@@ -531,7 +531,10 @@ function renderWeekplan() {
       <div class="weekplan-day">
         <label class="weekplan-label">${day.label}</label>
         <div class="weekplan-autocomplete" data-day="${day.key}">
-          <input type="text" class="weekplan-search" placeholder="Rezept suchen..." autocomplete="off">
+          <div class="weekplan-input-row">
+            <input type="text" class="weekplan-search" placeholder="Rezept suchen..." autocomplete="off">
+            <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
+          </div>
           <div class="weekplan-suggestions" hidden></div>
           <div class="weekplan-selected">${displayName ? `<span class="weekplan-tag">${esc(displayName)} <button class="weekplan-tag-remove">✕</button></span>` : ''}</div>
         </div>
@@ -554,6 +557,7 @@ function renderWeekplan() {
   for (const dayEl of el.querySelectorAll('.weekplan-autocomplete')) {
     const dayKey = dayEl.dataset.day;
     const searchInput = dayEl.querySelector('.weekplan-search');
+    const addBtn = dayEl.querySelector('.weekplan-add-btn');
     const suggestionsDiv = dayEl.querySelector('.weekplan-suggestions');
     const selectedDiv = dayEl.querySelector('.weekplan-selected');
 
@@ -606,10 +610,10 @@ function renderWeekplan() {
       }
     });
 
-    // Enter-Key oder Blur für Freitext
-    const saveFreetext = () => {
+    // Add-Button für Freitext
+    addBtn.onclick = () => {
       const text = searchInput.value.trim();
-      if (!text || suggestionsDiv.children.length > 0) return; // Nur wenn keine Autocomplete-Vorschläge da sind
+      if (!text) return;
 
       // Speichere als Freitext (mit Präfix um es von Recipe-IDs zu unterscheiden)
       weekplan[dayKey] = 'TEXT:' + text;
@@ -625,15 +629,18 @@ function renderWeekplan() {
       };
     };
 
+    // Enter-Key für Autocomplete-Auswahl oder Freitext
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        saveFreetext();
+        // Wenn Autocomplete-Vorschläge da sind, benutze den ersten
+        if (!suggestionsDiv.hidden && suggestionsDiv.children.length > 0) {
+          suggestionsDiv.children[0].click();
+        } else {
+          // Sonst speichere als Freitext
+          addBtn.click();
+        }
       }
-    });
-
-    searchInput.addEventListener('blur', () => {
-      setTimeout(() => saveFreetext(), 100);
     });
 
     // Remove-Button für bestehende Tags

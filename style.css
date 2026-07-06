@@ -1615,8 +1615,14 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   position: relative;
 }
 
+.weekplan-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .weekplan-search {
-  width: 100%;
+  flex: 1;
   padding: 10px 12px;
   border: 1px solid #d0c5b9;
   border-radius: 6px;
@@ -1634,6 +1640,30 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   outline: none;
   border-color: #e8590c;
   box-shadow: 0 0 0 2px rgba(232, 89, 12, 0.1);
+}
+
+.weekplan-add-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border: 1px solid #d0c5b9;
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.weekplan-add-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.weekplan-add-btn:active {
+  transform: scale(0.95);
 }
 
 .weekplan-suggestions {
