@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T18:53:39.689Z",
+  "updated": "2026-07-06T18:55:44.789Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -83,7 +83,9 @@
     {
       "id": "basic-bitch-pasta",
       "title": "Italian Basic Bitch Pasta",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "💅",
@@ -91,7 +93,9 @@
       "images": [
         "data/images/basic-bitch-pasta-1783240941.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "Heyyyyy mein Schatz"
+      ],
       "steps": [],
       "notes": "Rucola, Pesto, Tomaten",
       "bereich": "kochen"
