@@ -715,9 +715,6 @@ function renderWeekplan() {
 
     // Attach handlers für bestehende Tags
     attachTagHandlers(selectedDiv, dayKey);
-        searchInput.value = '';
-      };
-    }
   }
 
   // Drag & Drop Handler für Tage
