@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-06T20:44:00+02:00';
+const APP_BUILD_TIME = '2026-07-06T20:53:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -494,6 +494,55 @@ function saveWeekplan(plan) {
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, new Date().toISOString());
 }
 
+/* Wochenplan-Sync über GitHub (data/weekplan.json):
+   Speichern lädt den Plan hoch, beim Öffnen wird der neueste Stand geholt.
+   Neuester ISO-Timestamp gewinnt. */
+
+async function fetchRemoteWeekplan() {
+  // Mit Token: direkt über die GitHub-API (sofort aktuell, kein Pages-Cache)
+  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
+    try {
+      const info = await ghGet('data/weekplan.json');
+      return JSON.parse(utf8b64(info.content));
+    } catch (e) { /* Datei existiert evtl. noch nicht */ }
+  }
+  // Ohne Token: über GitHub Pages (kann ein paar Minuten hinterherhängen)
+  try {
+    const res = await fetch('data/weekplan.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) return await res.json();
+  } catch (e) { /* offline */ }
+  return null;
+}
+
+// Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
+async function syncWeekplanFromRemote() {
+  const remote = await fetchRemoteWeekplan();
+  if (!remote || !remote.days) return false;
+  const localUpdated = new Date(localStorage.getItem(WEEKPLAN_UPDATED_KEY)).getTime() || 0;
+  const remoteUpdated = new Date(remote.updated).getTime() || 0;
+  if (remoteUpdated > localUpdated) {
+    localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(remote.days));
+    localStorage.setItem(WEEKPLAN_UPDATED_KEY, remote.updated);
+    return true;
+  }
+  return false;
+}
+
+// Lädt den lokalen Plan zu GitHub hoch, damit andere Geräte ihn sehen
+async function uploadWeekplan(plan) {
+  if (typeof ghToken !== 'function' || !ghToken()) {
+    toast('💾 Nur lokal gespeichert (kein Token auf diesem Gerät)');
+    return;
+  }
+  const payload = { updated: new Date().toISOString(), days: plan };
+  let sha;
+  try { sha = (await ghGet('data/weekplan.json')).sha; } catch (e) { /* erste Übertragung */ }
+  await ghPut('data/weekplan.json', b64utf8(JSON.stringify(payload, null, 2)),
+    'Wochenplan aktualisiert (aus der App)', sha);
+  localStorage.setItem(WEEKPLAN_UPDATED_KEY, payload.updated);
+  toast('✅ Wochenplan gespeichert & geteilt');
+}
+
 // HTML für einen Wochenplan-Eintrag — immer mit X-Button zum Entfernen
 function weekplanTagHTML(entry, displayName, dayKey) {
   return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
@@ -520,7 +569,7 @@ function attachTagHandlers(selectedDiv, weekplan) {
   }
 }
 
-function renderWeekplan() {
+function renderWeekplan(skipSync = false) {
   const el = $('#detail');
   const weekplan = getWeekplan();
   const days = [
@@ -573,7 +622,7 @@ function renderWeekplan() {
       <div class="weekplan-container">
         ${daysHTML}
       </div>
-      <button class="weekplan-save-btn">💾 Speichern</button>
+      <button class="weekplan-save-btn">💾 Speichern & teilen</button>
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -686,14 +735,30 @@ function renderWeekplan() {
     attachTagHandlers(selectedDiv, weekplan);
   }
 
-  // Save Button
-  el.querySelector('.weekplan-save-btn').onclick = () => {
+  // Save Button: lokal speichern UND zu GitHub hochladen (für das andere Gerät)
+  el.querySelector('.weekplan-save-btn').onclick = async () => {
     saveWeekplan(weekplan);
-    toast('✅ Wochenplan gespeichert');
+    try {
+      await uploadWeekplan(weekplan);
+    } catch (e) {
+      console.log('Wochenplan-Upload fehlgeschlagen:', e);
+      toast('⚠️ Lokal gespeichert, Teilen fehlgeschlagen (offline?)');
+    }
   };
 
   el.hidden = false;
   document.body.style.overflow = 'hidden';
+
+  // Im Hintergrund: neuesten Stand vom anderen Gerät holen und anzeigen
+  if (!skipSync) {
+    syncWeekplanFromRemote().then(changed => {
+      // Nur neu rendern wenn der Wochenplan noch offen ist
+      if (changed && !el.hidden && el.querySelector('.weekplan-container')) {
+        toast('🔄 Wochenplan vom anderen Gerät übernommen');
+        renderWeekplan(true);
+      }
+    });
+  }
 }
 
 function renderTinder() {
