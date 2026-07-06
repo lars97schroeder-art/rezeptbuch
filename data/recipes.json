@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:15:08.745Z",
+  "updated": "2026-07-06T21:15:57.078Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -814,14 +814,20 @@
     {
       "id": "couscous-salat",
       "title": "Couscous-Salat",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/couscous-salat-1783372555-0.jpg",
+      "images": [
+        "data/images/couscous-salat-1783372555-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "italienisches-baguette",
