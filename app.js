@@ -722,23 +722,36 @@ function renderWeekplan() {
     const dayKey = dayEl.dataset.day;
     const selectedDiv = dayEl.querySelector('.weekplan-selected');
 
-    // Drag Over (Mouse)
+    // Drag Over (Mouse) - auf der ganzen dayEl
     dayEl.ondragover = (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      dayEl.style.background = 'rgba(232, 89, 12, 0.1)';
+      selectedDiv.style.background = 'rgba(232, 89, 12, 0.1)';
     };
 
     dayEl.ondragleave = (e) => {
-      if (e.target === dayEl) {
-        dayEl.style.background = '';
-      }
+      selectedDiv.style.background = '';
     };
 
-    // Drop (Mouse)
-    dayEl.ondrop = (e) => {
+    // Drop (Mouse) - auf der selectedDiv
+    selectedDiv.ondrop = (e) => {
       e.preventDefault();
-      dayEl.style.background = '';
+      e.stopPropagation();
+      selectedDiv.style.background = '';
+
+      const entry = e.dataTransfer.getData('entry');
+      const sourceDay = e.dataTransfer.getData('sourceDay');
+
+      if (!entry || !sourceDay) return;
+      performDragDrop(entry, sourceDay, dayKey);
+    };
+
+    // Drop auch auf dayEl fallback
+    dayEl.ondrop = (e) => {
+      if (!e.dataTransfer.getData('entry')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      selectedDiv.style.background = '';
 
       const entry = e.dataTransfer.getData('entry');
       const sourceDay = e.dataTransfer.getData('sourceDay');
@@ -751,13 +764,13 @@ function renderWeekplan() {
     dayEl.ontouchend = (e) => {
       if (!draggedTag) return;
       e.preventDefault();
-      dayEl.style.background = '';
+      selectedDiv.style.background = '';
       performDragDrop(draggedTag.entry, draggedTag.sourceDay, dayKey);
     };
 
     dayEl.ontouchover = (e) => {
       if (draggedTag) {
-        dayEl.style.background = 'rgba(232, 89, 12, 0.1)';
+        selectedDiv.style.background = 'rgba(232, 89, 12, 0.1)';
       }
     };
   }
