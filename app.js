@@ -1017,7 +1017,15 @@ function openSettings() {
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
 
     <div class="setting-info">
-      <div><strong>Stand:</strong> v${data.version}</div>
+      <div><strong>App Version:</strong> v${data.version}${(() => {
+        const stored = localStorage.getItem(APP_VERSION_KEY);
+        if (stored) {
+          const [version, timestamp] = stored.split('@');
+          const date = new Date(timestamp).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+          return ` (${date})`;
+        }
+        return '';
+      })()}</div>
       <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
       <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
     </div>
