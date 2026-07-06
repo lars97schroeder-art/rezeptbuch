@@ -2,7 +2,7 @@
 
 // APP-FUNKTIONALITÄTS-VERSION: erhöhen bei JEDER Änderung (unabhängig von Rezepten!)
 // Format: YYYYMMDD-HHMM (z.B. 20260707-1930)
-const APP_BUILD_VERSION = '20260707-1930';
+const APP_BUILD_VERSION = '20260707-1935';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
