@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:21:08.051Z",
+  "updated": "2026-07-06T21:21:34.573Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -878,12 +878,13 @@
     },
     {
       "id": "many-man",
-      "title": "Many Man",
-      "category": "",
+      "title": "Menemen",
+      "category": [],
       "time": "",
       "servings": "",
-      "emoji": "",
+      "emoji": "🍳",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
       "notes": "",
