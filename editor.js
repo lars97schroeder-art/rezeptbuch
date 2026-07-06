@@ -227,7 +227,9 @@ async function freshRemoteData() {
 }
 
 async function commitRemoteData(remote, sha, message) {
-  remote.version += 1;
+  // Version richtig erhöhen: "3.3" → "3.4", nicht "3.31"
+  const [major, minor] = remote.version.split('.');
+  remote.version = major + '.' + (parseInt(minor) + 1);
   remote.updated = new Date().toISOString().slice(0, 10);
   await ghPut('data/recipes.json', b64utf8(JSON.stringify(remote, null, 2)), message, sha);
 }
