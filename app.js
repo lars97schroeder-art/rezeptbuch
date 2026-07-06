@@ -515,6 +515,15 @@ function saveWeekplan(plan) {
 
 let draggedTag = null;
 let draggedElement = null;
+let dragGhost = null;
+let dragStartY = 0;
+
+function updateGhostPosition(touch) {
+  if (!dragGhost) return;
+  const offsetY = touch.clientY - dragStartY;
+  dragGhost.style.left = (touch.clientX - 60) + 'px';
+  dragGhost.style.top = (touch.clientY - 15) + 'px';
+}
 
 function showMoveToMenu(draggedTag, currentDay) {
   const days = [
@@ -608,25 +617,56 @@ function attachTagHandlers(selectedDiv, dayKey) {
       tag.style.opacity = '1';
     };
 
-    // Touch Support für Handy - Long Press zum Verschieben
-    let touchStartTime = 0;
+    // Touch Support für Handy - Visuelles Drag & Drop
     tag.ontouchstart = (e) => {
-      touchStartTime = Date.now();
       draggedTag = { tag, entry: tag.dataset.entry, sourceDay: dayKey };
       draggedElement = e.target.closest('.weekplan-tag');
-      draggedElement.style.opacity = '0.5';
+      dragStartY = e.touches[0].clientY;
+
+      // Erstelle Ghost-Element
+      dragGhost = draggedElement.cloneNode(true);
+      dragGhost.style.cssText = `
+        position: fixed;
+        z-index: 10000;
+        opacity: 0.8;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: scale(1.05);
+      `;
+      document.body.appendChild(dragGhost);
+      draggedElement.style.opacity = '0.3';
+
+      // Update Ghost Position
+      updateGhostPosition(e.touches[0]);
+    };
+
+    tag.ontouchmove = (e) => {
+      if (!dragGhost) return;
+      e.preventDefault();
+      updateGhostPosition(e.touches[0]);
     };
 
     tag.ontouchend = (e) => {
-      if (draggedTag && Date.now() - touchStartTime > 500) {
-        // Long press erkannt - zeige Menü
-        showMoveToMenu(draggedTag, dayKey);
+      if (!dragGhost) return;
+
+      // Finde Tag unter der aktuellen Position
+      const endY = e.changedTouches[0].clientY;
+      const endX = e.changedTouches[0].clientX;
+      const element = document.elementFromPoint(endX, endY);
+      const targetDay = element?.closest('.weekplan-day')?.dataset.day;
+
+      // Cleanup
+      dragGhost.remove();
+      dragGhost = null;
+      draggedElement.style.opacity = '1';
+
+      // Verschiebe wenn anderer Tag gefunden
+      if (targetDay && targetDay !== dayKey) {
+        performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
       }
-      if (draggedElement) {
-        draggedElement.style.opacity = '1';
-        draggedTag = null;
-        draggedElement = null;
-      }
+
+      draggedTag = null;
+      draggedElement = null;
     };
   }
 }
