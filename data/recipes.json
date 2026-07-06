@@ -1,5 +1,5 @@
 {
-  "version": 33,
+  "version": 34,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -414,10 +414,15 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/schnitzel-1783328061-0.jpg",
+      "images": [
+        "data/images/schnitzel-1783328061-0.jpg",
+        "data/images/schnitzel-1783328061-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "karamellisierter-rosenkohl",
