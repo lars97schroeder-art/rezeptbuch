@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:12:23.743Z",
+  "updated": "2026-07-06T22:13:19.666Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -966,8 +966,10 @@
       "time": "",
       "servings": "",
       "emoji": "🍞",
-      "image": "",
-      "images": [],
+      "image": "data/images/strammer-max-nach-annikas-art-1783375997-0.jpg",
+      "images": [
+        "data/images/strammer-max-nach-annikas-art-1783375997-0.jpg"
+      ],
       "ingredients": [
         "Leberkäs",
         "Brot",
@@ -975,8 +977,8 @@
         "Käse"
       ],
       "steps": [],
-      "notes": "",
-      "bereich": "fruehstueck"
+      "notes": "I knowwww das Foto ist nicht repräsentativ 🥺",
+      "bereich": "kochen"
     },
     {
       "id": "granola",
