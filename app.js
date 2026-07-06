@@ -1198,6 +1198,8 @@ function openSettings() {
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
     <div class="update-status"></div>
 
+    <button class="setting-btn" id="clear-cache-btn" style="margin-top: 8px;">🗑️ Cache löschen</button>
+
     <div class="setting-info">
       <div><strong>App Version:</strong> v${data.version}${(() => {
         const stored = localStorage.getItem(APP_VERSION_KEY);
@@ -1336,12 +1338,8 @@ function openSettings() {
     }
   };
 
-  // Clear Cache Button
-  const clearCacheBtn = document.createElement('button');
-  clearCacheBtn.className = 'weekplan-save-btn';
-  clearCacheBtn.style.marginTop = '12px';
-  clearCacheBtn.innerHTML = '🗑️ Cache löschen';
-  clearCacheBtn.onclick = async () => {
+  // Clear Cache Button Handler
+  const clearCacheHandler = async () => {
     showToastWithoutTimeout('🗑️ Cache wird gelöscht...');
     try {
       // Lösche alle Caches
@@ -1367,7 +1365,11 @@ function openSettings() {
       toast('❌ Fehler beim Cache löschen');
     }
   };
-  el.querySelector('.detail-body').appendChild(clearCacheBtn);
+
+  const clearCacheBtn = el.querySelector('#clear-cache-btn');
+  if (clearCacheBtn) {
+    clearCacheBtn.onclick = clearCacheHandler;
+  }
 
   // Theme-Switcher
   for (const radio of el.querySelectorAll('input[name="theme"]')) {
