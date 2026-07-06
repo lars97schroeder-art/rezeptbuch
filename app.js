@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-06T20:53:00+02:00';
+const APP_BUILD_TIME = '2026-07-06T21:05:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -97,6 +97,20 @@ function saveLocal() {
   }
 }
 
+// Frische Rezepte holen: mit Token direkt über die GitHub-API (sofort aktuell),
+// sonst über GitHub Pages (kann nach einem Save ein paar Minuten hinterherhängen)
+async function fetchRemoteRecipes() {
+  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
+    try {
+      const info = await ghGet('data/recipes.json');
+      return JSON.parse(utf8b64(info.content));
+    } catch (e) { /* API nicht erreichbar → Pages-Fallback */ }
+  }
+  const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 // Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
 // Gibt true zurück wenn Updates gefunden wurden, false wenn aktuell
 async function checkAndUpdateIfNeeded() {
@@ -107,9 +121,8 @@ async function checkAndUpdateIfNeeded() {
   }
 
   try {
-    const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) return false;
-    const fresh = await res.json();
+    const fresh = await fetchRemoteRecipes();
+    if (!fresh) return false;
 
     // Vergleiche global updated Datum (ISO-Parse für robuste Vergleiche)
     const oldDate = new Date(data.updated).getTime();
@@ -134,10 +147,11 @@ async function checkAndUpdateIfNeeded() {
     }
 
     if (updated.length > 0) {
-      // Update: ganze recipes ersetzen
+      // Update: ganze recipes ersetzen und Ansicht auffrischen
       data.recipes = fresh.recipes;
       data.updated = fresh.updated;
       saveLocal();
+      render();
       console.log('🔄 ' + updated.length + ' Rezept(e) aktualisiert: ' + updated.join(', '));
       toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
       return true;
@@ -154,9 +168,8 @@ async function checkAndUpdateIfNeeded() {
 async function update(showErrors = true) {
   try {
     const oldData = JSON.parse(JSON.stringify(data)); // Deep copy
-    const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const fresh = await res.json();
+    const fresh = await fetchRemoteRecipes();
+    if (!fresh) throw new Error('Rezepte konnten nicht geladen werden');
 
     // Neue Bilder herunterladen, damit alles offline verfügbar ist.
     // Bilddateien haben versionierte Namen: was schon im Cache liegt, bleibt.
@@ -1251,9 +1264,8 @@ function openSettings() {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
       // Lade frische Version vom Server zum Vergleichen
-      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const fresh = await res.json();
+      const fresh = await fetchRemoteRecipes();
+      if (!fresh) throw new Error('Rezepte konnten nicht geladen werden');
 
       // Prüfe ob es ein Update gibt (NUR auf updated Timestamp achten, nicht auf Version!)
       const hasUpdates = await checkAndUpdateIfNeeded();
@@ -1353,9 +1365,8 @@ function openSettings() {
   // Auto-Check für Updates beim Öffnen der Settings
   (async () => {
     try {
-      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-      if (res.ok) {
-        const fresh = await res.json();
+      const fresh = await fetchRemoteRecipes();
+      if (fresh) {
         // Prüfe ob Rezept-Daten unterscheiden sich (ISO-Parse für robuste Vergleiche)
         const oldDate = new Date(data.updated).getTime();
         const freshDate = new Date(fresh.updated).getTime();
@@ -1448,12 +1459,11 @@ document.addEventListener('click', e => {
   }
 
   // 2. DATEN-CHECK: Rezepte-Timestamp vom Server (falls Funktionalitäten gleich)
-  // Wochenplan-Einträge sind rein lokal (rezeptbuch-weekplan) und werden bei Reloads nie angetastet
+  // Wochenplan-Einträge (rezeptbuch-weekplan) werden bei Reloads nie angetastet
   if (!shouldReload) {
     try {
-      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-      if (res.ok) {
-        const fresh = await res.json();
+      const fresh = await fetchRemoteRecipes();
+      if (fresh) {
         const stored = localStorage.getItem(DATA_KEY);
 
         if (stored) {
@@ -1518,6 +1528,23 @@ update(false);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js?t=' + Date.now()).catch(e => console.log('SW register error:', e));
 }
+
+// App kommt in den Vordergrund (Handy entsperrt, Tab gewechselt):
+// sofort per ISO-Timestamp prüfen, ob das andere Gerät etwas geändert hat
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  checkAndUpdateIfNeeded();
+  // Falls der Wochenplan gerade offen ist, auch dessen neuesten Stand holen
+  const detail = $('#detail');
+  if (!detail.hidden && detail.querySelector('.weekplan-container')) {
+    syncWeekplanFromRemote().then(changed => {
+      if (changed) {
+        toast('🔄 Wochenplan vom anderen Gerät übernommen');
+        renderWeekplan(true);
+      }
+    });
+  }
+});
 
 // Swipe-to-back Geste: von links nach rechts wischen
 let swipeStart = null;
