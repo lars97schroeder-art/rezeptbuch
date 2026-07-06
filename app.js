@@ -513,9 +513,19 @@ function renderWeekplan() {
 
   let daysHTML = '';
   for (const day of days) {
-    const recipeId = weekplan[day.key];
-    const recipe = recipeId ? data.recipes.find(r => r.id === recipeId) : null;
-    const displayName = recipe ? titleWithEmoji(recipe) : '';
+    const entry = weekplan[day.key];
+    let displayName = '';
+
+    if (entry) {
+      if (entry.startsWith('TEXT:')) {
+        // Freitext-Eintrag
+        displayName = entry.substring(5);
+      } else {
+        // Recipe-ID
+        const recipe = data.recipes.find(r => r.id === entry);
+        displayName = recipe ? titleWithEmoji(recipe) : '';
+      }
+    }
 
     daysHTML += `
       <div class="weekplan-day">
@@ -594,6 +604,27 @@ function renderWeekplan() {
           };
         };
       }
+    });
+
+    // Enter-Key für Freitext
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const text = searchInput.value.trim();
+      if (!text) return;
+
+      // Speichere als Freitext (mit Präfix um es von Recipe-IDs zu unterscheiden)
+      weekplan[dayKey] = 'TEXT:' + text;
+      selectedDiv.innerHTML = `<span class="weekplan-tag">${esc(text)} <button class="weekplan-tag-remove">✕</button></span>`;
+      searchInput.value = '';
+      suggestionsDiv.hidden = true;
+
+      // Remove-Button
+      selectedDiv.querySelector('.weekplan-tag-remove').onclick = () => {
+        weekplan[dayKey] = '';
+        selectedDiv.innerHTML = '';
+        searchInput.value = '';
+      };
     });
 
     // Remove-Button für bestehende Tags
