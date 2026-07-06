@@ -984,7 +984,10 @@ function openSettings() {
       <h3>Verbindung</h3>
       <div class="settings-row">
         <label class="setting-label">
-          <input type="checkbox" id="offline-toggle" ${localStorage.getItem(OFFLINE_MODE_KEY) === 'true' ? 'checked' : ''}>
+          <div class="toggle-slider">
+            <input type="checkbox" id="offline-toggle" ${localStorage.getItem(OFFLINE_MODE_KEY) === 'true' ? 'checked' : ''}>
+            <span class="slider"></span>
+          </div>
           <span>🔒 Offline-Modus</span>
         </label>
         <div class="setting-hint">Keine Abgleiche mit Server, nur Lesen möglich</div>
