@@ -1,5 +1,5 @@
 {
-  "version": 35,
+  "version": 36,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -748,7 +748,16 @@
       "servings": "",
       "emoji": "🥪",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Toast",
+        "Miracel Whip",
+        "Salat (Eisberg/ Rucola / whatever)",
+        "Bacon",
+        "Ei",
+        "Gouda mittelalt",
+        "➕Tomate, Gurke"
+      ],
       "steps": [],
       "notes": "",
       "bereich": "fruehstueck"
