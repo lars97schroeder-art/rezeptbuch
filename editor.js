@@ -138,6 +138,12 @@ function renderEdPhotos() {
 }
 
 function openEditor(id) {
+  // Blockiere Bearbeitung im Offline-Modus
+  if (localStorage.getItem('rezeptbuch-offline-mode') === 'true') {
+    toast('🔒 Im Offline-Modus: Bearbeiten nicht möglich');
+    return;
+  }
+
   // Auto-Check: Falls bestehendes Rezept, checke auf Updates
   if (id) {
     window.checkAndUpdateIfNeeded?.();

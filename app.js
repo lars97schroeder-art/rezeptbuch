@@ -2,6 +2,7 @@
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
+const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
 
 const CATEGORY_EMOJI = {
   'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
@@ -109,6 +110,12 @@ function saveLocal() {
 
 // Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
 async function checkAndUpdateIfNeeded() {
+  // Skip wenn Offline-Modus aktiv
+  if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') {
+    console.log('ℹ️ Offline-Modus aktiv - kein Abgleich mit Server');
+    return;
+  }
+
   try {
     const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
@@ -974,6 +981,17 @@ function openSettings() {
     </div>
 
     <div class="settings-section">
+      <h3>Verbindung</h3>
+      <div class="settings-row">
+        <label class="setting-label">
+          <input type="checkbox" id="offline-toggle" ${localStorage.getItem(OFFLINE_MODE_KEY) === 'true' ? 'checked' : ''}>
+          <span>🔒 Offline-Modus</span>
+        </label>
+        <div class="setting-hint">Keine Abgleiche mit Server, nur Lesen möglich</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <h3>Bearbeiten</h3>
       ${hasToken
         ? `<div class="settings-row">
@@ -1004,6 +1022,17 @@ function openSettings() {
     editToggle.onchange = () => {
       localStorage.setItem(EDIT_ENABLED_KEY, editToggle.checked ? 'true' : 'false');
       render();
+    };
+  }
+
+  const offlineToggle = el.querySelector('#offline-toggle');
+  if (offlineToggle) {
+    offlineToggle.onchange = () => {
+      localStorage.setItem(OFFLINE_MODE_KEY, offlineToggle.checked ? 'true' : 'false');
+      const message = offlineToggle.checked
+        ? '🔒 Offline-Modus aktiviert (keine Online-Abgleiche)'
+        : '🌐 Online-Modus aktiviert (Auto-Abgleiche aktiv)';
+      toast(message);
     };
   }
 
