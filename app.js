@@ -905,7 +905,10 @@ document.addEventListener('click', e => {
 renderModeUI();
 loadLocal();
 render();
-if (!data.recipes.length) update(false); // Erststart: still versuchen zu laden
+
+// Beim Start immer nach Updates checken (nicht nur beim Erststart)
+// Das sorgt dafür, dass auch gekachte alte Versionen aktualisiert werden
+update(false);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');

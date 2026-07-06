@@ -2,7 +2,7 @@
 
 // Bei Änderungen an index.html/app.js/style.css die Versionsnummer erhöhen,
 // damit die Handys die neue App-Version bekommen.
-const SHELL_CACHE = 'rezeptbuch-shell-v3-300';
+const SHELL_CACHE = 'rezeptbuch-shell-v3-999';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const SHELL_FILES = [
@@ -28,11 +28,22 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
+    // Lösche ALLE rezeptbuch-* Caches außer der aktuellen Version
     for (const key of await caches.keys()) {
-      if (key.startsWith('rezeptbuch-shell-') && key !== SHELL_CACHE) {
+      if (key.startsWith('rezeptbuch-') && key !== SHELL_CACHE) {
+        console.log('Deleting old cache:', key);
         await caches.delete(key);
       }
     }
+
+    // Lösche auch die Bild-Caches um sicherzustellen
+    for (const key of await caches.keys()) {
+      if (key.startsWith('rezept-bilder-') && key !== IMG_CACHE) {
+        console.log('Deleting old image cache:', key);
+        await caches.delete(key);
+      }
+    }
+
     await self.clients.claim();
   })());
 });
