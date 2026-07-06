@@ -98,7 +98,13 @@ function loadLocal() {
 }
 
 function saveLocal() {
-  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(DATA_KEY, JSON.stringify(data));
+    console.log('✅ saveLocal() erfolgreich');
+  } catch (e) {
+    console.error('🔴 FEHLER beim Speichern in localStorage:', e.message);
+    throw e;
+  }
 }
 
 /* ---------- Aktualisieren ---------- */
