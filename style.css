@@ -597,34 +597,30 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .t-badge {
   position: absolute;
-  top: 28px;
-  padding: 8px 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 24px;
   border-radius: 12px;
   font-weight: 900;
-  font-size: 29px;
+  font-size: 36px;
   letter-spacing: 1px;
   opacity: 0;
-  border: 5px solid;
-  background: rgba(255, 255, 255, 0.75);
+  border: 6px solid;
+  background: rgba(255, 255, 255, 0.85);
   pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.12s ease;
+  transition: opacity 0.25s ease;
   white-space: nowrap;
 }
 
 .t-badge.like {
-  left: 14px;
   color: #2f9e44;
   border-color: #2f9e44;
-  transform: rotate(-14deg) scale(0.6);
-  transform-origin: top left;
 }
 
 .t-badge.nope {
-  right: 14px;
   color: #c0392b;
   border-color: #c0392b;
-  transform: rotate(14deg) scale(0.6);
-  transform-origin: top right;
 }
 
 .tinder-buttons {
@@ -757,7 +753,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  animation: matchZoomIn 0.6s ease-out forwards;
+  animation: matchZoomIn 1.2s ease-out forwards;
 }
 
 @keyframes matchZoomIn {
@@ -779,16 +775,33 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  animation: matchBackgroundDim 3.5s ease-in-out forwards;
+}
+
+@keyframes matchBackgroundDim {
+  0% {
+    background: rgba(0, 0, 0, 0);
+  }
+  15% {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  85% {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    background: rgba(0, 0, 0, 0);
+  }
 }
 
 .match-text {
-  font-size: 56px;
+  font-size: 60px;
   font-weight: 900;
-  color: var(--accent);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: #2f9e44;
+  text-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
   transform: rotate(-12deg);
-  animation: matchSwing 2.5s ease-in-out forwards;
-  letter-spacing: 3px;
+  animation: matchSwing 3.5s ease-in-out forwards;
+  letter-spacing: 4px;
 }
 
 @keyframes matchSwing {
@@ -796,14 +809,14 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
     opacity: 0;
     transform: rotate(-12deg) translateX(-150vw) translateY(-50vh);
   }
-  15% {
+  12% {
     opacity: 1;
   }
   50% {
     opacity: 1;
     transform: rotate(-12deg) translateX(0) translateY(0);
   }
-  85% {
+  88% {
     opacity: 1;
   }
   100% {

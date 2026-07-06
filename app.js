@@ -468,6 +468,7 @@ function attachSwipe(card, onSwipe) {
   let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
   const badgeLike = card.querySelector('.t-badge.like');
   const badgeNope = card.querySelector('.t-badge.nope');
+  const img = card.querySelector('img');
 
   card.addEventListener('pointerdown', e => {
     dragging = true;
@@ -494,6 +495,11 @@ function attachSwipe(card, onSwipe) {
       badgeNope.style.transform = `rotate(14deg) scale(${scale})`;
       badgeLike.style.opacity = 0;
     }
+    // Foto wird je weiter raus gezogen dunkler (ausgrauen)
+    if (img) {
+      const fadeStrength = Math.min(0.5, Math.abs(dx) / 200);
+      img.style.filter = `brightness(${1 - fadeStrength * 0.7})`;
+    }
   });
 
   const end = () => {
@@ -507,6 +513,10 @@ function attachSwipe(card, onSwipe) {
       card.style.transform = '';
       badgeLike.style.opacity = 0;
       badgeNope.style.opacity = 0;
+      // Foto zurück auf normal
+      if (img) {
+        img.style.filter = 'brightness(1)';
+      }
     }
     dx = 0;
   };
