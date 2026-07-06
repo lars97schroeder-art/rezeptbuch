@@ -491,9 +491,6 @@ function openGroupSelector(allGroups) {
 
   let html = '<div class="ed-modal"><h3>Gruppe auswählen</h3><div class="ed-group-list">';
 
-  // Leere Option (keine Gruppe)
-  html += `<label class="ed-group-option"><input type="radio" name="group" value="" ${!window.edSelectedGroup ? 'checked' : ''}> (Keine Gruppe)</label>`;
-
   for (const group of allGroups) {
     html += `<label class="ed-group-option"><input type="radio" name="group" value="${esc(group)}" ${window.edSelectedGroup === group ? 'checked' : ''}> ${esc(group)}</label>`;
   }
@@ -505,7 +502,8 @@ function openGroupSelector(allGroups) {
 
   modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
   modal.querySelector('.ed-modal-ok').onclick = () => {
-    let selected = modal.querySelector('input[name="group"]:checked').value;
+    const checkedRadio = modal.querySelector('input[name="group"]:checked');
+    let selected = checkedRadio ? checkedRadio.value : '';
     const newGroup = modal.querySelector('#ed-new-group').value.trim();
     if (newGroup) {
       selected = newGroup;

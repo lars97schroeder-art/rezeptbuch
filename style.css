@@ -955,13 +955,19 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   max-width: 700px;
   margin: 0 auto;
   padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 40px);
-  padding-left: clamp(20px, 12vw, 60px);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.ed-body h2 { font-size: 22px; }
+.ed-body h2 {
+  font-size: 22px;
+  margin-left: 44px;
+}
+
+.editor #editor .ed-body h2 {
+  margin-left: clamp(20px, 12vw, 60px);
+}
 
 .ed-close {
   position: fixed;
