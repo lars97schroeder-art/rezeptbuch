@@ -254,6 +254,8 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   font-size: 15px;
   font-weight: 600;
   line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .card .meta {
@@ -1153,9 +1155,10 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
 }
 
 .add-card .photo.placeholder {
-  font-size: 48px;
-  color: var(--accent);
+  font-size: 64px;
+  color: #fff;
   font-weight: 300;
+  background: #4caf50 !important;
 }
 
 /* ---------- Toast ---------- */
