@@ -1596,7 +1596,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   display: grid;
   grid-template-columns: 100px 1fr;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   padding: 12px;
   background: var(--bg);
   border-radius: 8px;
@@ -1608,9 +1608,14 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   color: var(--text);
   font-size: 14px;
   white-space: nowrap;
+  margin-top: 4px;
 }
 
-.weekplan-input {
+.weekplan-autocomplete {
+  position: relative;
+}
+
+.weekplan-search {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #d0c5b9;
@@ -1621,14 +1626,77 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   font-family: inherit;
 }
 
-.weekplan-input::placeholder {
+.weekplan-search::placeholder {
   color: var(--muted);
 }
 
-.weekplan-input:focus {
+.weekplan-search:focus {
   outline: none;
   border-color: #e8590c;
   box-shadow: 0 0 0 2px rgba(232, 89, 12, 0.1);
+}
+
+.weekplan-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid #d0c5b9;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.weekplan-suggestion {
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.weekplan-suggestion:hover {
+  background: #f5f0ea;
+}
+
+.weekplan-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  min-height: 24px;
+}
+
+.weekplan-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #e8590c;
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.weekplan-tag-remove {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.weekplan-tag-remove:hover {
+  opacity: 0.7;
 }
 
 .weekplan-save-btn {

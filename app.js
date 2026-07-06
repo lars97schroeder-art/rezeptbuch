@@ -439,10 +439,18 @@ function renderWeekplan() {
 
   let daysHTML = '';
   for (const day of days) {
+    const recipeId = weekplan[day.key];
+    const recipe = recipeId ? data.recipes.find(r => r.id === recipeId) : null;
+    const displayName = recipe ? titleWithEmoji(recipe) : '';
+
     daysHTML += `
       <div class="weekplan-day">
         <label class="weekplan-label">${day.label}</label>
-        <input type="text" class="weekplan-input" data-day="${day.key}" value="${esc(weekplan[day.key] || '')}" placeholder="z.B. Pasta">
+        <div class="weekplan-autocomplete" data-day="${day.key}">
+          <input type="text" class="weekplan-search" placeholder="Rezept suchen..." autocomplete="off">
+          <div class="weekplan-suggestions" hidden></div>
+          <div class="weekplan-selected">${displayName ? `<span class="weekplan-tag">${esc(displayName)} <button class="weekplan-tag-remove">✕</button></span>` : ''}</div>
+        </div>
       </div>`;
   }
 
@@ -458,13 +466,75 @@ function renderWeekplan() {
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
 
+  // Autocomplete Setup
+  for (const dayEl of el.querySelectorAll('.weekplan-autocomplete')) {
+    const dayKey = dayEl.dataset.day;
+    const searchInput = dayEl.querySelector('.weekplan-search');
+    const suggestionsDiv = dayEl.querySelector('.weekplan-suggestions');
+    const selectedDiv = dayEl.querySelector('.weekplan-selected');
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
+        suggestionsDiv.hidden = true;
+        return;
+      }
+
+      // Suche Rezepte
+      const matches = data.recipes.filter(r =>
+        titleWithEmoji(r).toLowerCase().includes(query) ||
+        r.category.toLowerCase().includes(query)
+      ).slice(0, 8);
+
+      if (matches.length === 0) {
+        suggestionsDiv.hidden = true;
+        return;
+      }
+
+      // Zeige Vorschläge
+      suggestionsDiv.innerHTML = matches.map(r => `
+        <div class="weekplan-suggestion" data-id="${esc(r.id)}">
+          ${emojiFor(r)} ${esc(titleWithEmoji(r))}
+        </div>
+      `).join('');
+      suggestionsDiv.hidden = false;
+
+      // Click Handler für Vorschläge
+      for (const suggEl of suggestionsDiv.querySelectorAll('.weekplan-suggestion')) {
+        suggEl.onclick = () => {
+          const recipeId = suggEl.dataset.id;
+          const recipe = data.recipes.find(r => r.id === recipeId);
+          weekplan[dayKey] = recipeId;
+
+          // Update UI
+          selectedDiv.innerHTML = `<span class="weekplan-tag">${esc(titleWithEmoji(recipe))} <button class="weekplan-tag-remove">✕</button></span>`;
+          searchInput.value = '';
+          suggestionsDiv.hidden = true;
+
+          // Remove-Button
+          selectedDiv.querySelector('.weekplan-tag-remove').onclick = () => {
+            weekplan[dayKey] = '';
+            selectedDiv.innerHTML = '';
+            searchInput.value = '';
+          };
+        };
+      }
+    });
+
+    // Remove-Button für bestehende Tags
+    const removeBtn = selectedDiv.querySelector('.weekplan-tag-remove');
+    if (removeBtn) {
+      removeBtn.onclick = () => {
+        weekplan[dayKey] = '';
+        selectedDiv.innerHTML = '';
+        searchInput.value = '';
+      };
+    }
+  }
+
   // Save Button
   el.querySelector('.weekplan-save-btn').onclick = () => {
-    const plan = {};
-    for (const input of el.querySelectorAll('.weekplan-input')) {
-      plan[input.dataset.day] = input.value;
-    }
-    saveWeekplan(plan);
+    saveWeekplan(weekplan);
     toast('✅ Wochenplan gespeichert');
   };
 
