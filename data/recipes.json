@@ -1,5 +1,5 @@
 {
-  "version": 14,
+  "version": 15,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -118,7 +118,7 @@
         "Nudeln abgießen (etwas Nudelwasser aufheben) und in die Pfanne geben.",
         "Pfanne vom Herd nehmen, Ei-Käse-Mischung unterrühren (ggf. mit Nudelwasser), cremig rühren"
       ],
-      "notes": "Die Pfanne muss vom Herd sein, sonst gibt es Rührei!",
+      "notes": "",
       "bereich": "kochen"
     },
     {
