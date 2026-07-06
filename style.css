@@ -117,7 +117,7 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   font-weight: 700;
 }
 
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 10px; }
 
 .actions button {
   font-size: 20px;
@@ -132,6 +132,15 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
 }
 
 .actions button:active { transform: scale(0.92); }
+
+.btn-tinder-primary {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(232, 89, 12, 0.3) !important;
+  width: 50px !important;
+  height: 50px !important;
+}
 
 #btn-update.spinning { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
