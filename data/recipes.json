@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -96,23 +96,30 @@
       "category": "Pasta & Gnocchi",
       "time": "25 Min.",
       "servings": "2 Portionen",
+      "emoji": "",
       "image": "data/images/spaghetti-carbonara-1783240941.jpg",
+      "images": [
+        "data/images/spaghetti-carbonara-1783240941.jpg"
+      ],
       "ingredients": [
         "250 g Spaghetti",
-        "100 g Guanciale oder Pancetta",
-        "2 Eier + 1 Eigelb",
-        "60 g Pecorino, gerieben",
+        "1 Rewe Bio Bacon (2 wären besser 😏)",
+        "3 Eigelb + 1 ganz",
+        "60 g Pecorino",
+        "60 g Parmesan",
         "Schwarzer Pfeffer",
         "Salz"
       ],
       "steps": [
-        "Spaghetti in reichlich Salzwasser al dente kochen.",
-        "Guanciale in Würfel schneiden und in der Pfanne knusprig auslassen.",
-        "Eier, Eigelb und Pecorino mit viel Pfeffer verquirlen.",
+        "Spaghetti in reichlich Salzwasser al dente kochen",
+        "Eine Tasse Pasta Wasser an die Seite",
+        "Bacon in der Pfanne knusprig auslassen.",
+        "Eier, Eigelb und Käse mit Pfeffer verquirlen.",
         "Nudeln abgießen (etwas Nudelwasser aufheben) und in die Pfanne geben.",
-        "Pfanne vom Herd nehmen, Ei-Käse-Mischung unterrühren, mit Nudelwasser cremig rühren."
+        "Pfanne vom Herd nehmen, Ei-Käse-Mischung unterrühren (ggf. mit Nudelwasser), cremig rühren"
       ],
-      "notes": "Die Pfanne muss vom Herd sein, sonst gibt es Rührei!"
+      "notes": "Die Pfanne muss vom Herd sein, sonst gibt es Rührei!",
+      "bereich": "kochen"
     },
     {
       "id": "schinkennudeln",
