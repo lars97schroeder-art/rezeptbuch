@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:12:03.154Z",
+  "updated": "2026-07-06T22:12:23.743Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1219,6 +1219,22 @@
         "Tomaten",
         "Parmesan"
       ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "pesto-snoodels",
+      "title": "Pesto Snoodels",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/pesto-snoodels-1783375942-0.jpg",
+      "images": [
+        "data/images/pesto-snoodels-1783375942-0.jpg"
+      ],
+      "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "kochen"
