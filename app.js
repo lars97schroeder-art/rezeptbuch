@@ -652,34 +652,37 @@ function attachTagHandlers(selectedDiv, dayKey) {
       const endY = e.changedTouches[0].clientY;
       const endX = e.changedTouches[0].clientX;
 
-      // Cleanup Ghost ZUERST damit elementFromPoint nicht den Ghost findet
+      // Suche SOFORT das Ziel-Element BEVOR wir den Ghost entfernen
+      // (damit elementFromPoint noch die echten Elemente unter den Koordinaten findet)
+      let targetDay = null;
+
+      // Temporär Ghost unsichtbar machen statt zu entfernen
+      dragGhost.style.pointerEvents = 'none';
+      dragGhost.style.display = 'none';
+
+      // Jetzt können wir elementFromPoint nutzen
+      let element = document.elementFromPoint(endX, endY);
+      console.log('elementFromPoint result:', element?.tagName, element?.className, 'at', endX, endY);
+
+      targetDay = element?.closest('.weekplan-day')?.dataset.day;
+      console.log('targetDay found:', targetDay);
+
+      // Ghost aufräumen
       dragGhost.remove();
       dragGhost = null;
 
-      // Warte kurz damit Ghost weg ist
-      setTimeout(() => {
-        // Finde Tag unter der aktuellen Position
-        let element = document.elementFromPoint(endX, endY);
-        let targetDay = element?.closest('.weekplan-day')?.dataset.day;
+      draggedElement.style.opacity = '1';
 
-        // Fallback: Wenn nichts gefunden, versuch die .weekplan-day direkt
-        if (!targetDay) {
-          element = document.elementFromPoint(endX, endY);
-          const dayEl = element?.closest('.weekplan-day');
-          targetDay = dayEl?.dataset.day;
-        }
+      // Verschiebe wenn anderer Tag gefunden
+      if (targetDay && targetDay !== dayKey) {
+        console.log('Verschiebe von', dayKey, 'zu', targetDay);
+        performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
+      } else {
+        console.log('Keine Verschiebung nötig oder kein Tag gefunden');
+      }
 
-        draggedElement.style.opacity = '1';
-
-        // Verschiebe wenn anderer Tag gefunden
-        if (targetDay && targetDay !== dayKey) {
-          console.log('Verschiebe von', dayKey, 'zu', targetDay);
-          performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
-        }
-
-        draggedTag = null;
-        draggedElement = null;
-      }, 50);
+      draggedTag = null;
+      draggedElement = null;
     };
   }
 }
