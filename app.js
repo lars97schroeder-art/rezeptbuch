@@ -433,9 +433,10 @@ function renderTinderCard() {
       </div>
       <div class="tinder-buttons">
         <button class="t-nope" aria-label="Nö">👎</button>
+        <button class="t-superlike" aria-label="Superlike">⭐</button>
         <button class="t-like" aria-label="Will ich">❤️</button>
       </div>
-      <div class="tinder-hint">Wischen oder tippen: links = nö, rechts = will ich!</div>
+      <div class="tinder-hint">Wischen oder tippen: links = nö, Mitte = superlike, rechts = will ich!</div>
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -443,6 +444,7 @@ function renderTinderCard() {
   attachSwipe(card, dir => swipeTinder(dir));
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
   el.querySelector('.t-like').onclick = () => flyOut(card, 1);
+  el.querySelector('.t-superlike').onclick = () => superlike(top);
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }
@@ -451,6 +453,21 @@ function swipeTinder(dir) {
   const r = tinder.deck.shift();
   if (dir > 0) tinder.likes.push(r);
   renderTinderCard();
+}
+
+function superlike(recipe) {
+  const el = $('#detail');
+  const overlay = document.createElement('div');
+  overlay.className = 'superlike-overlay';
+  overlay.innerHTML = '<div class="superlike-text">SUPERLIKE ⭐</div>';
+  el.appendChild(overlay);
+
+  setTimeout(() => {
+    overlay.remove();
+    tinder.deck.shift();
+    renderDetail(recipe.id);
+    history.pushState({ view: 'tinder-result-recipe', from: 'superlike' }, '');
+  }, 2500);
 }
 
 function flyOut(card, dir) {
