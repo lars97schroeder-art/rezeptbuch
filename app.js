@@ -73,6 +73,7 @@ function saveLocal() {
 
 async function update(showErrors = true) {
   try {
+    const oldData = JSON.parse(JSON.stringify(data)); // Deep copy
     const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const fresh = await res.json();
@@ -96,11 +97,41 @@ async function update(showErrors = true) {
       if (!wanted.has(req.url)) await cache.delete(req);
     }
 
-    const changed = fresh.version !== data.version;
     data = fresh;
     saveLocal();
     render();
-    toast(changed ? `Aktualisiert – ${data.recipes.length} Rezepte ✓` : 'Alles schon aktuell ✓');
+
+    // Vergleiche alte und neue Daten und erstelle Update-Nachricht
+    const messages = [];
+
+    // Check für neue Version
+    if (fresh.version !== oldData.version) {
+      messages.push(`Update: v${fresh.version}`);
+    }
+
+    // Check für neue/aktualisierte Rezepte
+    const oldIds = new Set(oldData.recipes.map(r => r.id));
+    const newRecipes = fresh.recipes.filter(r => !oldIds.has(r.id));
+    if (newRecipes.length > 0) {
+      messages.push(`${newRecipes.length} neue ${newRecipes.length === 1 ? 'Rezept' : 'Rezepte'}`);
+    }
+
+    // Check für aktualisierte Rezepte
+    const oldMap = new Map(oldData.recipes.map(r => [r.id, r]));
+    const updatedRecipes = fresh.recipes.filter(r => {
+      const old = oldMap.get(r.id);
+      return old && JSON.stringify(old) !== JSON.stringify(r);
+    });
+    if (updatedRecipes.length > 0) {
+      messages.push(`${updatedRecipes.length} ${updatedRecipes.length === 1 ? 'Rezept aktualisiert' : 'Rezepte aktualisiert'}`);
+    }
+
+    // Zeige Nachricht an
+    if (messages.length > 0) {
+      toast(messages.join('\n') + ' ✓');
+    } else {
+      toast('Alles schon aktuell ✓');
+    }
   } catch (e) {
     if (showErrors) toast('Keine Verbindung – gespeicherte Rezepte bleiben da 📴');
   } finally {

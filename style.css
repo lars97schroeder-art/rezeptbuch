@@ -1191,10 +1191,13 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   transform: translateX(-50%);
   background: var(--text);
   color: var(--bg);
-  padding: 10px 20px;
-  border-radius: 999px;
-  font-size: 14px;
+  padding: clamp(10px, 2vw, 16px) clamp(16px, 3vw, 24px);
+  border-radius: clamp(8px, 2vw, 12px);
+  font-size: clamp(13px, 2.5vw, 14px);
   z-index: 30;
-  white-space: nowrap;
+  white-space: pre-wrap;
   box-shadow: var(--shadow);
+  max-width: 90vw;
+  text-align: center;
+  line-height: 1.4;
 }
