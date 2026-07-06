@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:20:31.012Z",
+  "updated": "2026-07-06T20:21:15.599Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -290,14 +290,22 @@
     {
       "id": "sommerrollen",
       "title": "Sommerrollen",
-      "category": "Asia",
+      "category": [
+        "Asia"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥢",
-      "image": "",
+      "image": "data/images/sommerrollen-1783369271-0.jpg",
+      "images": [
+        "data/images/sommerrollen-1783369271-0.jpg",
+        "data/images/sommerrollen-1783369271-1.jpg",
+        "data/images/sommerrollen-1783369271-2.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "curry",
