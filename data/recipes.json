@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 13,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -64,15 +64,19 @@
     },
     {
       "id": "basic-bitch-pasta",
-      "title": "Basic Bitch Pasta",
+      "title": "Italian Basic Bitch Pasta",
       "category": "Pasta & Gnocchi",
       "time": "",
       "servings": "",
       "emoji": "💅",
       "image": "data/images/basic-bitch-pasta-1783240941.jpg",
+      "images": [
+        "data/images/basic-bitch-pasta-1783240941.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": "Rucola, Pesto, Tomaten"
+      "notes": "Rucola, Pesto, Tomaten",
+      "bereich": "kochen"
     },
     {
       "id": "curry-kokos-pasta",
