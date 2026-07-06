@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:13:19.666Z",
+  "updated": "2026-07-06T22:17:00.945Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1240,6 +1240,20 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
+    },
+    {
+      "id": "annika-s-san-diego-breakfast-bagel",
+      "title": "Annika’s San Diego Breakfast Bagel 🥯",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "fruehstueck"
     }
   ]
 }
