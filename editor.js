@@ -152,27 +152,26 @@ function openEditor(id) {
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
     <div class="ed-row">
-      <div class="ed-field"><label>Kategorien</label>
-        <div id="ed-categories-container" class="ed-categories-container"></div></div>
       <div class="ed-field"><label>Bereich</label>
         <select id="ed-bereich">
           <option value="kochen"${bereich === 'kochen' ? ' selected' : ''}>🍳 Kochen</option>
           <option value="backen"${bereich === 'backen' ? ' selected' : ''}>🧁 Backen</option>
           <option value="fruehstueck"${bereich === 'fruehstueck' ? ' selected' : ''}>🥐 Frühstück</option>
         </select></div>
+      <div class="ed-field"><label>Kategorien</label>
+        <div id="ed-categories-container" class="ed-categories-container"></div></div>
+    </div>
+    <div class="ed-row">
+      <div class="ed-field"><label>Emoji</label>
+        <input id="ed-emoji" placeholder="🍕" value="${r ? esc(r.emoji || '') : ''}"></div>
+      <div class="ed-field"><label>Gruppe</label>
+        <div id="ed-groups-container" class="ed-groups-container"></div></div>
     </div>
     <div class="ed-row">
       <div class="ed-field"><label>Zeit</label>
         <input id="ed-time" placeholder="z. B. 30 Min." value="${r ? esc(r.time) : ''}"></div>
       <div class="ed-field"><label>Portionen</label>
         <input id="ed-servings" placeholder="z. B. 2 Portionen" value="${r ? esc(r.servings) : ''}"></div>
-    </div>
-    <div class="ed-row">
-      <div class="ed-field"><label>Emoji</label>
-        <input id="ed-emoji" placeholder="🍕" value="${r ? esc(r.emoji || '') : ''}"></div>
-      <div class="ed-field"><label>Gruppe (fasst Varianten zusammen)</label>
-        <input id="ed-group" list="ed-groups" value="${r ? esc(r.group || '') : ''}">
-        <datalist id="ed-groups">${groups.map(g => `<option value="${esc(g)}">`).join('')}</datalist></div>
     </div>
     <div class="ed-field"><label>Zutaten (eine pro Zeile)</label>
       <textarea id="ed-ingredients" rows="6">${r ? esc((r.ingredients || []).join('\n')) : ''}</textarea></div>
@@ -194,6 +193,10 @@ function openEditor(id) {
   const selectedCats = r ? (Array.isArray(r.category) ? r.category : (r.category ? [r.category] : [])) : [];
   window.edSelectedCategories = selectedCats;
   renderCategoriesContainer();
+
+  // Gruppen-Auswahl initialisieren
+  window.edSelectedGroup = r?.group || '';
+  renderGroupsContainer();
 
   renderEdPhotos();
   $('#ed-photo-input').onchange = async e => {
@@ -271,8 +274,7 @@ async function saveFromEditor(existingId) {
       notes: $('#ed-notes').value.trim(),
       bereich: $('#ed-bereich').value,
     };
-    const group = $('#ed-group').value.trim();
-    if (group) recipe.group = group;
+    if (window.edSelectedGroup) recipe.group = window.edSelectedGroup;
 
     if (old) {
       remote.recipes[remote.recipes.indexOf(old)] = recipe;
@@ -444,6 +446,69 @@ function openCategorySelector(allCats) {
     }
     window.edSelectedCategories = selected;
     renderCategoriesContainer();
+    modal.remove();
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+// Gruppen-Auswahl UI
+function renderGroupsContainer() {
+  const container = $('#ed-groups-container');
+  if (!container) return;
+
+  const allGroups = [...new Set(data.recipes.map(x => x.group).filter(Boolean))].sort();
+
+  let html = '<div class="ed-groups-chips">';
+  if (window.edSelectedGroup) {
+    html += `<span class="ed-group-chip">${esc(window.edSelectedGroup)} <button type="button" class="ed-group-remove" data-group="${esc(window.edSelectedGroup)}">×</button></span>`;
+  }
+  html += `<button type="button" class="ed-group-add" id="ed-group-add-btn">+ Gruppe</button></div>`;
+
+  container.innerHTML = html;
+
+  const removeBtn = container.querySelector('.ed-group-remove');
+  if (removeBtn) {
+    removeBtn.onclick = (e) => {
+      e.preventDefault();
+      window.edSelectedGroup = '';
+      renderGroupsContainer();
+    };
+  }
+
+  container.querySelector('#ed-group-add-btn').onclick = (e) => {
+    e.preventDefault();
+    openGroupSelector(allGroups);
+  };
+}
+
+function openGroupSelector(allGroups) {
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+
+  let html = '<div class="ed-modal"><h3>Gruppe auswählen</h3><div class="ed-group-list">';
+
+  // Leere Option (keine Gruppe)
+  html += `<label class="ed-group-option"><input type="radio" name="group" value="" ${!window.edSelectedGroup ? 'checked' : ''}> (Keine Gruppe)</label>`;
+
+  for (const group of allGroups) {
+    html += `<label class="ed-group-option"><input type="radio" name="group" value="${esc(group)}" ${window.edSelectedGroup === group ? 'checked' : ''}> ${esc(group)}</label>`;
+  }
+
+  html += `</div><div class="ed-group-new"><input id="ed-new-group" placeholder="Neue Gruppe..."></div><div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button><button type="button" class="ed-modal-ok">OK</button></div></div>`;
+
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
+
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.ed-modal-ok').onclick = () => {
+    let selected = modal.querySelector('input[name="group"]:checked').value;
+    const newGroup = modal.querySelector('#ed-new-group').value.trim();
+    if (newGroup) {
+      selected = newGroup;
+    }
+    window.edSelectedGroup = selected;
+    renderGroupsContainer();
     modal.remove();
   };
 
