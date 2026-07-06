@@ -509,18 +509,19 @@ function spinSlot(winners) {
   const pick = Math.floor(Math.random() * winners.length);
   let count = 0;
   const maxSpins = 25 + Math.random() * 15;
+  const itemHeight = 140; // muss mit CSS .slot-item height übereinstimmen
 
   const animate = () => {
     if (count < maxSpins) {
-      const offset = ((count % winners.length) * -120);
+      const offset = ((count % winners.length) * -itemHeight);
       slots.style.transform = `translateY(${offset}px)`;
       slots.style.transition = 'none';
       count++;
-      const delay = Math.min(60, 30 + count * 3);
+      const delay = Math.min(35, 15 + count * 1.5);
       setTimeout(animate, delay);
     } else {
-      // Final spin zur gewählten Position
-      const offset = (pick * -120);
+      // Final spin zur gewählten Position (Mitte ist immer sichtbar)
+      const offset = (pick * -itemHeight);
       slots.style.transition = `transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)`;
       slots.style.transform = `translateY(${offset}px)`;
       setTimeout(() => {
