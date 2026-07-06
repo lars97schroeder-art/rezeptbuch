@@ -359,6 +359,21 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   z-index: 21;
 }
 
+.detail-home {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 21;
+}
+
 .detail-body {
   max-width: 700px;
   margin: 0 auto;

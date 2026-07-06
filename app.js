@@ -230,6 +230,7 @@ function renderGroup(name) {
   const el = $('#detail');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
+    <button class="detail-home" aria-label="Startseite">🏠</button>
     <div class="detail-body group-body">
       <h2>${esc(name)}</h2>
       <div class="detail-meta">${members.length} Varianten – such dir eine aus</div>
@@ -245,6 +246,10 @@ function renderGroup(name) {
       </div>
     </div>`;
   el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-home').onclick = () => {
+    el.hidden = true;
+    document.body.style.overflow = '';
+  };
   for (const b of el.querySelectorAll('.variant')) {
     b.onclick = () => openRecipe(b.dataset.id);
   }
@@ -280,6 +285,7 @@ function renderDetail(id, opts = {}) {
   const meta = [r.category, r.time, r.servings].filter(Boolean).join(' · ');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
+    <button class="detail-home" aria-label="Startseite">🏠</button>
     ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
     ${detailPhotosHTML(r)}
     <div class="detail-body">
@@ -292,6 +298,10 @@ function renderDetail(id, opts = {}) {
       ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
     </div>`;
   el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-home').onclick = () => {
+    el.hidden = true;
+    document.body.style.overflow = '';
+  };
   const rnd = el.querySelector('.detail-random');
   if (rnd) {
     rnd.onclick = () => {
@@ -510,6 +520,7 @@ function renderTinderResult(ids) {
       </div>
 
       <button class="detail-close" aria-label="Zurück">←</button>
+      <button class="detail-home" aria-label="Startseite" style="display:none;">🏠</button>
       <div class="detail-body group-body" style="display:none;">
         <h2>Eure Top ${winners.length} ❤️</h2>
         <div class="detail-meta">Wer gewinnt?</div>
@@ -529,6 +540,10 @@ function renderTinderResult(ids) {
       </div>`;
 
     el.querySelector('.detail-close').onclick = () => history.back();
+    el.querySelector('.detail-home').onclick = () => {
+      el.hidden = true;
+      document.body.style.overflow = '';
+    };
 
     // Nach 2.5 Sekunden: Match-Screen ausblenden, Slot-Machine einblenden
     setTimeout(() => {
@@ -538,6 +553,7 @@ function renderTinderResult(ids) {
       const btn = el.querySelector('#slot-btn');
       const again = el.querySelector('.tinder-again');
       const closeBtn = el.querySelector('.detail-close');
+      const homeBtn = el.querySelector('.detail-home');
 
       matchScreen.style.display = 'none';
       body.style.display = 'block';
@@ -545,6 +561,7 @@ function renderTinderResult(ids) {
       btn.style.display = 'block';
       again.style.display = 'block';
       closeBtn.style.display = 'none';
+      homeBtn.style.display = 'block';
 
       // Auto-spin starten
       spinSlot(winners);
