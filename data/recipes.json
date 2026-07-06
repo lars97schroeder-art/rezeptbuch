@@ -1,5 +1,5 @@
 {
-  "version": 32,
+  "version": 33,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -315,15 +315,20 @@
     },
     {
       "id": "burger",
-      "title": "Burger",
+      "title": "(Veggie) Burger",
       "category": "Streetfood",
       "time": "",
       "servings": "",
       "emoji": "🍔",
-      "image": "",
+      "image": "data/images/burger-1783328009-0.jpg",
+      "images": [
+        "data/images/burger-1783328009-0.jpg",
+        "data/images/burger-1783328009-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Normal, Smashed, oder Veggie ?",
+      "bereich": "kochen"
     },
     {
       "id": "gyros",
