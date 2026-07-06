@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T18:55:44.789Z",
+  "updated": "2026-07-06T22:17:00.945Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -253,18 +253,6 @@
       "bereich": "kochen"
     },
     {
-      "id": "cannelloni",
-      "title": "Cannelloni",
-      "category": "Pasta & Gnocchi",
-      "time": "",
-      "servings": "",
-      "emoji": "",
-      "image": "",
-      "ingredients": [],
-      "steps": [],
-      "notes": "Noch ausprobieren!"
-    },
-    {
       "id": "nasty-gnocchi",
       "title": "Nasty Gnocchi",
       "category": "Pasta & Gnocchi",
@@ -284,26 +272,40 @@
     {
       "id": "gnocchi-mit-cashew-pesto",
       "title": "Gnocchi mit Cashew-Pesto",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/gnocchi-mit-cashew-pesto-1783375921-0.jpg",
+      "images": [
+        "data/images/gnocchi-mit-cashew-pesto-1783375921-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "sommerrollen",
       "title": "Sommerrollen",
-      "category": "Asia",
+      "category": [
+        "Asia"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥢",
-      "image": "",
+      "image": "data/images/sommerrollen-1783369271-0.jpg",
+      "images": [
+        "data/images/sommerrollen-1783369271-0.jpg",
+        "data/images/sommerrollen-1783369271-1.jpg",
+        "data/images/sommerrollen-1783369271-2.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "curry",
@@ -335,16 +337,40 @@
       "bereich": "kochen"
     },
     {
+      "id": "asia-snoodles-pfanne",
+      "title": "Asia Snoodles Pfanne",
+      "category": [
+        "Asia"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/asia-snoodles-pfanne-1783373686-0.jpg",
+      "images": [
+        "data/images/asia-snoodles-pfanne-1783373686-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
       "id": "pizzaaaaa",
       "title": "Pizzaaaaa",
-      "category": "Streetfood",
+      "category": [
+        "Streetfood"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍕",
-      "image": "",
+      "image": "data/images/pizzaaaaa-1783369303-0.jpg",
+      "images": [
+        "data/images/pizzaaaaa-1783369303-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "burger",
@@ -472,14 +498,20 @@
     {
       "id": "frikadellen",
       "title": "Frikadellen",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/frikadellen-1783369338-0.jpg",
+      "images": [
+        "data/images/frikadellen-1783369338-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "wuerstelgulasch",
@@ -508,14 +540,21 @@
     {
       "id": "sellerieschnitzel",
       "title": "Sellerieschnitzel",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/sellerieschnitzel-1783369170-0.jpg",
+      "images": [
+        "data/images/sellerieschnitzel-1783369170-0.jpg",
+        "data/images/sellerieschnitzel-1783369170-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Auf dem Foto mit süßkartoffelpüree",
+      "bereich": "kochen"
     },
     {
       "id": "bratwuerste-mit-sauerkraut",
@@ -565,14 +604,20 @@
     {
       "id": "kartoffelsuppe",
       "title": "Kartoffelsuppe",
-      "category": "Eintöpfe & Suppen",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥔",
-      "image": "",
+      "image": "data/images/kartoffelsuppe-1783375034-0.jpg",
+      "images": [
+        "data/images/kartoffelsuppe-1783375034-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "linseneintopf",
@@ -589,14 +634,38 @@
     {
       "id": "gulasch",
       "title": "Gulasch",
-      "category": "Eintöpfe & Suppen",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/gulasch-1783369363-0.jpg",
+      "images": [
+        "data/images/gulasch-1783369363-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Rezept von siggi holen!!",
+      "bereich": "kochen"
+    },
+    {
+      "id": "gemuesesuppe",
+      "title": "Gemüsesuppe",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/gemuesesuppe-1783375474-0.jpg",
+      "images": [
+        "data/images/gemuesesuppe-1783375474-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "rattatatatatatouille",
@@ -617,26 +686,38 @@
     {
       "id": "kartoffel-hackfleisch-pfanne",
       "title": "Kartoffel-Hackfleisch-Pfanne",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥔",
-      "image": "",
+      "image": "data/images/kartoffel-hackfleisch-pfanne-1783372410-0.jpg",
+      "images": [
+        "data/images/kartoffel-hackfleisch-pfanne-1783372410-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Oder halt schupfnudeln haha",
+      "bereich": "kochen"
     },
     {
       "id": "spanische-tortilla",
       "title": "Spanische Tortilla",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🇪🇸",
-      "image": "",
+      "image": "data/images/spanische-tortilla-1783375100-0.jpg",
+      "images": [
+        "data/images/spanische-tortilla-1783375100-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Rezept vom Kochkurs mit Ros aus Barcelona raussuchen",
+      "bereich": "kochen"
     },
     {
       "id": "kartoffelgratin",
@@ -653,18 +734,24 @@
     {
       "id": "zwiebelkuchen",
       "title": "Zwiebelkuchen",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🧅",
-      "image": "",
+      "image": "data/images/zwiebelkuchen-1783372436-0.jpg",
+      "images": [
+        "data/images/zwiebelkuchen-1783372436-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "shakshuka",
-      "title": "Shakshuka",
+      "title": "Shakshuka / Menemen",
       "category": [
         "Ofen & Pfanne"
       ],
@@ -673,7 +760,8 @@
       "emoji": "🍳",
       "image": "data/images/shakshuka-1783240941.jpg",
       "images": [
-        "data/images/shakshuka-1783240941.jpg"
+        "data/images/shakshuka-1783240941.jpg",
+        "data/images/shakshuka-1783375616-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
@@ -704,14 +792,20 @@
     {
       "id": "wraps",
       "title": "Wraps",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌯",
-      "image": "",
+      "image": "data/images/wraps-1783372451-0.jpg",
+      "images": [
+        "data/images/wraps-1783372451-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "backcamembert-mit-salat",
@@ -727,15 +821,22 @@
     },
     {
       "id": "caesar-salat",
-      "title": "Caesar Salat",
-      "category": "Ist das Kochen?",
+      "title": "Cesar Salat",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/caesar-salat-1783372507-0.jpg",
+      "images": [
+        "data/images/caesar-salat-1783372507-0.jpg",
+        "data/images/caesar-salat-1783375897-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "italienischer-nudelsalat",
@@ -763,14 +864,20 @@
     {
       "id": "couscous-salat",
       "title": "Couscous-Salat",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/couscous-salat-1783372555-0.jpg",
+      "images": [
+        "data/images/couscous-salat-1783372555-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "italienisches-baguette",
@@ -785,27 +892,60 @@
       "notes": "Baguette mit Parmaschinken und Mozzarella"
     },
     {
+      "id": "brotzeit",
+      "title": "Brotzeit",
+      "category": [
+        "Ist das Kochen?"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/brotzeit-1783373555-0.jpg",
+      "images": [
+        "data/images/brotzeit-1783373555-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
       "id": "breakfast-wrap",
       "title": "Breakfast Wrap",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🌯",
       "image": "",
-      "ingredients": [],
-      "steps": [],
+      "images": [],
+      "ingredients": [
+        "Wrap",
+        "Ei",
+        "Schuss Milch",
+        "Nach Belieben Gemüse und Salat"
+      ],
+      "steps": [
+        "Ei mit dem Gemüse als Rührei (bzw. Omelette) verquirlen",
+        "In eine Pfanne geben",
+        "Wrap auf die Ei-Masse",
+        "Warten bis Ei gestockt ist und am wrap klebt",
+        "Umdrehen, wrap bisschen rösten",
+        "Ggf Salat rein, genießen"
+      ],
       "notes": "",
       "bereich": "fruehstueck"
     },
     {
       "id": "maxvorstadt-sandwich",
       "title": "Maxvorstadt Sandwich",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🥪",
-      "image": "",
-      "images": [],
+      "image": "data/images/maxvorstadt-sandwich-1783375835-0.jpg",
+      "images": [
+        "data/images/maxvorstadt-sandwich-1783375835-0.jpg"
+      ],
       "ingredients": [
         "Toast",
         "Miracel Whip",
@@ -813,21 +953,8 @@
         "Bacon",
         "Ei",
         "Gouda mittelalt",
-        "➕Tomate, Gurke"
+        "Wahlweise Tomate, Gurke"
       ],
-      "steps": [],
-      "notes": "",
-      "bereich": "fruehstueck"
-    },
-    {
-      "id": "many-man",
-      "title": "Many Man",
-      "category": "",
-      "time": "",
-      "servings": "",
-      "emoji": "",
-      "image": "",
-      "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "fruehstueck"
@@ -835,20 +962,28 @@
     {
       "id": "strammer-max-nach-annikas-art",
       "title": "Strammer Max nach Annikas Art",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🍞",
-      "image": "",
-      "ingredients": [],
+      "image": "data/images/strammer-max-nach-annikas-art-1783375997-0.jpg",
+      "images": [
+        "data/images/strammer-max-nach-annikas-art-1783375997-0.jpg"
+      ],
+      "ingredients": [
+        "Leberkäs",
+        "Brot",
+        "Ei",
+        "Käse"
+      ],
       "steps": [],
-      "notes": "",
-      "bereich": "fruehstueck"
+      "notes": "I knowwww das Foto ist nicht repräsentativ 🥺",
+      "bereich": "kochen"
     },
     {
       "id": "granola",
       "title": "Granola",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🥣",
@@ -857,7 +992,17 @@
         "data/images/granola-1783240941.jpg",
         "data/images/granola-1783326982-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "375g Mehrkornmischung",
+        "1 Hand Walnüsse",
+        "1 Hand cashews",
+        "50g Kakao",
+        "Prise Salz",
+        "Prise Zucker",
+        "50g ahornsirup",
+        "100g Öl",
+        "100 Gramm dunkle Schoko"
+      ],
       "steps": [],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
       "bereich": "fruehstueck"
@@ -880,16 +1025,20 @@
     },
     {
       "id": "weisswurst",
-      "title": "Weißwurst",
-      "category": "",
+      "title": "Weißwurstfrühstück",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "data/images/weisswurst-1783328545-0.jpg",
+      "image": "data/images/weisswurst-1783372616-0.jpg",
       "images": [
-        "data/images/weisswurst-1783328545-0.jpg"
+        "data/images/weisswurst-1783372616-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "A paar Würstel",
+        "Brezn",
+        "Süßer Senf"
+      ],
       "steps": [],
       "notes": "O’zapft is",
       "bereich": "fruehstueck"
@@ -939,14 +1088,19 @@
     {
       "id": "kaesekuchen",
       "title": "Käsekuchen",
-      "category": "Kuchen",
+      "category": [
+        "Kuchen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍰",
-      "image": "",
+      "image": "data/images/kaesekuchen-1783372643-0.jpg",
+      "images": [
+        "data/images/kaesekuchen-1783372643-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Auch bekannt als Lars Geburtstagskuchen 😋",
       "bereich": "backen"
     },
     {
@@ -964,6 +1118,142 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
+    },
+    {
+      "id": "zucchini-puffer",
+      "title": "Zucchini Puffer",
+      "category": [
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/zucchini-puffer-1783375518-0.jpg",
+      "images": [
+        "data/images/zucchini-puffer-1783375518-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "waffeln",
+      "title": "Waffeln",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/waffeln-1783372721-0.jpg",
+      "images": [
+        "data/images/waffeln-1783372721-0.jpg",
+        "data/images/waffeln-1783372721-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "Die besten Waffelrezepte sind in Annika’s Waffelbuch ♥️",
+      "bereich": "backen"
+    },
+    {
+      "id": "annika-s-pfannkuchen-crepes",
+      "title": "Annika’s Pfannkuchen (Crepes 😉)",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/annika-s-pfannkuchen-crepes-1783373617-0.jpg",
+      "images": [
+        "data/images/annika-s-pfannkuchen-crepes-1783373617-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "chicken-wings-2",
+      "title": "Chicken Wings",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/chicken-wings-2-1783373862-0.jpg",
+      "images": [
+        "data/images/chicken-wings-2-1783373862-0.jpg",
+        "data/images/chicken-wings-2-1783373862-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "weihnachtsgans",
+      "title": "Weihnachtsgans",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/weihnachtsgans-1783375425-0.jpg",
+      "images": [
+        "data/images/weihnachtsgans-1783375425-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "spinat-pasta",
+      "title": "Spinat Pasta",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/spinat-pasta-1783375578-0.jpg",
+      "images": [
+        "data/images/spinat-pasta-1783375578-0.jpg"
+      ],
+      "ingredients": [
+        "Pasta",
+        "Spinat",
+        "Knoblauch",
+        "Tomaten",
+        "Parmesan"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "pesto-snoodels",
+      "title": "Pesto Snoodels",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/pesto-snoodels-1783375942-0.jpg",
+      "images": [
+        "data/images/pesto-snoodels-1783375942-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "annika-s-san-diego-breakfast-bagel",
+      "title": "Annika’s San Diego Breakfast Bagel 🥯",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "fruehstueck"
     }
   ]
 }
