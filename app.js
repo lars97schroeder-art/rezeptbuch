@@ -101,8 +101,10 @@ async function checkAndUpdateIfNeeded() {
     if (!res.ok) return false;
     const fresh = await res.json();
 
-    // Vergleiche global updated Datum
-    if (fresh.updated === data.updated) {
+    // Vergleiche global updated Datum (ISO-Parse für robuste Vergleiche)
+    const oldDate = new Date(data.updated).getTime();
+    const freshDate = new Date(fresh.updated).getTime();
+    if (freshDate === oldDate) {
       console.log('✅ Rezepte sind aktuell');
       return false; // Nichts geändert
     }
@@ -1509,8 +1511,10 @@ function openSettings() {
       const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
       if (res.ok) {
         const fresh = await res.json();
-        // Prüfe ob App-Version oder Rezept-Daten unterscheiden sich
-        if (fresh.updated !== data.updated) {
+        // Prüfe ob Rezept-Daten unterscheiden sich (ISO-Parse für robuste Vergleiche)
+        const oldDate = new Date(data.updated).getTime();
+        const freshDate = new Date(fresh.updated).getTime();
+        if (freshDate !== oldDate) {
           const statusEl = el.querySelector('.update-status');
           if (statusEl) {
             statusEl.innerHTML = `<div style="color: var(--accent); font-weight: 600; margin-top: 8px;">🔄 Update verfügbar</div>`;
@@ -1606,7 +1610,11 @@ document.addEventListener('click', e => {
 
         if (stored) {
           const oldData = JSON.parse(stored);
-          if (fresh.updated !== oldData.updated) {
+          // Parse ISO Timestamps für zuverlässigen Vergleich (ignoriere Format-Unterschiede)
+          const oldDate = new Date(oldData.updated).getTime();
+          const freshDate = new Date(fresh.updated).getTime();
+
+          if (freshDate !== oldDate) {
             shouldReload = true;
             reloadReason = `Rezepte geändert: ${oldData.updated} → ${fresh.updated}`;
             console.log('🔄 FORCE-REFRESH: ' + reloadReason);
