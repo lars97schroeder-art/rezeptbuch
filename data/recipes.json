@@ -149,7 +149,9 @@
     {
       "id": "bolognese",
       "title": "Bolognese",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -160,7 +162,7 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Macht Annika eh am besten",
       "bereich": "kochen"
     },
     {
