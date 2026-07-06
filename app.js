@@ -466,7 +466,7 @@ function superlike(recipe) {
     overlay.remove();
     tinder.deck.shift();
     renderDetail(recipe.id);
-    history.pushState({ view: 'tinder-result-recipe', from: 'superlike' }, '');
+    history.replaceState({ view: 'recipe', id: recipe.id }, '');
   }, 2500);
 }
 
