@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:14:13.345Z",
+  "updated": "2026-07-06T21:14:41.812Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -773,14 +773,20 @@
     {
       "id": "caesar-salat",
       "title": "Caesar Salat",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/caesar-salat-1783372479-0.jpg",
+      "images": [
+        "data/images/caesar-salat-1783372479-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "italienischer-nudelsalat",
