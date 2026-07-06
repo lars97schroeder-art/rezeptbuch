@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:06:19.702Z",
+  "updated": "2026-07-06T22:06:57.490Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -760,7 +760,8 @@
       "emoji": "🍳",
       "image": "data/images/shakshuka-1783240941.jpg",
       "images": [
-        "data/images/shakshuka-1783240941.jpg"
+        "data/images/shakshuka-1783240941.jpg",
+        "data/images/shakshuka-1783375616-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
