@@ -621,6 +621,7 @@ function openSettings() {
 
   const el = $('#editor'); // Reuse editor div für Modal
   el.innerHTML = `
+  <button class="detail-close" aria-label="Zurück">←</button>
   <div class="ed-body settings-body">
     <h2>⚙️ Einstellungen</h2>
 
@@ -657,7 +658,6 @@ function openSettings() {
     </div>
 
     <button class="setting-btn primary" id="refresh-btn">⟳ Datenbank aktualisieren</button>
-    <button class="ed-cancel setting-btn primary">Schließen</button>
 
     <div class="setting-info">
       <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>
@@ -666,7 +666,7 @@ function openSettings() {
     </div>
   </div>`;
 
-  el.querySelector('.ed-cancel').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };
+  el.querySelector('.detail-close').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };
 
   const editToggle = el.querySelector('#edit-toggle');
   if (editToggle) {
