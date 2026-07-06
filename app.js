@@ -1578,9 +1578,60 @@ document.addEventListener('click', e => {
   }
 });
 
-renderModeUI();
-loadLocal();
-render();
+// FORCE-RELOAD beim Start: überprüfe ob Updates da sind BEVOR wir was anzeigen
+(async () => {
+  try {
+    const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const fresh = await res.json();
+      const stored = localStorage.getItem(DATA_KEY);
+
+      if (stored) {
+        try {
+          const oldData = JSON.parse(stored);
+          // Wenn die Timestamps UNTERSCHIEDLICH sind = UPDATE VORHANDEN
+          if (fresh.updated !== oldData.updated) {
+            console.log('🔄 FORCE-REFRESH: Update erkannt beim Start!');
+            console.log('  Alt:', oldData.updated, '→ Neu:', fresh.updated);
+
+            // Aggressiv alles neu laden
+            localStorage.removeItem(DATA_KEY);
+
+            // Service Worker unregistrieren
+            if ('serviceWorker' in navigator) {
+              try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(r => r.unregister()));
+              } catch (e) { console.log('SW unregister error:', e); }
+            }
+
+            // Caches löschen
+            if ('caches' in window) {
+              try {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+              } catch (e) { console.log('Cache delete error:', e); }
+            }
+
+            // FORCE RELOAD mit Cache-Buster
+            console.log('💥 Force-Reload mit Cache-Buster!');
+            window.location.href = window.location.pathname + '?force=' + Date.now() + '&r=' + Math.random();
+            return; // Stoppe hier, der Reload wird die Seite neu starten
+          }
+        } catch (e) {
+          console.error('Fehler beim Timestamp-Vergleich:', e);
+        }
+      }
+    }
+  } catch (e) {
+    console.log('ℹ️ Force-Refresh Check fehlgeschlagen (offline?)');
+  }
+
+  // Wenn KEIN Update: normal laden
+  renderModeUI();
+  loadLocal();
+  render();
+})();
 
 // Beim Start immer nach Updates checken (nicht nur beim Erststart)
 // Das sorgt dafür, dass auch gekachte alte Versionen aktualisiert werden
