@@ -719,12 +719,100 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   font-size: 32px;
 }
 
+/* Tinder Match Screen */
+.tinder-match-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: matchZoomIn 0.6s ease-out;
+}
+
+@keyframes matchZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.match-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.match-text {
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transform: rotate(-12deg);
+  animation: matchSwing 2.5s ease-in-out forwards;
+  letter-spacing: 3px;
+}
+
+@keyframes matchSwing {
+  0% {
+    opacity: 0;
+    transform: rotate(-12deg) translateX(-150vw) translateY(-50vh);
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-12deg) translateX(0) translateY(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-12deg) translateX(150vw) translateY(50vh);
+  }
+}
+
 /* Foto-Preview für Tindern */
 .tinder-photo-preview {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin: 24px 0;
+}
+
+.tinder-photo-preview.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 0;
+  padding: calc(env(safe-area-inset-top) + 40px) 20px calc(env(safe-area-inset-bottom) + 40px);
+  background: var(--bg);
+  animation: photoZoomIn 0.6s ease-out 0.4s both;
+}
+
+@keyframes photoZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .preview-card {

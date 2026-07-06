@@ -477,12 +477,11 @@ function renderTinderResult(ids) {
   } else {
     // Erst Fotos zeigen, dann Slot-Machine
     el.innerHTML = `
-      <button class="detail-close" aria-label="Zurück">←</button>
-      <div class="detail-body group-body">
-        <h2>Eure Top ${winners.length} ❤️</h2>
-        <div class="detail-meta">Wer gewinnt?</div>
-
-        <div class="tinder-photo-preview" id="photo-preview">
+      <div class="tinder-match-screen" id="match-screen">
+        <div class="match-overlay">
+          <div class="match-text">IT'S A MATCH! 🎉</div>
+        </div>
+        <div class="tinder-photo-preview fullscreen" id="photo-preview">
           ${winners.map((w, i) => `
             <div class="preview-card">
               ${imagesOf(w).length ? `<img src="${esc(randomImage(w))}" alt="">` : `<div class="preview-emoji">${emojiFor(w)}</div>`}
@@ -490,6 +489,12 @@ function renderTinderResult(ids) {
             </div>
           `).join('')}
         </div>
+      </div>
+
+      <button class="detail-close" aria-label="Zurück">←</button>
+      <div class="detail-body group-body" style="display:none;">
+        <h2>Eure Top ${winners.length} ❤️</h2>
+        <div class="detail-meta">Wer gewinnt?</div>
 
         <div class="slot-machine" id="slot-container" style="display:none;">
           <div class="slots">${winners.map(w => `<div class="slot-item">${titleWithEmoji(w)}</div>`).join('')}</div>
@@ -503,14 +508,16 @@ function renderTinderResult(ids) {
 
     el.querySelector('.detail-close').onclick = () => history.back();
 
-    // Nach 2 Sekunden: Fotos ausblenden, Slot-Machine einblenden und automatisch spinnen
+    // Nach 2.5 Sekunden: Match-Screen ausblenden, Slot-Machine einblenden
     setTimeout(() => {
-      const preview = el.querySelector('#photo-preview');
+      const matchScreen = el.querySelector('#match-screen');
+      const body = el.querySelector('.detail-body');
       const machine = el.querySelector('#slot-container');
       const btn = el.querySelector('#slot-btn');
       const again = el.querySelector('.tinder-again');
 
-      preview.style.display = 'none';
+      matchScreen.style.display = 'none';
+      body.style.display = 'block';
       machine.style.display = 'block';
       btn.style.display = 'block';
       again.style.display = 'block';
@@ -520,7 +527,7 @@ function renderTinderResult(ids) {
 
       btn.onclick = () => spinSlot(winners);
       again.onclick = () => spinSlot(winners); // Nur Slot-Machine neu, kein Retindern
-    }, 2000);
+    }, 2500);
   }
   el.hidden = false;
   document.body.style.overflow = 'hidden';
