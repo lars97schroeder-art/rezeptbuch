@@ -22,12 +22,14 @@
     <div class="actions">
       <button id="btn-edit" title="Bearbeiten einrichten" aria-label="Bearbeiten einrichten">✏️</button>
       <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder">🔥</button>
-      <button id="btn-random" title="Zufallsrezept" aria-label="Zufallsrezept">🎲</button>
       <button id="btn-update" title="Aktualisieren" aria-label="Aktualisieren">⟳</button>
     </div>
   </div>
   <div id="mode-menu" hidden></div>
-  <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
+  <div class="search-wrapper">
+    <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
+    <button id="search-clear" class="search-clear" aria-label="Suche löschen" hidden>✕</button>
+  </div>
   <nav id="chips" aria-label="Kategorien"></nav>
 </header>
 

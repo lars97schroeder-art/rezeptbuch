@@ -461,35 +461,76 @@ function showTinderResult(ids) {
 function renderTinderResult(ids) {
   const winners = ids.map(id => data.recipes.find(r => r.id === id)).filter(Boolean);
   const el = $('#detail');
-  el.innerHTML = `
-    <button class="detail-close" aria-label="Zurück">←</button>
-    <div class="detail-body group-body">
-      <h2>${winners.length ? `Eure Top ${winners.length} ❤️` : 'Alles weggewischt 😅'}</h2>
-      <div class="detail-meta">${winners.length
-        ? 'Such dir eins aus – das wird gekocht!'
-        : 'Vielleicht ist beim nächsten Mischen was dabei.'}</div>
-      <div class="variant-list">
-        ${winners.map(m => `
-          <button class="variant" data-id="${esc(m.id)}">
-            ${imagesOf(m).length
-              ? `<img src="${esc(imagesOf(m)[0])}" alt="">`
-              : `<span class="v-emoji">${emojiFor(m)}</span>`}
-            <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
-            <span class="v-arrow">›</span>
-          </button>`).join('')}
-      </div>
-      <button class="tinder-again">🔀 Nochmal mischen</button>
-    </div>`;
-  el.querySelector('.detail-close').onclick = () => history.back();
-  for (const b of el.querySelectorAll('.variant')) {
-    b.onclick = () => openRecipe(b.dataset.id);
+  if (!winners.length) {
+    el.innerHTML = `
+      <button class="detail-close" aria-label="Zurück">←</button>
+      <div class="detail-body group-body">
+        <h2>Alles weggewischt 😅</h2>
+        <div class="detail-meta">Vielleicht ist beim nächsten Mischen was dabei.</div>
+        <button class="tinder-again">🔀 Nochmal mischen</button>
+      </div>`;
+    el.querySelector('.detail-close').onclick = () => history.back();
+    el.querySelector('.tinder-again').onclick = () => {
+      history.replaceState({ view: 'tinder' }, '');
+      renderTinder();
+    };
+  } else {
+    el.innerHTML = `
+      <button class="detail-close" aria-label="Zurück">←</button>
+      <div class="detail-body group-body">
+        <h2>Eure Top ${winners.length} ❤️</h2>
+        <div class="detail-meta">Wer gewinnt?</div>
+        <div class="slot-machine" id="slot-container">
+          <div class="slots">${winners.map(w => `<div class="slot-item">${titleWithEmoji(w)}</div>`).join('')}</div>
+        </div>
+        <div class="slot-buttons">
+          <button class="slot-spin" id="slot-btn">🎰 LOSCHEN!</button>
+          <button class="tinder-again">🔀 Nochmal mischen</button>
+        </div>
+      </div>`;
+    el.querySelector('.detail-close').onclick = () => history.back();
+    el.querySelector('.tinder-again').onclick = () => {
+      history.replaceState({ view: 'tinder' }, '');
+      renderTinder();
+    };
+    el.querySelector('#slot-btn').onclick = () => spinSlot(winners);
   }
-  el.querySelector('.tinder-again').onclick = () => {
-    history.replaceState({ view: 'tinder' }, '');
-    renderTinder();
-  };
   el.hidden = false;
   document.body.style.overflow = 'hidden';
+}
+
+function spinSlot(winners) {
+  const btn = $('#slot-btn');
+  const container = $('#slot-container');
+  const slots = container.querySelector('.slots');
+  btn.disabled = true;
+  btn.textContent = '⏳ …';
+
+  // Slot-Machine-Animation: schnell durchdrehen, dann abbremsen
+  const spins = 30 + Math.random() * 20;
+  const pick = Math.floor(Math.random() * winners.length);
+  const duration = 1500;
+  let count = 0;
+
+  const animate = () => {
+    if (count < spins) {
+      const offset = ((count % winners.length) * -120);
+      slots.style.transform = `translateY(${offset}px)`;
+      slots.style.transition = 'none';
+      count++;
+      setTimeout(animate, 40 + count * 2);
+    } else {
+      const offset = (pick * -120);
+      slots.style.transition = `transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)`;
+      slots.style.transform = `translateY(${offset}px)`;
+      setTimeout(() => {
+        btn.textContent = '✨ ' + titleWithEmoji(winners[pick]);
+        btn.disabled = false;
+        btn.onclick = () => openRecipe(winners[pick].id);
+      }, 650);
+    }
+  };
+  animate();
 }
 
 /* ---------- Toast ---------- */
@@ -507,12 +548,6 @@ function toast(msg) {
 
 $('#btn-update').onclick = () => update();
 
-$('#btn-random').onclick = () => {
-  const list = filtered();
-  if (!list.length) return toast('Keine Rezepte da 🤷');
-  openRecipe(list[Math.floor(Math.random() * list.length)].id, { random: true });
-};
-
 $('#btn-tinder').onclick = () => {
   if (filtered().length < 2) return toast('Zu wenige Rezepte zum Tindern 🤷');
   openTinder();
@@ -520,8 +555,17 @@ $('#btn-tinder').onclick = () => {
 
 $('#search').addEventListener('input', e => {
   query = e.target.value;
+  $('#search-clear').hidden = !query;
   render();
 });
+
+$('#search-clear').onclick = () => {
+  $('#search').value = '';
+  query = '';
+  $('#search-clear').hidden = true;
+  render();
+  $('#search').focus();
+};
 
 /* ---------- Bereichs-Umschalter (Frühstück / Kochen / Backen) ---------- */
 
