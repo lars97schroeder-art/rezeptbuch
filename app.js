@@ -126,6 +126,14 @@ async function update(showErrors = true) {
       if (!wanted.has(req.url)) await cache.delete(req);
     }
 
+    // Semantic Versioning: Behalte Recipe-Patch (letzte Zahl) bei App-Updates
+    // z.B. wenn lokal v3.3.5 (mit 5 Rezept-Patches) und frisch v3.4.0 vom Server
+    // wird es zu v3.4.5 (neue App-Version, aber alte Rezept-Patches beibehalten)
+    const oldParts = oldData.version?.split('.') || ['3', '3', '0'];
+    const freshParts = fresh.version.split('.');
+    const recipePatches = parseInt(oldParts[2]) || 0;
+    fresh.version = freshParts[0] + '.' + freshParts[1] + '.' + recipePatches;
+
     data = fresh;
     saveLocal();
     render();

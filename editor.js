@@ -227,9 +227,11 @@ async function freshRemoteData() {
 }
 
 async function commitRemoteData(remote, sha, message) {
-  // Version richtig erhöhen: "3.3" → "3.4", nicht "3.31"
-  const [major, minor] = remote.version.split('.');
-  remote.version = major + '.' + (parseInt(minor) + 1);
+  // Semantic Versioning: MAJOR.MINOR.RECIPE
+  // Nur Recipe-Patch erhöhen (letzte Zahl)
+  const parts = remote.version.split('.');
+  const recipePatch = parseInt(parts[2]) || 0;
+  remote.version = parts[0] + '.' + parts[1] + '.' + (recipePatch + 1);
   remote.updated = new Date().toISOString().slice(0, 10);
   await ghPut('data/recipes.json', b64utf8(JSON.stringify(remote, null, 2)), message, sha);
 }
