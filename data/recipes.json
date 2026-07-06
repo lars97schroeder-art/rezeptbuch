@@ -1,5 +1,5 @@
 {
-  "version": 31,
+  "version": 32,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -291,10 +291,15 @@
       "time": "",
       "servings": "",
       "emoji": "🥥",
-      "image": "",
+      "image": "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
+      "images": [
+        "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
+        "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "pizzaaaaa",
