@@ -1,5 +1,5 @@
 {
-  "version": 27,
+  "version": 28,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -153,10 +153,15 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/bolognese-1783327674-0.jpg",
+      "images": [
+        "data/images/bolognese-1783327674-0.jpg",
+        "data/images/bolognese-1783327674-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "brokkoli-pasta",
