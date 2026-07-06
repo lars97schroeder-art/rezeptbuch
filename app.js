@@ -1440,9 +1440,8 @@ function openSettings() {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const fresh = await res.json();
 
-      // Prüfe ob es ein Update gibt
+      // Prüfe ob es ein Update gibt (NUR auf updated Timestamp achten, nicht auf Version!)
       const hasUpdates = await checkAndUpdateIfNeeded();
-      const hasVersionUpdate = fresh.version !== data.version;
 
       // IMMER Cache löschen beim Update-Button
       showToastWithoutTimeout('🗑️ Cache wird geleert...');
@@ -1474,11 +1473,11 @@ function openSettings() {
         }
       }
 
-      // Speichere Version + Timestamp
-      localStorage.setItem(APP_VERSION_KEY, fresh.version + '@' + new Date().toISOString());
+      // Speichere Timestamp statt Version
+      localStorage.setItem(APP_VERSION_KEY, fresh.updated);
 
       // Feedback
-      if (hasUpdates || hasVersionUpdate) {
+      if (hasUpdates) {
         // Zeige Reload-Dialog
         const reloadDialog = document.createElement('div');
         reloadDialog.style.cssText = `
@@ -1543,7 +1542,7 @@ function openSettings() {
       if (res.ok) {
         const fresh = await res.json();
         // Prüfe ob App-Version oder Rezept-Daten unterscheiden sich
-        if (fresh.version !== data.version || fresh.updated !== data.updated) {
+        if (fresh.updated !== data.updated) {
           const statusEl = el.querySelector('.update-status');
           if (statusEl) {
             statusEl.innerHTML = `<div style="color: var(--accent); font-weight: 600; margin-top: 8px;">🔄 Update verfügbar</div>`;
