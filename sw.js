@@ -2,7 +2,7 @@
 
 // Bei Änderungen an index.html/app.js/style.css die Versionsnummer erhöhen,
 // damit die Handys die neue App-Version bekommen.
-const SHELL_CACHE = 'rezeptbuch-shell-v4-0';
+const SHELL_CACHE = 'rezeptbuch-shell-v4-1';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const SHELL_FILES = [
@@ -52,21 +52,43 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== location.origin) return;
 
-  // index.html: IMMER vom Netz (Network-First)
-  // Das ist KRITISCH um zu verhindern, dass alte Service Worker v3.1 alte index.html servieren
+  // index.html: ABSOLUT KRITISCH - IMMER vom Netz, NIEMALS cachen
+  // Grund: version-check Script muss laufen, alte v3.1 darf nicht vom Cache kommen
   if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
     event.respondWith((async () => {
+      console.log('[SW] Fetching index.html from network (never from cache)');
       try {
-        const res = await fetch(event.request, { cache: 'no-cache', cache: 'no-store' });
+        // Fetch IMMER vom Netz, bypass ALLES (HTTP cache + SW cache)
+        const res = await fetch(new Request(event.request, { cache: 'reload' }));
         if (res.ok) {
-          const cache = await caches.open(SHELL_CACHE);
-          cache.put(event.request, res.clone());
+          console.log('[SW] Got fresh index.html from server');
+          return res;
         }
+        throw new Error('Bad response: ' + res.status);
+      } catch (err) {
+        console.error('[SW] Failed to fetch index.html:', err);
+        // Offline fallback - ABER NUR älteste Version, keine gecachte alte Version
+        return new Response('Offline - bitte Internet verbindung', { status: 503 });
+      }
+    })());
+    return;
+  }
+
+  // recipes.json: IMMER vom Netz (App verwaltet lokale Kopie)
+  // WICHTIG: Nicht im Service Worker cachen - nur im RAM der App
+  if (url.pathname.endsWith('/data/recipes.json')) {
+    event.respondWith((async () => {
+      console.log('[SW] Fetching recipes.json from network');
+      try {
+        const res = await fetch(new Request(event.request, { cache: 'reload' }));
+        console.log('[SW] Got recipes.json, status:', res.status);
         return res;
       } catch (err) {
-        // Fallback auf Cache wenn offline
-        const cache = await caches.open(SHELL_CACHE);
-        return await cache.match(event.request) || new Response('Offline', { status: 503 });
+        console.error('[SW] Failed to fetch recipes.json:', err);
+        return new Response(JSON.stringify({ version: '0', recipes: [] }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        });
       }
     })());
     return;
@@ -85,12 +107,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // recipes.json geht immer übers Netz – die App verwaltet ihre eigene Kopie
-  if (url.pathname.endsWith('/data/recipes.json')) return;
-
   // App-Dateien (app.js, style.css, etc.): sofort aus dem Cache, im Hintergrund frisch nachladen.
-  // "no-cache" umgeht den HTTP-Cache des Browsers (fragt beim Server nach),
-  // sonst bleiben alte Versionen von app.js & Co. hängen.
   event.respondWith((async () => {
     const cache = await caches.open(SHELL_CACHE);
     const hit = await cache.match(event.request, { ignoreSearch: true });

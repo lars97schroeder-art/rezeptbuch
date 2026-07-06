@@ -12,27 +12,54 @@
 <meta name="apple-mobile-web-app-title" content="Schlemmerliste">
 <link rel="stylesheet" href="style.css">
 <script>
-// Force clear old cached data if version is outdated
-// This ensures that old v3.1 data doesn't stick around
+// KRITISCHER version-check: Alte v3.1 muss raus!
+// Dieses Script läuft VOR app.js und löscht alte Daten
+console.log('🔍 Version-Check startet...');
 if (typeof localStorage !== 'undefined') {
   try {
     const stored = localStorage.getItem('rezeptbuch-data');
+    console.log('📦 LocalStorage rezeptbuch-data:', stored ? '✓ vorhanden' : '✗ leer');
+
     if (stored) {
-      const data = JSON.parse(stored);
-      if (data.version && data.version < '3.3') {
-        // Old version found - clear everything
-        console.warn('Old cache detected (v' + data.version + '), clearing all storage');
+      try {
+        const data = JSON.parse(stored);
+        const version = data.version;
+        console.log('📌 Lokale Version:', version);
+
+        // WICHTIG: Numerischer Vergleich, nicht String-Vergleich
+        const localVer = parseFloat(version);
+        const requiredVer = 3.3;
+
+        if (localVer < requiredVer) {
+          console.warn('⚠️ ALTE VERSION ERKANNT:', localVer, '< erforderlich', requiredVer);
+          console.log('🗑️ Lösche localStorage + sessionStorage...');
+          localStorage.clear();
+          sessionStorage.clear();
+          console.log('✅ Storage gelöscht - neue Version wird geladen');
+        } else {
+          console.log('✅ Version ist aktuell:', localVer);
+        }
+      } catch (parseErr) {
+        console.error('❌ JSON Parse Fehler:', parseErr);
+        console.log('🗑️ Lösche wegen Parse-Fehler...');
         localStorage.clear();
         sessionStorage.clear();
       }
+    } else {
+      console.log('ℹ️ Storage ist leer - neue Installation oder gerade gelöscht');
     }
   } catch (e) {
-    // If anything fails, just clear it to be safe
-    console.warn('Error checking version, clearing storage:', e);
-    localStorage.clear();
-    sessionStorage.clear();
+    console.error('❌ Kritischer Fehler im version-check:', e);
+    console.log('🗑️ Sicherheitshalber alles löschen...');
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (clearErr) {
+      console.error('❌ Konnte Storage nicht löschen:', clearErr);
+    }
   }
 }
+console.log('✅ Version-Check abgeschlossen\n');
 </script>
 </head>
 <body>
