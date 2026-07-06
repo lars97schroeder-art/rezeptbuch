@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:03:47.144Z",
+  "updated": "2026-07-06T22:04:35.159Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -647,6 +647,24 @@
       "ingredients": [],
       "steps": [],
       "notes": "Rezept von siggi holen!!",
+      "bereich": "kochen"
+    },
+    {
+      "id": "gemuesesuppe",
+      "title": "Gemüsesuppe",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/gemuesesuppe-1783375474-0.jpg",
+      "images": [
+        "data/images/gemuesesuppe-1783375474-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
       "bereich": "kochen"
     },
     {
