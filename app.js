@@ -653,7 +653,7 @@ function toast(msg) {
   t.textContent = msg;
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
 }
 
 /* ---------- Start ---------- */
