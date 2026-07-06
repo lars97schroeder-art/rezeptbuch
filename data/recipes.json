@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:16:58.307Z",
+  "updated": "2026-07-06T21:17:24.740Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -996,11 +996,16 @@
     {
       "id": "kaesekuchen",
       "title": "Käsekuchen",
-      "category": "Kuchen",
+      "category": [
+        "Kuchen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍰",
-      "image": "",
+      "image": "data/images/kaesekuchen-1783372643-0.jpg",
+      "images": [
+        "data/images/kaesekuchen-1783372643-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
       "notes": "",
