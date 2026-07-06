@@ -1,5 +1,5 @@
 {
-  "version": "2.7",
+  "version": "2.71",
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -891,6 +891,23 @@
       "steps": [],
       "notes": "",
       "bereich": "backen"
+    },
+    {
+      "id": "annika-s-buttermilch-waffeln",
+      "title": "Annika’s Buttermilch Waffeln",
+      "category": [
+        "Gebäck"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "group": "Waffeln"
     }
   ]
 }
