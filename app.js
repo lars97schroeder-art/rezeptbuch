@@ -704,6 +704,15 @@ function renderWeekplan() {
       }
     });
 
+    // Reset zoom nach Blur (iOS Safari)
+    searchInput.addEventListener('blur', () => {
+      // Warte kurz bis Tastatur weg ist
+      setTimeout(() => {
+        // Scroll zu 0,0 um Zoom zurückzusetzen
+        window.scrollTo(0, 0);
+      }, 100);
+    });
+
     // Attach handlers für bestehende Tags
     attachTagHandlers(selectedDiv, dayKey);
         searchInput.value = '';
