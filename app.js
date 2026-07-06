@@ -961,6 +961,27 @@ function openSettings() {
   const editEnabled = localStorage.getItem(EDIT_ENABLED_KEY) !== 'false' && hasToken;
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
 
+  // Auto-Check für Updates beim Öffnen der Settings
+  let updateStatus = '';
+  (async () => {
+    try {
+      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        const fresh = await res.json();
+        // Prüfe ob App-Version oder Rezept-Daten unterscheiden sich
+        if (fresh.version !== data.version || fresh.updated !== data.updated) {
+          updateStatus = '🔄 Update verfügbar';
+          const statusEl = document.querySelector('.update-status');
+          if (statusEl) {
+            statusEl.innerHTML = `<div style="color: var(--accent); font-weight: 600; margin-top: 8px;">${updateStatus}</div>`;
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Update-Check fehlgeschlagen');
+    }
+  })();
+
   const el = $('#editor'); // Reuse editor div für Modal
   el.innerHTML = `
   <button class="detail-close" aria-label="Zurück">←</button>
@@ -1015,6 +1036,7 @@ function openSettings() {
     </div>
 
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
+    <div class="update-status"></div>
 
     <div class="setting-info">
       <div><strong>App Version:</strong> v${data.version}${(() => {
