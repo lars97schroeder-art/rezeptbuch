@@ -1195,8 +1195,6 @@ function openSettings() {
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
     <div class="update-status"></div>
 
-    <button class="setting-btn" id="clear-cache-btn" style="margin-top: 8px;">🗑️ Cache löschen</button>
-
     <div class="setting-info">
       <div><strong>App Version:</strong> v${data.version}${(() => {
         const stored = localStorage.getItem(APP_VERSION_KEY);
@@ -1284,35 +1282,41 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = async () => {
-    showToastWithoutTimeout('🔄 Cache wird geleert und Updates werden geprüft...');
+    showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
-      // SCHRITT 1: Lösche Cache VOR dem Update
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('✓ Alle Caches gelöscht');
-      }
-
-      // SCHRITT 2: Unregister alte Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        registrations.forEach(reg => reg.unregister());
-        console.log('✓ Service Worker unregistriert');
-      }
-
-      // SCHRITT 3: Lade frische Version vom Server zum Vergleichen
+      // Lade frische Version vom Server zum Vergleichen
       const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const fresh = await res.json();
 
-      // SCHRITT 4: Auto-Check: Rezepte auf Updates prüfen
+      // Prüfe ob es ein Update gibt
       const hasUpdates = await checkAndUpdateIfNeeded();
+      const hasVersionUpdate = fresh.version !== data.version;
 
-      // SCHRITT 5: Service Worker Update checken (neue registrieren)
+      // NUR Cache löschen wenn es ein Update gibt
+      if (hasUpdates || hasVersionUpdate) {
+        showToastWithoutTimeout('🗑️ Cache wird geleert...');
+
+        // Lösche Cache
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          console.log('✓ Alle Caches gelöscht');
+        }
+
+        // Unregister alte Service Workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          registrations.forEach(reg => reg.unregister());
+          console.log('✓ Service Worker unregistriert');
+        }
+      }
+
+      // Service Worker Update checken (neu registrieren falls nötig)
       if ('serviceWorker' in navigator) {
         try {
           await navigator.serviceWorker.register('/sw.js');
-          console.log('✓ Service Worker neu registriert');
+          console.log('✓ Service Worker registriert');
         } catch (e) {
           console.log('Service Worker registrieren fehlgeschlagen:', e);
         }
@@ -1323,50 +1327,17 @@ function openSettings() {
 
       // Feedback
       if (hasUpdates) {
-        toast('✅ Cache geleert & Updates geladen - v' + fresh.version);
-      } else if (fresh.version !== data.version) {
-        toast('✅ Cache geleert! Neue Version v' + fresh.version + ' verfügbar');
+        toast('✅ Updates geladen - v' + fresh.version);
+      } else if (hasVersionUpdate) {
+        toast('✅ Neue Version v' + fresh.version + ' verfügbar');
       } else {
-        toast('✅ Cache geleert - alles auf aktuellem Stand (v' + fresh.version + ')');
+        toast('✅ Alles auf aktuellem Stand');
       }
     } catch (err) {
       console.error('Update-Fehler:', err);
       toast('❌ Fehler: ' + err.message);
     }
   };
-
-  // Clear Cache Button Handler
-  const clearCacheHandler = async () => {
-    showToastWithoutTimeout('🗑️ Cache wird gelöscht...');
-    try {
-      // Lösche alle Caches
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-
-      // Unregister Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        registrations.forEach(reg => reg.unregister());
-      }
-
-      // Reload nach kurzer Verzögerung
-      setTimeout(() => {
-        location.reload();
-      }, 500);
-
-      toast('✅ Cache gelöscht! App wird neu geladen...');
-    } catch (err) {
-      console.error('Cache löschen Fehler:', err);
-      toast('❌ Fehler beim Cache löschen');
-    }
-  };
-
-  const clearCacheBtn = el.querySelector('#clear-cache-btn');
-  if (clearCacheBtn) {
-    clearCacheBtn.onclick = clearCacheHandler;
-  }
 
   // Theme-Switcher
   for (const radio of el.querySelectorAll('input[name="theme"]')) {
