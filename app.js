@@ -514,21 +514,85 @@ function saveWeekplan(plan) {
 }
 
 let draggedTag = null;
+let draggedElement = null;
+
+function showMoveToMenu(draggedTag, currentDay) {
+  const days = [
+    { key: 'mo', label: 'Montag' },
+    { key: 'di', label: 'Dienstag' },
+    { key: 'mi', label: 'Mittwoch' },
+    { key: 'do', label: 'Donnerstag' },
+    { key: 'fr', label: 'Freitag' },
+    { key: 'sa', label: 'Samstag' },
+    { key: 'so', label: 'Sonntag' },
+  ];
+
+  const menu = document.createElement('div');
+  menu.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+  `;
+
+  menu.innerHTML = '<h3 style="margin: 0 0 12px 0; text-align: center;">📍 Zu welchem Tag verschieben?</h3>';
+
+  for (const day of days) {
+    if (day.key === currentDay) continue;
+
+    const btn = document.createElement('button');
+    btn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+    `;
+    btn.textContent = day.label;
+    btn.onclick = () => {
+      performDragDrop(draggedTag.entry, draggedTag.sourceDay, day.key);
+      menu.remove();
+    };
+    menu.appendChild(btn);
+  }
+
+  // Close on click outside
+  menu.addEventListener('click', (e) => {
+    if (e.target === menu) menu.remove();
+  });
+
+  document.body.appendChild(menu);
+  setTimeout(() => menu.focus(), 100);
+}
 
 function attachTagHandlers(selectedDiv, dayKey) {
-  // Remove-Button Handler
-  for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
-    removeBtn.onclick = (e) => {
+  // Remove-Button Handler - mit Event-Delegation
+  selectedDiv.onclick = (e) => {
+    if (e.target.classList.contains('weekplan-tag-remove')) {
       e.preventDefault();
       e.stopPropagation();
-      const entry = removeBtn.dataset.entry;
+      const entry = e.target.dataset.entry;
       const idx = weekplan[dayKey].indexOf(entry);
       if (idx > -1) {
         weekplan[dayKey].splice(idx, 1);
-        removeBtn.closest('.weekplan-tag').remove();
+        e.target.closest('.weekplan-tag').remove();
       }
-    };
-  }
+    }
+  };
 
   // Drag-Start & Touch-Start Handler
   for (const tag of selectedDiv.querySelectorAll('.weekplan-tag')) {
@@ -544,16 +608,24 @@ function attachTagHandlers(selectedDiv, dayKey) {
       tag.style.opacity = '1';
     };
 
-    // Touch Support für Handy
+    // Touch Support für Handy - Long Press zum Verschieben
+    let touchStartTime = 0;
     tag.ontouchstart = (e) => {
+      touchStartTime = Date.now();
       draggedTag = { tag, entry: tag.dataset.entry, sourceDay: dayKey };
-      tag.style.opacity = '0.5';
+      draggedElement = e.target.closest('.weekplan-tag');
+      draggedElement.style.opacity = '0.5';
     };
 
     tag.ontouchend = (e) => {
-      if (draggedTag) {
-        draggedTag.tag.style.opacity = '1';
+      if (draggedTag && Date.now() - touchStartTime > 500) {
+        // Long press erkannt - zeige Menü
+        showMoveToMenu(draggedTag, dayKey);
+      }
+      if (draggedElement) {
+        draggedElement.style.opacity = '1';
         draggedTag = null;
+        draggedElement = null;
       }
     };
   }
