@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:35:41.440Z",
+  "updated": "2026-07-06T21:37:44.710Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1110,6 +1110,23 @@
       "image": "data/images/annika-s-pfannkuchen-crepes-1783373617-0.jpg",
       "images": [
         "data/images/annika-s-pfannkuchen-crepes-1783373617-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "chicken-wings-2",
+      "title": "Chicken Wings",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/chicken-wings-2-1783373862-0.jpg",
+      "images": [
+        "data/images/chicken-wings-2-1783373862-0.jpg",
+        "data/images/chicken-wings-2-1783373862-1.jpg"
       ],
       "ingredients": [],
       "steps": [],
