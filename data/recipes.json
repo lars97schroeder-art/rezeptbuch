@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:23:04.622Z",
+  "updated": "2026-07-06T21:13:32.289Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -644,14 +644,20 @@
     {
       "id": "kartoffel-hackfleisch-pfanne",
       "title": "Kartoffel-Hackfleisch-Pfanne",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥔",
-      "image": "",
+      "image": "data/images/kartoffel-hackfleisch-pfanne-1783372410-0.jpg",
+      "images": [
+        "data/images/kartoffel-hackfleisch-pfanne-1783372410-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "spanische-tortilla",
