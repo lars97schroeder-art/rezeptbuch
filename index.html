@@ -11,6 +11,29 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Schlemmerliste">
 <link rel="stylesheet" href="style.css">
+<script>
+// Force clear old cached data if version is outdated
+// This ensures that old v3.1 data doesn't stick around
+if (typeof localStorage !== 'undefined') {
+  try {
+    const stored = localStorage.getItem('rezeptbuch-data');
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.version && data.version < '3.3') {
+        // Old version found - clear everything
+        console.warn('Old cache detected (v' + data.version + '), clearing all storage');
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+    }
+  } catch (e) {
+    // If anything fails, just clear it to be safe
+    console.warn('Error checking version, clearing storage:', e);
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+}
+</script>
 </head>
 <body>
 <header>
