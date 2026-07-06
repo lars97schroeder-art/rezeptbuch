@@ -64,10 +64,13 @@ function loadLocal() {
     if (raw) {
       data = JSON.parse(raw);
 
-      // AUTO-RECOVERY: Wenn alte/kaputte Version erkannt, sofort löschen + Reload erzwingen
-      // Kaputt = nicht exakt '3.3' (auch 3.3111, 3.0, etc sind kaputt)
-      const expectedVersion = '3.3';
-      const hasCorruptVersion = data.version && data.version !== expectedVersion;
+      // AUTO-RECOVERY: Nur SEHR alte Versionen löschen (z.B. 3.1 oder 3.3111)
+      // Alle 3.3.x und 3.4.x Versionen sind gültig
+      const hasCorruptVersion = data.version && (
+        data.version === '3.1' ||
+        data.version === '3.3111' ||
+        (typeof data.version === 'string' && data.version.startsWith('3.0'))
+      );
 
       if (hasCorruptVersion) {
         console.error('🚨 KAPUTTE VERSION ERKANNT:', data.version, '(erwartet: ' + expectedVersion + ')');
