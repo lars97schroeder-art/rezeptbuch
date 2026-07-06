@@ -1668,7 +1668,7 @@ document.addEventListener('click', e => {
 update(false);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('sw.js?t=' + Date.now()).catch(e => console.log('SW register error:', e));
 }
 
 // Swipe-to-back Geste: von links nach rechts wischen
