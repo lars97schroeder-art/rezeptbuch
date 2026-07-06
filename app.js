@@ -405,15 +405,65 @@ function openWeekplan() {
   history.pushState({ view: 'weekplan' }, '');
 }
 
+const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
+
+function getWeekplan() {
+  try {
+    const stored = localStorage.getItem(WEEKPLAN_KEY);
+    return stored ? JSON.parse(stored) : { mo: '', di: '', mi: '', do: '', fr: '', sa: '', so: '' };
+  } catch (e) {
+    return { mo: '', di: '', mi: '', do: '', fr: '', sa: '', so: '' };
+  }
+}
+
+function saveWeekplan(plan) {
+  localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(plan));
+}
+
 function renderWeekplan() {
   const el = $('#detail');
+  const weekplan = getWeekplan();
+  const days = [
+    { key: 'mo', label: 'Montag' },
+    { key: 'di', label: 'Dienstag' },
+    { key: 'mi', label: 'Mittwoch' },
+    { key: 'do', label: 'Donnerstag' },
+    { key: 'fr', label: 'Freitag' },
+    { key: 'sa', label: 'Samstag' },
+    { key: 'so', label: 'Sonntag' },
+  ];
+
+  let daysHTML = '';
+  for (const day of days) {
+    daysHTML += `
+      <div class="weekplan-day">
+        <label class="weekplan-label">${day.label}</label>
+        <input type="text" class="weekplan-input" data-day="${day.key}" value="${esc(weekplan[day.key] || '')}" placeholder="z.B. Pasta">
+      </div>`;
+  }
+
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <div class="detail-body group-body">
       <h2>📅 Wochenplan</h2>
-      <div class="detail-meta">Kommt bald... 🚀</div>
+      <div class="weekplan-container">
+        ${daysHTML}
+      </div>
+      <button class="weekplan-save-btn">💾 Speichern</button>
     </div>`;
+
   el.querySelector('.detail-close').onclick = () => closeOverlay();
+
+  // Save Button
+  el.querySelector('.weekplan-save-btn').onclick = () => {
+    const plan = {};
+    for (const input of el.querySelectorAll('.weekplan-input')) {
+      plan[input.dataset.day] = input.value;
+    }
+    saveWeekplan(plan);
+    toast('✅ Wochenplan gespeichert');
+  };
+
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }

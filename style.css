@@ -1583,3 +1583,68 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   color: var(--text);
   font-size: clamp(12px, 2vw, 13px);
 }
+
+/* Wochenplan */
+.weekplan-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.weekplan-day {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid #e0d5c7;
+}
+
+.weekplan-label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.weekplan-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0c5b9;
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.weekplan-input::placeholder {
+  color: var(--muted);
+}
+
+.weekplan-input:focus {
+  outline: none;
+  border-color: #e8590c;
+  box-shadow: 0 0 0 2px rgba(232, 89, 12, 0.1);
+}
+
+.weekplan-save-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 20px;
+  background: #e8590c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.weekplan-save-btn:active {
+  background: #d04708;
+}
