@@ -659,6 +659,13 @@ function toast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
 }
 
+function showToastWithoutTimeout(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+}
+
 /* ---------- Start ---------- */
 
 /* ---------- Einstellungen ---------- */
@@ -763,7 +770,7 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = async () => {
-    toast('Aktualisiere App...');
+    showToastWithoutTimeout('Aktualisiere App...');
     try {
       // Lösche alle Caches
       const cacheNames = await caches.keys();
