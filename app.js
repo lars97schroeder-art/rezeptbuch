@@ -138,8 +138,11 @@ async function update(showErrors = true) {
     fresh.version = freshParts[0] + '.' + freshParts[1] + '.' + recipePatches;
 
     data = fresh;
+    console.log('✅ data = fresh gesetzt, Version:', data.version, 'Rezepte:', data.recipes.length);
     saveLocal();
+    console.log('✅ saveLocal() aufgerufen');
     render();
+    console.log('✅ render() aufgerufen');
 
     // Vergleiche alte und neue Daten und erstelle Update-Nachricht
     const messages = [];
