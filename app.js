@@ -717,7 +717,7 @@ function renderWeekplan() {
       }
 
       if (displayName) {
-        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}" data-day="${day.key}">${esc(displayName)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${day.key}">✕</button></span>`;
+        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}" data-day="${day.key}">${esc(displayName)}</span>`;
       }
     }
 
