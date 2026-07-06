@@ -770,6 +770,8 @@ if ('serviceWorker' in navigator) {
 
 // Swipe-to-back Geste: von links nach rechts wischen
 let swipeStart = null;
+const swipeTarget = () => $('#detail').hidden ? $('#editor') : $('#detail');
+
 document.addEventListener('pointerdown', (e) => {
   if (e.clientX < 50) swipeStart = e.clientX;
 }, false);
@@ -777,23 +779,29 @@ document.addEventListener('pointerdown', (e) => {
 document.addEventListener('pointermove', (e) => {
   if (!swipeStart) return;
   const swipeDistance = e.clientX - swipeStart;
+  const target = swipeTarget();
+
+  // Zeige Swipe-Animation während des Swipens
+  if (!target.hidden) {
+    target.style.transform = `translateX(${Math.min(swipeDistance, 100)}px)`;
+    target.style.opacity = Math.max(0.5, 1 - swipeDistance / 300);
+  }
+
+  // Wenn genug geswipet wurde: schließen
   if (swipeDistance > 100 && e.clientX < 200) {
     swipeStart = null;
-    // Falls Detail oder Editor offen: schließen; sonst history.back()
-    const detail = $('#detail');
-    const editor = $('#editor');
-    if (!detail.hidden) {
-      detail.hidden = true;
-      document.body.style.overflow = '';
-    } else if (!editor.hidden) {
-      editor.hidden = true;
-      document.body.style.overflow = '';
-    } else {
-      history.back();
-    }
+    target.style.transform = '';
+    target.style.opacity = '';
+    target.hidden = true;
+    document.body.style.overflow = '';
   }
 }, false);
 
 document.addEventListener('pointerup', () => {
-  swipeStart = null;
+  if (swipeStart) {
+    swipeStart = null;
+    const target = swipeTarget();
+    target.style.transform = '';
+    target.style.opacity = '';
+  }
 }, false);
