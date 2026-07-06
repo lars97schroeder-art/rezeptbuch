@@ -3,7 +3,7 @@
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
 const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
-const APP_VERSION_KEY = 'rezeptbuch-app-version';
+const LAST_UPDATED_KEY = 'rezeptbuch-last-updated';
 
 const CATEGORY_EMOJI = {
   'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
@@ -65,33 +65,6 @@ function loadLocal() {
     const raw = localStorage.getItem(DATA_KEY);
     if (raw) {
       data = JSON.parse(raw);
-
-      // AUTO-RECOVERY: Nur SEHR alte Versionen löschen (z.B. 3.1 oder 3.3111)
-      // Alle 3.3.x und 3.4.x Versionen sind gültig
-      const hasCorruptVersion = data.version && (
-        data.version === '3.1' ||
-        data.version === '3.3111' ||
-        (typeof data.version === 'string' && data.version.startsWith('3.0'))
-      );
-
-      if (hasCorruptVersion) {
-        console.error('🚨 KAPUTTE VERSION ERKANNT:', data.version, '(erwartet: ' + expectedVersion + ')');
-        console.log('🔄 Lösche kaputte Daten und lade neu...');
-        localStorage.removeItem(DATA_KEY);
-        // Erzwinge Neuload aller Caches
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(regs => {
-            regs.forEach(reg => reg.unregister());
-          });
-        }
-        caches.keys().then(names => {
-          names.forEach(name => caches.delete(name));
-        });
-        // Nach kurzer Verzögerung neu laden
-        setTimeout(() => {
-          location.href = location.href.split('?')[0] + '?reset=' + Date.now();
-        }, 500);
-      }
     }
   } catch (e) {
     console.error('Fehler beim Laden von localStorage:', e);
@@ -187,11 +160,8 @@ async function update(showErrors = true) {
       if (!wanted.has(req.url)) await cache.delete(req);
     }
 
-    // Version vom Server übernehmen (MAJOR.MINOR)
-    // Recipe-Änderungen werden nicht in der App-Version reflected
-
     data = fresh;
-    console.log('✅ data = fresh gesetzt, Version:', data.version, 'Rezepte:', data.recipes.length);
+    console.log('✅ data = fresh gesetzt, Updated:', data.updated, 'Rezepte:', data.recipes.length);
     saveLocal();
     console.log('✅ saveLocal() aufgerufen');
     render();
@@ -199,11 +169,6 @@ async function update(showErrors = true) {
 
     // Vergleiche alte und neue Daten und erstelle Update-Nachricht
     const messages = [];
-
-    // Check für neue Version
-    if (fresh.version !== oldData.version) {
-      messages.push(`✅ Update: v${fresh.version}`);
-    }
 
     // Check für neue/aktualisierte Rezepte
     const oldIds = new Set(oldData.recipes.map(r => r.id));
@@ -1347,17 +1312,15 @@ function openSettings() {
     <div class="update-status"></div>
 
     <div class="setting-info">
-      <div><strong>App Version:</strong> v${data.version}${(() => {
-        const stored = localStorage.getItem(APP_VERSION_KEY);
-        if (stored) {
-          const [version, timestamp] = stored.split('@');
-          const date = new Date(timestamp).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-          return ` (${date})`;
+      <div><strong>Zuletzt aktualisiert:</strong> ${(() => {
+        if (data.updated) {
+          const date = new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+          return date;
         }
-        return '';
+        return 'Noch nie';
       })()}</div>
       <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
-      <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
+      <div><strong>App aktualisiert:</strong> ${lastUpdate}</div>
     </div>
   </div>`;
 
@@ -1474,7 +1437,7 @@ function openSettings() {
       }
 
       // Speichere Timestamp statt Version
-      localStorage.setItem(APP_VERSION_KEY, fresh.updated);
+      localStorage.setItem(LAST_UPDATED_KEY, fresh.updated);
 
       // Feedback
       if (hasUpdates) {
@@ -1496,7 +1459,7 @@ function openSettings() {
         `;
         reloadDialog.innerHTML = `
           <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ Update verfügbar!</h3>
-          <p style="margin: 0 0 12px 0; color: var(--text);">Version ${fresh.version} bereit.</p>
+          <p style="margin: 0 0 12px 0; color: var(--text);">🔄 Neue Rezepte bereit zum Laden.</p>
           <button id="reload-now" style="
             padding: 12px 24px;
             margin: 8px;
