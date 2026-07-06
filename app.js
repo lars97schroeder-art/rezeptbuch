@@ -819,6 +819,13 @@ document.addEventListener('pointermove', (e) => {
   if (!swipeStart) return;
   const swipeDistance = e.clientX - swipeStart;
   const target = swipeTarget();
+  const closeBtn = target.querySelector('.detail-close');
+
+  // Nur swipen, wenn der Zurück-Button sichtbar ist
+  if (!closeBtn || getComputedStyle(closeBtn).display === 'none') {
+    swipeStart = null;
+    return;
+  }
 
   // Zeige Swipe-Animation während des Swipens
   if (!target.hidden) {
