@@ -835,35 +835,30 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = async () => {
-    showToastWithoutTimeout('🔄 Force-Update lädt neue App-Version...');
+    showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
-      // SCHRITT 1: Alle Caches brutal löschen
+      // Nur rezeptbuch-Caches löschen (nicht alles)
       const cacheNames = await caches.keys();
-      console.log('Caches vor Löschung:', cacheNames);
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('✓ Alle Caches gelöscht');
+      const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
+      await Promise.all(toDelete.map(name => caches.delete(name)));
+      console.log('✓ ' + toDelete.length + ' alte Cache(s) gelöscht');
 
-      // SCHRITT 2: Service Worker komplett unregistrieren (nicht nur update!)
+      // Service Worker nur updaten (nicht unregistrieren)
       if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log('Service Workers vor Unregister:', registrations.length);
-        await Promise.all(registrations.map(reg => reg.unregister()));
-        console.log('✓ Alle Service Workers unregistriert');
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await reg.update();
+          console.log('✓ Service Worker Update geprüft');
+        }
       }
 
-      // SCHRITT 3: localStorage/sessionStorage löschen (für den Fall dass alte Daten dort sind)
-      localStorage.clear();
-      sessionStorage.clear();
-      console.log('✓ Alle Storage gelöscht');
+      // Rezepte vom Server laden
+      await update();
+      console.log('✓ Rezepte aktualisiert');
 
-      // SCHRITT 4: Ganz kurz warten, dann neu laden mit Cache Busting
-      setTimeout(() => {
-        console.log('✓ Neu laden mit Cache Busting...');
-        location.href = location.href.split('?')[0] + '?t=' + Date.now();
-      }, 1000);
     } catch (err) {
       console.error('Update-Fehler:', err);
-      toast('❌ Fehler beim Hard-Update: ' + err.message);
+      toast('❌ Fehler: ' + err.message);
     }
   };
 
