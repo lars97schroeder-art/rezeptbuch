@@ -495,9 +495,6 @@ function saveWeekplan(plan) {
 }
 
 function renderWeekplan() {
-  // Auto-Check im Hintergrund
-  checkAndUpdateIfNeeded();
-
   const el = $('#detail');
   const weekplan = getWeekplan();
   const days = [
