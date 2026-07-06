@@ -1,5 +1,5 @@
 {
-  "version": "3.3",
+  "version": "3.31",
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -287,7 +287,9 @@
     {
       "id": "kokosmilch-gemuese-mit-sojasosse",
       "title": "Kokosmilch-Gemüse mit Sojasoße",
-      "category": "Asia",
+      "category": [
+        "Asia"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥥",
@@ -298,7 +300,7 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Mit Udon Nudeln oder Reis",
       "bereich": "kochen"
     },
     {
