@@ -519,12 +519,14 @@ function renderTinderResult(ids) {
       const machine = el.querySelector('#slot-container');
       const btn = el.querySelector('#slot-btn');
       const again = el.querySelector('.tinder-again');
+      const closeBtn = el.querySelector('.detail-close');
 
       matchScreen.style.display = 'none';
       body.style.display = 'block';
       machine.style.display = 'block';
       btn.style.display = 'block';
       again.style.display = 'block';
+      closeBtn.style.display = 'none';
 
       // Auto-spin starten
       spinSlot(winners);
