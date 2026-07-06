@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:13:57.991Z",
+  "updated": "2026-07-06T21:14:13.345Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -743,14 +743,20 @@
     {
       "id": "wraps",
       "title": "Wraps",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌯",
-      "image": "",
+      "image": "data/images/wraps-1783372451-0.jpg",
+      "images": [
+        "data/images/wraps-1783372451-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "backcamembert-mit-salat",
