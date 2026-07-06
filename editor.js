@@ -239,7 +239,9 @@ async function freshRemoteData() {
 
 async function commitRemoteData(remote, sha, message) {
   // Version bleibt gleich (wird nur bei App-Updates erhöht)
-  remote.updated = new Date().toISOString().slice(0, 10);
+  // Voller ISO-Timestamp: nur Datum würde bei mehreren Saves am selben Tag
+  // gleich bleiben und andere Geräte würden das Update nie erkennen
+  remote.updated = new Date().toISOString();
   await ghPut('data/recipes.json', b64utf8(JSON.stringify(remote, null, 2)), message, sha);
 }
 
