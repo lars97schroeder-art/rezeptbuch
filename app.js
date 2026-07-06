@@ -1009,7 +1009,7 @@ function openSettings() {
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
 
     <div class="setting-info">
-      <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>
+      <div><strong>Stand:</strong> v${data.version}</div>
       <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
       <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
     </div>
