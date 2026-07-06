@@ -1,5 +1,5 @@
 {
-  "version": 29,
+  "version": 30,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -206,8 +206,10 @@
       "time": "",
       "servings": "",
       "emoji": "🍝",
-      "image": "",
-      "images": [],
+      "image": "data/images/lasagne-1783327783-0.jpg",
+      "images": [
+        "data/images/lasagne-1783327783-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
       "notes": "",
