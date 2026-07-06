@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 16,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -730,11 +730,16 @@
     },
     {
       "id": "pfannkuchen",
-      "title": "Klassische Pfannkuchen",
+      "title": "Lars Apfelpfannekuchen 🐭",
       "category": "Süßes",
       "time": "30 Min.",
       "servings": "ca. 8 Stück",
-      "image": "",
+      "emoji": "",
+      "image": "data/images/pfannkuchen-1783326269-0.jpg",
+      "images": [
+        "data/images/pfannkuchen-1783326269-0.jpg",
+        "data/images/pfannkuchen-1783326269-1.jpg"
+      ],
       "ingredients": [
         "250 g Mehl",
         "500 ml Milch",
@@ -750,7 +755,8 @@
         "Von beiden Seiten goldbraun backen.",
         "Mit Apfelmus, Zimtzucker oder Nutella servieren."
       ],
-      "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen."
+      "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen.",
+      "bereich": "kochen"
     },
     {
       "id": "milchreis",
