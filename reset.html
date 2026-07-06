@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Reset</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #f5f5f5;
+  }
+  h1 { color: #e8590c; }
+  .info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+  button {
+    width: 100%;
+    padding: 16px;
+    margin: 10px 0;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .reset-btn {
+    background: #fd695d;
+    color: white;
+  }
+  .reset-btn:active {
+    background: #e85544;
+  }
+  .back-btn {
+    background: #e8e8e8;
+    color: #333;
+  }
+  .status {
+    background: #fff3cd;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #ffc107;
+  }
+  .success {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+  }
+  .error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+  }
+</style>
+</head>
+<body>
+
+<h1>🔄 Schrödamskis Schlemmerliste - App Reset</h1>
+
+<div class="info">
+  <h2>Was passiert (Smart Reset):</h2>
+  <ul>
+    <li>✅ Löscht alte Rezepte/Favoriten (v3.1 Daten) → neue v3.3 werden geladen</li>
+    <li>✅ Behält Theme, Token, Einstellungen</li>
+    <li>✅ sessionStorage löschen</li>
+    <li>✅ Service Worker Caches löschen (rezeptbuch-* + rezept-*)</li>
+    <li>✅ Service Worker unregistrieren</li>
+    <li>✅ Seite neu laden mit frischer v3.3</li>
+  </ul>
+</div>
+
+<div class="info" style="border-left-color: #ff9800; background: #fff8e1;">
+  <h3>⚠️ Was passiert mit deinen Daten:</h3>
+  <ul>
+    <li>🔄 <strong>Favoriten</strong>: Werden zurückgesetzt (alte v3.1 Daten löschen)</li>
+    <li>✅ <strong>Theme</strong>: Bleibt erhalten (Hell/Dunkel/Auto)</li>
+    <li>✅ <strong>Token</strong>: Bleibt erhalten (falls vorhanden)</li>
+    <li>✅ <strong>Einstellungen</strong>: Bleiben erhalten</li>
+  </ul>
+</div>
+
+<button class="reset-btn" id="reset-btn">💣 NUCLEAR RESET</button>
+<button class="back-btn" onclick="history.back()">← Zurück</button>
+
+<div id="status"></div>
+
+<script>
+const status = document.getElementById('status');
+
+function log(msg, type = 'info') {
+  console.log(msg);
+  const div = document.createElement('div');
+  div.className = 'status ' + type;
+  div.textContent = msg;
+  status.appendChild(div);
+}
+
+document.getElementById('reset-btn').onclick = async () => {
+  log('🔄 Smart Reset startet...', 'info');
+
+  try {
+    // 1. NUR die alte rezeptbuch-data löschen (nicht alles!)
+    log('🗑️ Lösche alte rezeptbuch-data...', 'info');
+    const oldData = localStorage.getItem('rezeptbuch-data');
+    if (oldData) {
+      localStorage.removeItem('rezeptbuch-data');
+      log('✅ Alte rezeptbuch-data gelöscht (Favoriten werden neu geladen)', 'success');
+    } else {
+      log('ℹ️ rezeptbuch-data war bereits leer', 'success');
+    }
+
+    // 2. sessionStorage (nur temporäre Daten)
+    log('🗑️ Lösche sessionStorage...', 'info');
+    sessionStorage.clear();
+    log('✅ sessionStorage gelöscht', 'success');
+
+    // 3. Service Workers (WICHTIG!)
+    log('🗑️ Unregistriere Service Workers...', 'info');
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) {
+        await reg.unregister();
+      }
+      log('✅ ' + regs.length + ' Service Worker(s) unregistriert', 'success');
+    }
+
+    // 4. Alle Service Worker Caches (KRITISCH!)
+    log('🗑️ Lösche alle Service Worker Caches...', 'info');
+    const cacheNames = await caches.keys();
+    for (const name of cacheNames) {
+      if (name.startsWith('rezeptbuch-') || name.startsWith('rezept-')) {
+        await caches.delete(name);
+        log('  - gelöscht: ' + name, 'success');
+      }
+    }
+    log('✅ ' + cacheNames.length + ' Cache(s) gelöscht', 'success');
+
+    // 5. Neu laden mit Cache-Busting
+    log('🚀 Lade App neu mit frischer v3.3...', 'info');
+    setTimeout(() => {
+      location.href = '/?t=' + Date.now();
+    }, 2000);
+
+  } catch (err) {
+    log('❌ Fehler: ' + err.message, 'error');
+  }
+};
+</script>
+
+</body>
+</html>
