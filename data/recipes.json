@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:22:20.071Z",
+  "updated": "2026-07-06T20:22:45.235Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -610,14 +610,20 @@
     {
       "id": "gulasch",
       "title": "Gulasch",
-      "category": "Eintöpfe & Suppen",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/gulasch-1783369363-0.jpg",
+      "images": [
+        "data/images/gulasch-1783369363-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "S",
+      "bereich": "kochen"
     },
     {
       "id": "rattatatatatatouille",
