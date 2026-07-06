@@ -1617,8 +1617,9 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .weekplan-input-row {
   display: flex;
-  gap: 8px;
+  gap: 0;
   align-items: stretch;
+  position: relative;
 }
 
 @media (max-width: 480px) {
@@ -1631,6 +1632,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 .weekplan-search {
   flex: 1;
   padding: 10px 12px;
+  padding-right: 45px;
   border: 1px solid #d0c5b9;
   border-radius: 6px;
   background: var(--card);
@@ -1650,11 +1652,15 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 .weekplan-add-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 36px;
   height: 36px;
-  min-width: 36px;
   padding: 0;
-  border: 1px solid #d0c5b9;
+  border: none;
+  background: none;
   border-radius: 6px;
   background: var(--card);
   color: var(--accent);

@@ -589,19 +589,20 @@ function showMoveToMenu(draggedTag, currentDay) {
 }
 
 function attachTagHandlers(selectedDiv, dayKey) {
-  // Remove-Button Handler - mit Event-Delegation
-  selectedDiv.onclick = (e) => {
-    if (e.target.classList.contains('weekplan-tag-remove')) {
+  // Remove-Button Handler - direkt auf jedem Button registrieren
+  for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
+    removeBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const entry = e.target.dataset.entry;
+      const entry = removeBtn.dataset.entry;
       const idx = weekplan[dayKey].indexOf(entry);
       if (idx > -1) {
         weekplan[dayKey].splice(idx, 1);
-        e.target.closest('.weekplan-tag').remove();
+        saveWeekplan(weekplan);
+        removeBtn.closest('.weekplan-tag').remove();
       }
-    }
-  };
+    };
+  }
 
   // Drag-Start & Touch-Start Handler
   for (const tag of selectedDiv.querySelectorAll('.weekplan-tag')) {
