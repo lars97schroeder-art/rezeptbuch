@@ -2,13 +2,14 @@
 
 // Bei Änderungen an index.html/app.js/style.css die Versionsnummer erhöhen,
 // damit die Handys die neue App-Version bekommen.
-const SHELL_CACHE = 'rezeptbuch-shell-v7';
+const SHELL_CACHE = 'rezeptbuch-shell-v8';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const SHELL_FILES = [
   './',
   'index.html',
   'app.js',
+  'editor.js',
   'style.css',
   'manifest.webmanifest',
   'icons/icon-192.png',

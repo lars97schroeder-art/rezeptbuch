@@ -201,6 +201,12 @@ function render() {
     grid.appendChild(card);
   }
 
+  // „＋ Neues Rezept“-Kachel, wenn Bearbeiten auf diesem Gerät aktiviert ist
+  if (window.editorGridCard) {
+    const addCard = window.editorGridCard();
+    if (addCard) grid.appendChild(addCard);
+  }
+
   $('#status').textContent = data.recipes.length
     ? `Stand: ${data.updated || '–'} · ${data.recipes.length} Rezepte`
     : '';
@@ -298,6 +304,7 @@ function renderDetail(id, opts = {}) {
     };
   }
   wirePhotoDots(el);
+  if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }

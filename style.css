@@ -597,6 +597,147 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   cursor: pointer;
 }
 
+/* ---------- Bearbeiten-Modus ---------- */
+
+#editor {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: var(--bg);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ed-body {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ed-body h2 { font-size: 22px; }
+
+.ed-text { font-size: 15px; line-height: 1.5; color: var(--muted); }
+
+.ed-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.ed-field input,
+.ed-field textarea,
+.ed-field select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+
+.ed-field textarea { resize: vertical; }
+
+.ed-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ed-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ed-thumb { position: relative; display: inline-block; }
+
+.ed-thumb img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.ed-x {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #c0392b;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ed-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ed-buttons button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ed-save { background: var(--accent); color: #fff; }
+.ed-cancel { background: var(--accent-soft); color: var(--accent); }
+
+.ed-delete {
+  margin-top: 4px;
+  padding: 12px;
+  border: none;
+  background: none;
+  color: #c0392b;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.detail-edit {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  z-index: 22;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.add-card .photo.placeholder {
+  font-size: 48px;
+  color: var(--accent);
+  font-weight: 300;
+}
+
 /* ---------- Toast ---------- */
 
 #toast {
