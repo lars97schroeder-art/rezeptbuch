@@ -551,10 +551,11 @@ function renderWeekplan() {
       }
 
       // Suche Rezepte
-      const matches = data.recipes.filter(r =>
-        titleWithEmoji(r).toLowerCase().includes(query) ||
-        r.category.toLowerCase().includes(query)
-      ).slice(0, 8);
+      const matches = data.recipes.filter(r => {
+        const title = titleWithEmoji(r).toLowerCase();
+        const category = Array.isArray(r.category) ? r.category.join(' ').toLowerCase() : (r.category || '').toLowerCase();
+        return title.includes(query) || category.includes(query);
+      }).slice(0, 8);
 
       if (matches.length === 0) {
         suggestionsDiv.hidden = true;
