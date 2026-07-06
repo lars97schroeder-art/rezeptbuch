@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 20,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -740,6 +740,22 @@
       "steps": [],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
       "bereich": "fruehstueck"
+    },
+    {
+      "id": "bananenbrot",
+      "title": "Bananenbrot",
+      "category": "",
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/bananenbrot-1783326905-0.jpg",
+      "images": [
+        "data/images/bananenbrot-1783326905-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "backen"
     },
     {
       "id": "pfannkuchen",
