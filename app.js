@@ -615,17 +615,14 @@ function openSettings() {
         : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
-    <div class="settings-section">
-      <h3>Datenbank</h3>
-      <button class="setting-btn primary" id="refresh-btn">⟳ Aktualisieren</button>
-      <div class="setting-info">
-        <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>
-        <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
-        <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
-      </div>
-    </div>
+    <button class="setting-btn primary" id="refresh-btn">⟳ Datenbank aktualisieren</button>
+    <button class="ed-cancel setting-btn primary">Schließen</button>
 
-    <button class="ed-cancel">Schließen</button>
+    <div class="setting-info">
+      <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>
+      <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
+      <div><strong>Letztes Update:</strong> ${lastUpdate}</div>
+    </div>
   </div>`;
 
   el.querySelector('.ed-cancel').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };

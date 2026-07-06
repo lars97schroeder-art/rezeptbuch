@@ -967,11 +967,18 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
   font-size: 14px;
   line-height: 1.8;
   color: var(--text);
+  margin-top: 20px;
+  margin-bottom: 0;
 }
 
 .setting-info div {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.setting-info div:last-child {
+  margin-bottom: 0;
 }
 
 .setting-info strong {
