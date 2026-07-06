@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:21:15.599Z",
+  "updated": "2026-07-06T20:21:44.804Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -339,14 +339,20 @@
     {
       "id": "pizzaaaaa",
       "title": "Pizzaaaaa",
-      "category": "Streetfood",
+      "category": [
+        "Streetfood"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍕",
-      "image": "",
+      "image": "data/images/pizzaaaaa-1783369303-0.jpg",
+      "images": [
+        "data/images/pizzaaaaa-1783369303-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "burger",
