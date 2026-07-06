@@ -26,14 +26,22 @@
     {
       "id": "krautspaetzle",
       "title": "Krautspätzle",
-      "category": "Spätzle",
+      "category": [
+        "Spätzle"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Spätzle lol",
+        "Sauerkraut",
+        "Bacon"
+      ],
       "steps": [],
       "notes": "",
+      "bereich": "kochen",
       "group": "Spätzle"
     },
     {
