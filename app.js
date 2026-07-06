@@ -1,9 +1,14 @@
 'use strict';
 
+// APP-FUNKTIONALITÄTS-VERSION: erhöhen bei JEDER Änderung (unabhängig von Rezepten!)
+// Format: YYYYMMDD-HHMM (z.B. 20260707-1930)
+const APP_BUILD_VERSION = '20260707-1930';
+
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
 const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
 const LAST_UPDATED_KEY = 'rezeptbuch-last-updated';
+const LAST_APP_VERSION_KEY = 'rezeptbuch-last-app-version';
 
 const CATEGORY_EMOJI = {
   'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
@@ -1580,52 +1585,69 @@ document.addEventListener('click', e => {
 
 // FORCE-RELOAD beim Start: überprüfe ob Updates da sind BEVOR wir was anzeigen
 (async () => {
-  try {
-    const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-    if (res.ok) {
-      const fresh = await res.json();
-      const stored = localStorage.getItem(DATA_KEY);
+  let shouldReload = false;
+  let reloadReason = '';
 
-      if (stored) {
-        try {
+  // 1. Überprüfe APP-VERSION (Funktionalitäten, nicht Rezepte!)
+  const lastAppVersion = localStorage.getItem(LAST_APP_VERSION_KEY);
+  if (lastAppVersion !== APP_BUILD_VERSION) {
+    shouldReload = true;
+    reloadReason = `App-Version geändert: ${lastAppVersion} → ${APP_BUILD_VERSION}`;
+    console.log('🔄 FORCE-REFRESH: ' + reloadReason);
+  }
+
+  // 2. Überprüfe REZEPTE-TIMESTAMP (falls App-Version gleich)
+  if (!shouldReload) {
+    try {
+      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        const fresh = await res.json();
+        const stored = localStorage.getItem(DATA_KEY);
+
+        if (stored) {
           const oldData = JSON.parse(stored);
-          // Wenn die Timestamps UNTERSCHIEDLICH sind = UPDATE VORHANDEN
           if (fresh.updated !== oldData.updated) {
-            console.log('🔄 FORCE-REFRESH: Update erkannt beim Start!');
-            console.log('  Alt:', oldData.updated, '→ Neu:', fresh.updated);
-
-            // Aggressiv alles neu laden
-            localStorage.removeItem(DATA_KEY);
-
-            // Service Worker unregistrieren
-            if ('serviceWorker' in navigator) {
-              try {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(regs.map(r => r.unregister()));
-              } catch (e) { console.log('SW unregister error:', e); }
-            }
-
-            // Caches löschen
-            if ('caches' in window) {
-              try {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-              } catch (e) { console.log('Cache delete error:', e); }
-            }
-
-            // FORCE RELOAD mit Cache-Buster
-            console.log('💥 Force-Reload mit Cache-Buster!');
-            window.location.href = window.location.pathname + '?force=' + Date.now() + '&r=' + Math.random();
-            return; // Stoppe hier, der Reload wird die Seite neu starten
+            shouldReload = true;
+            reloadReason = `Rezepte geändert: ${oldData.updated} → ${fresh.updated}`;
+            console.log('🔄 FORCE-REFRESH: ' + reloadReason);
           }
-        } catch (e) {
-          console.error('Fehler beim Timestamp-Vergleich:', e);
         }
       }
+    } catch (e) {
+      console.log('ℹ️ Rezepte-Check fehlgeschlagen (offline?)');
     }
-  } catch (e) {
-    console.log('ℹ️ Force-Refresh Check fehlgeschlagen (offline?)');
   }
+
+  // 3. Führe FORCE-RELOAD durch wenn nötig
+  if (shouldReload) {
+    console.log('  Grund:', reloadReason);
+    localStorage.removeItem(DATA_KEY);
+    localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_VERSION);
+
+    // Service Worker unregistrieren
+    if ('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      } catch (e) { console.log('SW unregister error:', e); }
+    }
+
+    // Caches löschen
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      } catch (e) { console.log('Cache delete error:', e); }
+    }
+
+    // FORCE RELOAD mit Cache-Buster
+    console.log('💥 Force-Reload mit Cache-Buster!');
+    window.location.href = window.location.pathname + '?force=' + Date.now() + '&r=' + Math.random();
+    return;
+  }
+
+  // Speichere aktuelle App-Version
+  localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_VERSION);
 
   // Wenn KEIN Update: normal laden
   renderModeUI();
