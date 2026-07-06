@@ -1,5 +1,5 @@
 {
-  "version": 28,
+  "version": 29,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -232,10 +232,15 @@
       "time": "",
       "servings": "",
       "emoji": "😈",
-      "image": "",
+      "image": "data/images/nasty-gnocchi-1783327760-0.jpg",
+      "images": [
+        "data/images/nasty-gnocchi-1783327760-0.jpg",
+        "data/images/nasty-gnocchi-1783327760-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "gnocchi-mit-cashew-pesto",
