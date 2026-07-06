@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:10:36.436Z",
+  "updated": "2026-07-06T22:11:39.189Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -821,7 +821,7 @@
     },
     {
       "id": "caesar-salat",
-      "title": "Caesar Salat",
+      "title": "Cesar Salat",
       "category": [
         "Ist das Kochen?"
       ],
@@ -830,7 +830,8 @@
       "emoji": "",
       "image": "data/images/caesar-salat-1783372507-0.jpg",
       "images": [
-        "data/images/caesar-salat-1783372507-0.jpg"
+        "data/images/caesar-salat-1783372507-0.jpg",
+        "data/images/caesar-salat-1783375897-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
