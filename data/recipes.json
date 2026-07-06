@@ -528,10 +528,16 @@
     {
       "id": "kuerbissuppe",
       "title": "Kürbissuppe mit Ingwer",
-      "category": "Eintöpfe & Suppen",
+      "category": [
+        "Eintöpfe & Suppen"
+      ],
       "time": "40 Min.",
       "servings": "4 Portionen",
-      "image": "",
+      "emoji": "",
+      "image": "data/images/kuerbissuppe-1783355681-0.jpg",
+      "images": [
+        "data/images/kuerbissuppe-1783355681-0.jpg"
+      ],
       "ingredients": [
         "1 Hokkaido-Kürbis",
         "1 Zwiebel",
@@ -549,7 +555,8 @@
         "Kokosmilch dazu, fein pürieren und abschmecken.",
         "Mit gerösteten Kürbiskernen servieren."
       ],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "kartoffelsuppe",
