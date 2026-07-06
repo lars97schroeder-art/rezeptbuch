@@ -767,3 +767,33 @@ if (!data.recipes.length) update(false); // Erststart: still versuchen zu laden
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
+
+// Swipe-to-back Geste: von links nach rechts wischen
+let swipeStart = null;
+document.addEventListener('pointerdown', (e) => {
+  if (e.clientX < 50) swipeStart = e.clientX;
+}, false);
+
+document.addEventListener('pointermove', (e) => {
+  if (!swipeStart) return;
+  const swipeDistance = e.clientX - swipeStart;
+  if (swipeDistance > 100 && e.clientX < 200) {
+    swipeStart = null;
+    // Falls Detail oder Editor offen: schließen; sonst history.back()
+    const detail = $('#detail');
+    const editor = $('#editor');
+    if (!detail.hidden) {
+      detail.hidden = true;
+      document.body.style.overflow = '';
+    } else if (!editor.hidden) {
+      editor.hidden = true;
+      document.body.style.overflow = '';
+    } else {
+      history.back();
+    }
+  }
+}, false);
+
+document.addEventListener('pointerup', () => {
+  swipeStart = null;
+}, false);

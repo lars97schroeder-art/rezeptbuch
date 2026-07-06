@@ -1043,6 +1043,7 @@ h1 { font-size: 19px; line-height: 1.2; padding-right: 8px; }
 
 .settings-body {
   gap: 20px;
+  padding-left: 70px !important;
 }
 
 .settings-body h2 {
