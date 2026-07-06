@@ -837,11 +837,25 @@ function openSettings() {
   el.querySelector('#refresh-btn').onclick = async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
-      // Nur rezeptbuch-Caches löschen (nicht alles)
-      const cacheNames = await caches.keys();
-      const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
-      await Promise.all(toDelete.map(name => caches.delete(name)));
-      console.log('✓ ' + toDelete.length + ' alte Cache(s) gelöscht');
+      // Erst neue Rezepte vom Server checken
+      const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const fresh = await res.json();
+
+      // Vergleiche mit lokaler Version
+      const hasUpdate = fresh.version !== data.version || fresh.recipes.length !== data.recipes.length;
+
+      if (hasUpdate) {
+        console.log('📢 Update verfügbar:', data.version, '→', fresh.version);
+
+        // Nur WENN es ein Update gibt: Cache löschen
+        const cacheNames = await caches.keys();
+        const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
+        await Promise.all(toDelete.map(name => caches.delete(name)));
+        console.log('✓ ' + toDelete.length + ' Cache(s) gelöscht (wegen Update)');
+      } else {
+        console.log('✅ Bereits aktuell - kein Cache-Löschen nötig');
+      }
 
       // Service Worker nur updaten (nicht unregistrieren)
       if ('serviceWorker' in navigator) {
@@ -852,9 +866,8 @@ function openSettings() {
         }
       }
 
-      // Rezepte vom Server laden
+      // Rezepte neu laden
       await update();
-      console.log('✓ Rezepte aktualisiert');
 
     } catch (err) {
       console.error('Update-Fehler:', err);
