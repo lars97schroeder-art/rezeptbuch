@@ -671,6 +671,36 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4) !important;
 }
 
+.t-card-badge-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  font-weight: 900;
+  padding: 12px 24px;
+  border: 4px solid;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.t-card-badge-text.like-text {
+  color: #ff6b9d;
+  border-color: #ff6b9d;
+  background: rgba(255, 107, 157, 0.1);
+}
+
+.t-card-badge-text.nope-text {
+  color: #fd695d;
+  border-color: #fd695d;
+  background: rgba(253, 105, 93, 0.1);
+}
+
 .superlike-overlay {
   position: fixed;
   inset: 0;
@@ -679,6 +709,23 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  animation: superlikeBgDim 2.5s ease-in-out forwards;
+}
+
+@keyframes superlikeBgDim {
+  0% {
+    background: rgba(0, 0, 0, 0);
+  }
+  15% {
+    background: rgba(0, 0, 0, 0.15);
+  }
+  85% {
+    background: rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    background: rgba(0, 0, 0, 0);
+  }
 }
 
 .superlike-text {

@@ -414,6 +414,8 @@ function tinderCardHTML(r, cls) {
     </div>
     <div class="t-badge like">WILL ICH 😍</div>
     <div class="t-badge nope">NÖ 🙅</div>
+    <div class="t-card-badge-text like-text">WILL ICH 😍</div>
+    <div class="t-card-badge-text nope-text">NÖ 🙅</div>
   </div>`;
 }
 
@@ -471,14 +473,25 @@ function superlike(recipe) {
 }
 
 function flyOut(card, dir) {
+  // Text einblenden
+  const textBadge = card.querySelector(dir > 0 ? '.like-text' : '.nope-text');
+  if (textBadge) {
+    textBadge.style.opacity = '1';
+  }
+
   // Passenden Stempel groß einblenden, dann Karte rausfliegen lassen
   const badge = card.querySelector(dir > 0 ? '.t-badge.like' : '.t-badge.nope');
   badge.style.opacity = 1;
   badge.style.transform = `rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
-  card.style.transition = 'transform 0.6s ease, opacity 0.6s ease';
-  card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
-  card.style.opacity = '0';
-  setTimeout(() => swipeTinder(dir), 550);
+
+  // Verzögerte Animation für Karte
+  setTimeout(() => {
+    card.style.transition = 'transform 1.0s ease, opacity 1.0s ease';
+    card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
+    card.style.opacity = '0';
+  }, 400);
+
+  setTimeout(() => swipeTinder(dir), 1400);
 }
 
 function attachSwipe(card, onSwipe) {
