@@ -1618,7 +1618,14 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 .weekplan-input-row {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
+}
+
+@media (max-width: 480px) {
+  .weekplan-input-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 }
 
 .weekplan-search {
@@ -1678,6 +1685,10 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   max-height: 250px;
   overflow-y: auto;
   z-index: 100;
+}
+
+.weekplan-suggestions[hidden] {
+  display: none;
 }
 
 .weekplan-suggestion {

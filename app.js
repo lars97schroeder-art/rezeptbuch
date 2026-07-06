@@ -488,14 +488,75 @@ const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
 function getWeekplan() {
   try {
     const stored = localStorage.getItem(WEEKPLAN_KEY);
-    return stored ? JSON.parse(stored) : { mo: '', di: '', mi: '', do: '', fr: '', sa: '', so: '' };
+    if (!stored) {
+      return { mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] };
+    }
+    const plan = JSON.parse(stored);
+    // Konvertiere alte String-Format zu Array-Format
+    const converted = {};
+    for (const key in plan) {
+      if (Array.isArray(plan[key])) {
+        converted[key] = plan[key];
+      } else if (plan[key]) {
+        converted[key] = [plan[key]];
+      } else {
+        converted[key] = [];
+      }
+    }
+    return converted;
   } catch (e) {
-    return { mo: '', di: '', mi: '', do: '', fr: '', sa: '', so: '' };
+    return { mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] };
   }
 }
 
 function saveWeekplan(plan) {
   localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(plan));
+}
+
+let draggedTag = null;
+
+function attachTagHandlers(selectedDiv, dayKey) {
+  // Remove-Button Handler
+  for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
+    removeBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const entry = removeBtn.dataset.entry;
+      const idx = weekplan[dayKey].indexOf(entry);
+      if (idx > -1) {
+        weekplan[dayKey].splice(idx, 1);
+        removeBtn.closest('.weekplan-tag').remove();
+      }
+    };
+  }
+
+  // Drag-Start & Touch-Start Handler
+  for (const tag of selectedDiv.querySelectorAll('.weekplan-tag')) {
+    // Mouse Drag
+    tag.ondragstart = (e) => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('entry', tag.dataset.entry);
+      e.dataTransfer.setData('sourceDay', dayKey);
+      tag.style.opacity = '0.5';
+    };
+
+    tag.ondragend = (e) => {
+      tag.style.opacity = '1';
+    };
+
+    // Touch Support für Handy
+    tag.ontouchstart = (e) => {
+      draggedTag = { tag, entry: tag.dataset.entry, sourceDay: dayKey };
+      tag.style.opacity = '0.5';
+    };
+
+    tag.ontouchend = (e) => {
+      if (draggedTag) {
+        draggedTag.tag.style.opacity = '1';
+        draggedTag = null;
+      }
+    };
+  }
 }
 
 function renderWeekplan() {
@@ -513,22 +574,25 @@ function renderWeekplan() {
 
   let daysHTML = '';
   for (const day of days) {
-    const entry = weekplan[day.key];
-    let displayName = '';
+    const entries = weekplan[day.key] || [];
+    let tagsHTML = '';
 
-    if (entry) {
+    for (const entry of entries) {
+      let displayName = '';
       if (entry.startsWith('TEXT:')) {
-        // Freitext-Eintrag
         displayName = entry.substring(5);
       } else {
-        // Recipe-ID
         const recipe = data.recipes.find(r => r.id === entry);
         displayName = recipe ? titleWithEmoji(recipe) : '';
+      }
+
+      if (displayName) {
+        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}">${esc(displayName)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}">✕</button></span>`;
       }
     }
 
     daysHTML += `
-      <div class="weekplan-day">
+      <div class="weekplan-day" data-day="${day.key}" draggable="true">
         <label class="weekplan-label">${day.label}</label>
         <div class="weekplan-autocomplete" data-day="${day.key}">
           <div class="weekplan-input-row">
@@ -536,7 +600,7 @@ function renderWeekplan() {
             <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
           </div>
           <div class="weekplan-suggestions" hidden></div>
-          <div class="weekplan-selected">${displayName ? `<span class="weekplan-tag">${esc(displayName)} <button class="weekplan-tag-remove">✕</button></span>` : ''}</div>
+          <div class="weekplan-selected">${tagsHTML}</div>
         </div>
       </div>`;
   }
@@ -593,19 +657,18 @@ function renderWeekplan() {
         suggEl.onclick = () => {
           const recipeId = suggEl.dataset.id;
           const recipe = data.recipes.find(r => r.id === recipeId);
-          weekplan[dayKey] = recipeId;
 
-          // Update UI
-          selectedDiv.innerHTML = `<span class="weekplan-tag">${esc(titleWithEmoji(recipe))} <button class="weekplan-tag-remove">✕</button></span>`;
+          // Füge zu Array hinzu statt zu ersetzen
+          if (!weekplan[dayKey]) weekplan[dayKey] = [];
+          weekplan[dayKey].push(recipeId);
+
+          // Update UI: neues Tag hinzufügen
+          const tagHTML = `<span class="weekplan-tag" draggable="true" data-entry="${esc(recipeId)}">${esc(titleWithEmoji(recipe))} <button class="weekplan-tag-remove" data-entry="${esc(recipeId)}">✕</button></span>`;
+          selectedDiv.insertAdjacentHTML('beforeend', tagHTML);
+
           searchInput.value = '';
           suggestionsDiv.hidden = true;
-
-          // Remove-Button
-          selectedDiv.querySelector('.weekplan-tag-remove').onclick = () => {
-            weekplan[dayKey] = '';
-            selectedDiv.innerHTML = '';
-            searchInput.value = '';
-          };
+          attachTagHandlers(selectedDiv, dayKey);
         };
       }
     });
@@ -615,43 +678,103 @@ function renderWeekplan() {
       const text = searchInput.value.trim();
       if (!text) return;
 
-      // Speichere als Freitext (mit Präfix um es von Recipe-IDs zu unterscheiden)
-      weekplan[dayKey] = 'TEXT:' + text;
-      selectedDiv.innerHTML = `<span class="weekplan-tag">${esc(text)} <button class="weekplan-tag-remove">✕</button></span>`;
+      // Füge zu Array hinzu statt zu ersetzen
+      if (!weekplan[dayKey]) weekplan[dayKey] = [];
+      const entry = 'TEXT:' + text;
+      weekplan[dayKey].push(entry);
+
+      // Update UI: neues Tag hinzufügen
+      const tagHTML = `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}">${esc(text)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}">✕</button></span>`;
+      selectedDiv.insertAdjacentHTML('beforeend', tagHTML);
+
       searchInput.value = '';
       suggestionsDiv.hidden = true;
-
-      // Remove-Button
-      selectedDiv.querySelector('.weekplan-tag-remove').onclick = () => {
-        weekplan[dayKey] = '';
-        selectedDiv.innerHTML = '';
-        searchInput.value = '';
-      };
+      attachTagHandlers(selectedDiv, dayKey);
     };
 
     // Enter-Key für Autocomplete-Auswahl oder Freitext
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        // Wenn Autocomplete-Vorschläge da sind, benutze den ersten
         if (!suggestionsDiv.hidden && suggestionsDiv.children.length > 0) {
           suggestionsDiv.children[0].click();
         } else {
-          // Sonst speichere als Freitext
           addBtn.click();
         }
       }
     });
 
-    // Remove-Button für bestehende Tags
-    const removeBtn = selectedDiv.querySelector('.weekplan-tag-remove');
-    if (removeBtn) {
-      removeBtn.onclick = () => {
-        weekplan[dayKey] = '';
-        selectedDiv.innerHTML = '';
+    // Attach handlers für bestehende Tags
+    attachTagHandlers(selectedDiv, dayKey);
         searchInput.value = '';
       };
     }
+  }
+
+  // Drag & Drop Handler für Tage
+  for (const dayEl of el.querySelectorAll('.weekplan-day')) {
+    const dayKey = dayEl.dataset.day;
+    const selectedDiv = dayEl.querySelector('.weekplan-selected');
+
+    // Drag Over (Mouse)
+    dayEl.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      dayEl.style.background = 'rgba(232, 89, 12, 0.1)';
+    };
+
+    dayEl.ondragleave = (e) => {
+      if (e.target === dayEl) {
+        dayEl.style.background = '';
+      }
+    };
+
+    // Drop (Mouse)
+    dayEl.ondrop = (e) => {
+      e.preventDefault();
+      dayEl.style.background = '';
+
+      const entry = e.dataTransfer.getData('entry');
+      const sourceDay = e.dataTransfer.getData('sourceDay');
+
+      if (!entry || !sourceDay) return;
+      performDragDrop(entry, sourceDay, dayKey);
+    };
+
+    // Touch Support für Handy
+    dayEl.ontouchend = (e) => {
+      if (!draggedTag) return;
+      e.preventDefault();
+      dayEl.style.background = '';
+      performDragDrop(draggedTag.entry, draggedTag.sourceDay, dayKey);
+    };
+
+    dayEl.ontouchover = (e) => {
+      if (draggedTag) {
+        dayEl.style.background = 'rgba(232, 89, 12, 0.1)';
+      }
+    };
+  }
+
+  function performDragDrop(entry, sourceDay, targetDay) {
+    if (!entry || !sourceDay) return;
+
+    // Entferne von Source
+    if (weekplan[sourceDay]) {
+      const idx = weekplan[sourceDay].indexOf(entry);
+      if (idx > -1) {
+        weekplan[sourceDay].splice(idx, 1);
+      }
+    }
+
+    // Füge zu Target hinzu (ohne Duplikat)
+    if (!weekplan[targetDay]) weekplan[targetDay] = [];
+    if (!weekplan[targetDay].includes(entry)) {
+      weekplan[targetDay].push(entry);
+    }
+
+    // Re-render Wochenplan um Changes zu zeigen
+    renderWeekplan();
   }
 
   // Save Button
