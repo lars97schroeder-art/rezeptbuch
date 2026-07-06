@@ -107,16 +107,24 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App-Dateien (app.js, style.css, etc.): sofort aus dem Cache, im Hintergrund frisch nachladen.
+  // App-Dateien: IMMER vom Netz zuerst (app.js, style.css, etc.)
   event.respondWith((async () => {
     const cache = await caches.open(SHELL_CACHE);
+
+    // Versuche ZUERST vom Netz
+    try {
+      const network = await fetch(event.request, { cache: 'no-cache' });
+      if (network.ok) {
+        // Speichere neue Version
+        cache.put(event.request, network.clone());
+        return network;
+      }
+    } catch (e) {
+      // Netz nicht verfügbar, nutze Cache
+    }
+
+    // Fallback zu Cache
     const hit = await cache.match(event.request, { ignoreSearch: true });
-    const network = fetch(event.request, { cache: 'no-cache' })
-      .then(res => {
-        if (res.ok) cache.put(event.request, res.clone());
-        return res;
-      })
-      .catch(() => null);
-    return hit || (await network) || new Response('Offline', { status: 503 });
+    return hit || new Response('Offline', { status: 503 });
   })());
 });

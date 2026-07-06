@@ -1413,9 +1413,43 @@ function openSettings() {
 
       // Feedback
       if (hasUpdates || hasVersionUpdate) {
-        toast('✅ Updates geladen! App wird neu geladen... (v' + fresh.version + ')');
-        // Hard reload nach Update
-        setTimeout(() => location.reload(true), 1000);
+        // Zeige Reload-Dialog
+        const reloadDialog = document.createElement('div');
+        reloadDialog.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: var(--card);
+          border: 3px solid var(--accent);
+          border-radius: 12px;
+          padding: 24px;
+          z-index: 2000;
+          text-align: center;
+          max-width: 300px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        `;
+        reloadDialog.innerHTML = `
+          <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ Update verfügbar!</h3>
+          <p style="margin: 0 0 12px 0; color: var(--text);">Version ${fresh.version} bereit.</p>
+          <button id="reload-now" style="
+            padding: 12px 24px;
+            margin: 8px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: inherit;
+          ">🔄 Jetzt neu laden</button>
+        `;
+        document.body.appendChild(reloadDialog);
+
+        document.getElementById('reload-now').onclick = () => {
+          location.reload(true);
+        };
       } else {
         toast('✅ Alles auf aktuellem Stand');
       }
