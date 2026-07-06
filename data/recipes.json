@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:19:46.356Z",
+  "updated": "2026-07-06T21:20:37.444Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -947,7 +947,7 @@
     },
     {
       "id": "weisswurst",
-      "title": "Weißwurst",
+      "title": "Weißwurstfrühstück",
       "category": [],
       "time": "",
       "servings": "",
@@ -956,7 +956,11 @@
       "images": [
         "data/images/weisswurst-1783372616-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "A paar Würstel",
+        "Brezn",
+        "Süßer Senf"
+      ],
       "steps": [],
       "notes": "O’zapft is",
       "bereich": "fruehstueck"
