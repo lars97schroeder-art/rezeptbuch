@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-06T21:05:00+02:00';
+const APP_BUILD_TIME = '2026-07-07T01:15:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -124,6 +124,10 @@ async function checkAndUpdateIfNeeded() {
     const fresh = await fetchRemoteRecipes();
     if (!fresh) return false;
 
+    // Erfolgreicher Abgleich mit dem Server → "Zuletzt aktualisiert" stempeln
+    localStorage.setItem(LAST_UPDATE_KEY, new Date().toLocaleString('de-DE',
+      { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }));
+
     // Vergleiche global updated Datum (ISO-Parse für robuste Vergleiche)
     const oldDate = new Date(data.updated).getTime();
     const freshDate = new Date(fresh.updated).getTime();
@@ -152,6 +156,8 @@ async function checkAndUpdateIfNeeded() {
       data.updated = fresh.updated;
       saveLocal();
       render();
+      // Neue Bilder im Hintergrund fürs Offline-Kochen holen
+      precacheImages(fresh.recipes);
       console.log('🔄 ' + updated.length + ' Rezept(e) aktualisiert: ' + updated.join(', '));
       toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
       return true;
@@ -165,17 +171,13 @@ async function checkAndUpdateIfNeeded() {
 
 /* ---------- Aktualisieren ---------- */
 
-async function update(showErrors = true) {
+// Bilder fürs Offline-Kochen vorladen und nicht mehr benötigte aufräumen.
+// Läuft im Hintergrund, wenn neue Rezepte übernommen wurden.
+async function precacheImages(recipes) {
   try {
-    const oldData = JSON.parse(JSON.stringify(data)); // Deep copy
-    const fresh = await fetchRemoteRecipes();
-    if (!fresh) throw new Error('Rezepte konnten nicht geladen werden');
-
-    // Neue Bilder herunterladen, damit alles offline verfügbar ist.
-    // Bilddateien haben versionierte Namen: was schon im Cache liegt, bleibt.
     const cache = await caches.open(IMG_CACHE);
     const wanted = new Set();
-    for (const r of fresh.recipes) {
+    for (const r of recipes) {
       for (const img of imagesOf(r)) {
         wanted.add(new URL(img, location.href).href);
         if (await cache.match(img)) continue;
@@ -185,51 +187,29 @@ async function update(showErrors = true) {
         } catch (e) { /* einzelnes Bild fehlgeschlagen – beim nächsten Update erneut */ }
       }
     }
-    // Nicht mehr benötigte Bilder aufräumen
     for (const req of await cache.keys()) {
       if (!wanted.has(req.url)) await cache.delete(req);
     }
+  } catch (e) { /* Bild-Cache optional */ }
+}
 
-    data = fresh;
-    console.log('✅ data = fresh gesetzt, Updated:', data.updated, 'Rezepte:', data.recipes.length);
-    saveLocal();
-    console.log('✅ saveLocal() aufgerufen');
-    render();
-    console.log('✅ render() aufgerufen');
-
-    // Vergleiche alte und neue Daten und erstelle Update-Nachricht
-    const messages = [];
-
-    // Check für neue/aktualisierte Rezepte
-    const oldIds = new Set(oldData.recipes.map(r => r.id));
-    const newRecipes = fresh.recipes.filter(r => !oldIds.has(r.id));
-    if (newRecipes.length > 0) {
-      messages.push(`✅ ${newRecipes.length} neue ${newRecipes.length === 1 ? 'Rezept' : 'Rezepte'}`);
+// Funktionalitäten-Timestamp der Server-Version auslesen (aus app.js).
+// Gleiche Lese-Logik wie bei den Rezepten: mit Token über die API, sonst Pages.
+async function fetchRemoteBuildTime() {
+  try {
+    let text = null;
+    if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
+      try { text = utf8b64((await ghGet('app.js')).content); } catch (e) { /* Pages-Fallback */ }
     }
-
-    // Check für aktualisierte Rezepte
-    const oldMap = new Map(oldData.recipes.map(r => [r.id, r]));
-    const updatedRecipes = fresh.recipes.filter(r => {
-      const old = oldMap.get(r.id);
-      return old && JSON.stringify(old) !== JSON.stringify(r);
-    });
-    if (updatedRecipes.length > 0) {
-      messages.push(`✅ ${updatedRecipes.length} ${updatedRecipes.length === 1 ? 'Rezept aktualisiert' : 'Rezepte aktualisiert'}`);
+    if (!text) {
+      const res = await fetch('app.js?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return null;
+      text = await res.text();
     }
-
-    // Zeige Nachricht an
-    if (messages.length > 0) {
-      toast(messages.join('\n'));
-    } else {
-      toast('✅ Alles schon aktuell');
-    }
+    const m = text.match(/APP_BUILD_TIME\s*=\s*'([^']+)'/);
+    return m ? m[1] : null;
   } catch (e) {
-    console.error('🔴 FEHLER in update():', e.message, e.stack);
-    if (showErrors) toast('Keine Verbindung – gespeicherte Rezepte bleiben da 📴');
-  } finally {
-    // Letztes Update-Datum speichern
-    const now = new Date().toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-    localStorage.setItem(LAST_UPDATE_KEY, now);
+    return null;
   }
 }
 
@@ -340,8 +320,19 @@ function render() {
 function openRecipe(id, opts = {}) {
   renderDetail(id, opts);
   history.pushState({ view: 'recipe', id, random: !!opts.random }, '');
-  // Auto-Check im Hintergrund
-  checkAndUpdateIfNeeded();
+  // ISO-Check im Hintergrund: hat sich GENAU DIESES Rezept geändert,
+  // wird die offene Ansicht sofort mit den frischen Daten neu gezeichnet
+  const shownBefore = JSON.stringify(data.recipes.find(r => r.id === id) || null);
+  checkAndUpdateIfNeeded().then(changed => {
+    if (!changed) return;
+    const now = data.recipes.find(r => r.id === id);
+    if (!now || JSON.stringify(now) === shownBefore) return; // dieses Rezept unverändert
+    const detail = $('#detail');
+    // Nur neu zeichnen, wenn die Detailansicht noch offen ist (und kein Wochenplan drin)
+    if (!detail.hidden && !detail.querySelector('.weekplan-container')) {
+      renderDetail(id);
+    }
+  });
 }
 
 function openGroup(name) {
@@ -1177,15 +1168,8 @@ function openSettings() {
     <div class="update-status"></div>
 
     <div class="setting-info">
-      <div><strong>Zuletzt aktualisiert:</strong> ${(() => {
-        if (data.updated) {
-          const date = new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-          return date;
-        }
-        return 'Noch nie';
-      })()}</div>
       <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
-      <div><strong>App aktualisiert:</strong> ${lastUpdate}</div>
+      <div><strong>Zuletzt aktualisiert:</strong> ${lastUpdate}</div>
     </div>
   </div>`;
 
@@ -1267,8 +1251,13 @@ function openSettings() {
       const fresh = await fetchRemoteRecipes();
       if (!fresh) throw new Error('Rezepte konnten nicht geladen werden');
 
-      // Prüfe ob es ein Update gibt (NUR auf updated Timestamp achten, nicht auf Version!)
+      // 1. DATEN-CHECK: Rezept-ISO-Timestamp vergleichen und ggf. übernehmen
       const hasUpdates = await checkAndUpdateIfNeeded();
+
+      // 2. FUNKTIONALITÄTEN-CHECK: App-Build-ISO-Timestamp der Server-Version vergleichen
+      const remoteBuild = await fetchRemoteBuildTime();
+      const hasAppUpdate = !!remoteBuild &&
+        new Date(remoteBuild).getTime() !== new Date(APP_BUILD_TIME).getTime();
 
       // IMMER Cache löschen beim Update-Button
       showToastWithoutTimeout('🗑️ Cache wird geleert...');
@@ -1304,7 +1293,10 @@ function openSettings() {
       localStorage.setItem(LAST_UPDATED_KEY, fresh.updated);
 
       // Feedback
-      if (hasUpdates) {
+      if (hasUpdates || hasAppUpdate) {
+        const was = [];
+        if (hasUpdates) was.push('🔄 Neue Rezepte übernommen.');
+        if (hasAppUpdate) was.push('✨ Neue App-Funktionen bereit.');
         // Zeige Reload-Dialog
         const reloadDialog = document.createElement('div');
         reloadDialog.style.cssText = `
@@ -1323,7 +1315,7 @@ function openSettings() {
         `;
         reloadDialog.innerHTML = `
           <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ Update verfügbar!</h3>
-          <p style="margin: 0 0 12px 0; color: var(--text);">🔄 Neue Rezepte bereit zum Laden.</p>
+          <p style="margin: 0 0 12px 0; color: var(--text);">${was.join('<br>')}</p>
           <button id="reload-now" style="
             padding: 12px 24px;
             margin: 8px;
@@ -1345,7 +1337,7 @@ function openSettings() {
           window.location.href = window.location.pathname + randomParam;
         };
       } else {
-        toast('✅ Alles auf aktuellem Stand');
+        toast('✅ Alles aktuell – Rezepte und App-Funktionen');
       }
     } catch (err) {
       console.error('Update-Fehler:', err);
@@ -1458,33 +1450,11 @@ document.addEventListener('click', e => {
     console.log('🔄 FORCE-REFRESH: ' + reloadReason);
   }
 
-  // 2. DATEN-CHECK: Rezepte-Timestamp vom Server (falls Funktionalitäten gleich)
-  // Wochenplan-Einträge (rezeptbuch-weekplan) werden bei Reloads nie angetastet
-  if (!shouldReload) {
-    try {
-      const fresh = await fetchRemoteRecipes();
-      if (fresh) {
-        const stored = localStorage.getItem(DATA_KEY);
+  // Rezept-Änderungen lösen KEINEN Force-Reload mehr aus: die übernimmt
+  // checkAndUpdateIfNeeded() beim Start sanft per ISO-Vergleich, ohne Neuladen.
+  // Wochenplan-Einträge (rezeptbuch-weekplan) werden bei Reloads nie angetastet.
 
-        if (stored) {
-          const oldData = JSON.parse(stored);
-          // Parse ISO Timestamps für zuverlässigen Vergleich (ignoriere Format-Unterschiede)
-          const oldDate = new Date(oldData.updated).getTime();
-          const freshDate = new Date(fresh.updated).getTime();
-
-          if (freshDate !== oldDate) {
-            shouldReload = true;
-            reloadReason = `Rezepte geändert: ${oldData.updated} → ${fresh.updated}`;
-            console.log('🔄 FORCE-REFRESH: ' + reloadReason);
-          }
-        }
-      }
-    } catch (e) {
-      console.log('ℹ️ Rezepte-Check fehlgeschlagen (offline?)');
-    }
-  }
-
-  // 3. Führe FORCE-RELOAD durch wenn nötig
+  // 2. Führe FORCE-RELOAD durch wenn nötig (nur bei geänderten Funktionalitäten)
   if (shouldReload) {
     console.log('  Grund:', reloadReason);
     localStorage.removeItem(DATA_KEY);
@@ -1521,9 +1491,15 @@ document.addEventListener('click', e => {
   render();
 })();
 
-// Beim Start immer nach Updates checken (nicht nur beim Erststart)
-// Das sorgt dafür, dass auch gekachte alte Versionen aktualisiert werden
-update(false);
+// Beim Start: leichter ISO-Abgleich der Rezepte (kein kompletter Neu-Download)
+checkAndUpdateIfNeeded();
+
+// Gibt es neue App-Funktionen auf dem Server? Nur Hinweis zeigen, nicht automatisch laden
+fetchRemoteBuildTime().then(remoteBuild => {
+  if (remoteBuild && new Date(remoteBuild).getTime() > new Date(APP_BUILD_TIME).getTime()) {
+    toast('✨ App-Update verfügbar – über ⚙️ → ⟳ Update laden');
+  }
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js?t=' + Date.now()).catch(e => console.log('SW register error:', e));
