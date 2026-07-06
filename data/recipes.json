@@ -137,14 +137,23 @@
     {
       "id": "schinkennudeln",
       "title": "Schinkennudeln",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Pastaaaa",
+        "Kochschinken",
+        "Erbsen",
+        "Schlagsahne"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "bolognese",
