@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:57:15.870Z",
+  "updated": "2026-07-06T21:58:21.249Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -686,14 +686,20 @@
     {
       "id": "spanische-tortilla",
       "title": "Spanische Tortilla",
-      "category": "Ofen & Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🇪🇸",
-      "image": "",
+      "image": "data/images/spanische-tortilla-1783375100-0.jpg",
+      "images": [
+        "data/images/spanische-tortilla-1783375100-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "Rezept vom Kochkurs mit Ros aus Barcelona raussuchen",
+      "bereich": "kochen"
     },
     {
       "id": "kartoffelgratin",
