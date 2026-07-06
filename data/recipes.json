@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:06:57.490Z",
+  "updated": "2026-07-06T22:10:36.436Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -937,12 +937,14 @@
     {
       "id": "maxvorstadt-sandwich",
       "title": "Maxvorstadt Sandwich",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🥪",
-      "image": "",
-      "images": [],
+      "image": "data/images/maxvorstadt-sandwich-1783375835-0.jpg",
+      "images": [
+        "data/images/maxvorstadt-sandwich-1783375835-0.jpg"
+      ],
       "ingredients": [
         "Toast",
         "Miracel Whip",
@@ -950,7 +952,7 @@
         "Bacon",
         "Ei",
         "Gouda mittelalt",
-        "➕Tomate, Gurke"
+        "Wahlweise Tomate, Gurke"
       ],
       "steps": [],
       "notes": "",
