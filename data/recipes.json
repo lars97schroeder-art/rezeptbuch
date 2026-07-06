@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:19:07.321Z",
+  "updated": "2026-07-06T21:19:46.356Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -905,7 +905,7 @@
     {
       "id": "granola",
       "title": "Granola",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🥣",
@@ -914,7 +914,17 @@
         "data/images/granola-1783240941.jpg",
         "data/images/granola-1783326982-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "375g Mehrkornmischung",
+        "1 Hand Walnüsse",
+        "1 Hand cashews",
+        "50g Kakao",
+        "Prise Salz",
+        "Prise Zucker",
+        "50g ahornsirup",
+        "100g Öl",
+        "100 Gramm dunkle Schoko"
+      ],
       "steps": [],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
       "bereich": "fruehstueck"
