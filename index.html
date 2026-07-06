@@ -91,6 +91,13 @@ console.log('✅ Version-Check abgeschlossen\n');
 <div id="toast" hidden></div>
 
 <script src="editor.js"></script>
-<script src="app.js"></script>
+<script>
+// Cache-Buster: app.js wird IMMER neu vom Server geladen, nie vom Cache
+// Das ist KRITISCH für Updates - ohne das bleiben alte Versionen gecacht
+const cacheBuster = '?t=' + Date.now() + '&v=' + Math.random();
+const script = document.createElement('script');
+script.src = 'app.js' + cacheBuster;
+document.body.appendChild(script);
+</script>
 </body>
 </html>
