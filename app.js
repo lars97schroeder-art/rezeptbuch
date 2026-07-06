@@ -332,6 +332,7 @@ window.addEventListener('popstate', e => {
   else if (s.view === 'recipe') renderDetail(s.id, { random: s.random });
   else if (s.view === 'tinder') renderTinder();
   else if (s.view === 'tinder-result') renderTinderResult(s.ids || []);
+  else if (s.view === 'tinder-result-recipe') renderTinderResult(s.ids || []);
 });
 
 /* ---------- Rezept-Tinder 🔥 ---------- */
@@ -392,7 +393,6 @@ function renderTinderCard() {
   const [top, next] = tinder.deck;
   const el = $('#detail');
   el.innerHTML = `
-    <button class="detail-close" aria-label="Zurück">←</button>
     <div class="tinder">
       <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
@@ -405,7 +405,6 @@ function renderTinderCard() {
       </div>
       <div class="tinder-hint">Wischen oder tippen: links = nö, rechts = will ich!</div>
     </div>`;
-  el.querySelector('.detail-close').onclick = () => closeOverlay();
   const card = el.querySelector('.t-card.top');
   attachSwipe(card, dir => swipeTinder(dir));
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
@@ -605,7 +604,10 @@ function spinSlot(winners) {
       setTimeout(() => {
         btn.textContent = '✨ ' + titleWithEmoji(winners[pick]);
         btn.disabled = false;
-        btn.onclick = () => openRecipe(winners[pick].id);
+        btn.onclick = () => {
+          renderDetail(winners[pick].id);
+          history.pushState({ view: 'tinder-result-recipe', ids: winners.map(w => w.id), winnerIndex: pick }, '');
+        };
       }, 750);
     }
   };
