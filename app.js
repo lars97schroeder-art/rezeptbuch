@@ -242,8 +242,12 @@ async function update(showErrors = true) {
 
 function categories() {
   const inMode = data.recipes.filter(r => recipeMode(r) === mode);
-  const cats = [...new Set(inMode.map(r => r.category).filter(Boolean))];
-  cats.sort((a, b) => a.localeCompare(b, 'de'));
+  const cats = [...new Set(inMode.map(r => {
+    // Handle both array and string categories
+    if (Array.isArray(r.category)) return r.category[0];
+    return r.category;
+  }).filter(Boolean))];
+  cats.sort((a, b) => String(a).localeCompare(String(b), 'de'));
   return ['Alle', ...cats];
 }
 
