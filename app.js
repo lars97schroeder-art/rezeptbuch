@@ -607,7 +607,7 @@ function renderWeekplan() {
     });
 
     // Enter-Key für Freitext
-    searchInput.addEventListener('keypress', (e) => {
+    searchInput.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;
       e.preventDefault();
       const text = searchInput.value.trim();
