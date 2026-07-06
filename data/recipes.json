@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:21:44.804Z",
+  "updated": "2026-07-06T20:22:20.071Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -480,14 +480,20 @@
     {
       "id": "frikadellen",
       "title": "Frikadellen",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/frikadellen-1783369338-0.jpg",
+      "images": [
+        "data/images/frikadellen-1783369338-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "wuerstelgulasch",
