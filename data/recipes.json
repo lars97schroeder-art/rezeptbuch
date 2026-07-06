@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:21:34.573Z",
+  "updated": "2026-07-06T21:24:27.689Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -844,13 +844,26 @@
     {
       "id": "breakfast-wrap",
       "title": "Breakfast Wrap",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🌯",
       "image": "",
-      "ingredients": [],
-      "steps": [],
+      "images": [],
+      "ingredients": [
+        "Wrap",
+        "Ei",
+        "Schuss Milch",
+        "Nach Belieben Gemüse und Salat"
+      ],
+      "steps": [
+        "Ei mit dem Gemüse als Rührei (bzw. Omelette) verquirlen",
+        "In eine Pfanne geben",
+        "Wrap auf die Ei-Masse",
+        "Warten bis Ei gestockt ist und am wrap klebt",
+        "Umdrehen, wrap bisschen rösten",
+        "Ggf Salat rein, genießen"
+      ],
       "notes": "",
       "bereich": "fruehstueck"
     },
