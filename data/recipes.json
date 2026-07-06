@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:26:09.214Z",
+  "updated": "2026-07-06T21:32:36.538Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -840,6 +840,24 @@
       "ingredients": [],
       "steps": [],
       "notes": "Baguette mit Parmaschinken und Mozzarella"
+    },
+    {
+      "id": "brotzeit",
+      "title": "Brotzeit",
+      "category": [
+        "Ist das Kochen?"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/brotzeit-1783373555-0.jpg",
+      "images": [
+        "data/images/brotzeit-1783373555-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "breakfast-wrap",
