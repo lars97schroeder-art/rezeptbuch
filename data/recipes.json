@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:44:00+02:00",
+  "updated": "2026-07-06T18:53:39.689Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -944,6 +944,22 @@
       "steps": [],
       "notes": "",
       "bereich": "backen"
+    },
+    {
+      "id": "maultaschen-pfanne",
+      "title": "Maultaschen Pfanne",
+      "category": [
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
     }
   ]
 }
