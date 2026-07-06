@@ -550,16 +550,51 @@ function toast(msg) {
 /* ---------- Einstellungen ---------- */
 
 const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
+const THEME_KEY = 'rezeptbuch-theme';
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  html.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+  if (theme === 'light') html.classList.add('theme-light');
+  else if (theme === 'dark') html.classList.add('theme-dark');
+  else html.classList.add('theme-auto');
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+// Theme beim Start laden
+(() => {
+  const saved = localStorage.getItem(THEME_KEY) || 'auto';
+  applyTheme(saved);
+})();
 
 function openSettings() {
   const hasToken = ghToken && ghToken();
   const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
   const editMode = hasToken;
+  const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
 
   const el = $('#editor'); // Reuse editor div für Modal
   el.innerHTML = `
   <div class="ed-body settings-body">
     <h2>⚙️ Einstellungen</h2>
+
+    <div class="settings-section">
+      <h3>Anzeige</h3>
+      <div class="settings-row">
+        <label class="setting-radio">
+          <input type="radio" name="theme" value="light" ${currentTheme === 'light' ? 'checked' : ''}>
+          <span>☀️ Annika (Hell)</span>
+        </label>
+        <label class="setting-radio">
+          <input type="radio" name="theme" value="dark" ${currentTheme === 'dark' ? 'checked' : ''}>
+          <span>🌙 Lars (Dunkel)</span>
+        </label>
+        <label class="setting-radio">
+          <input type="radio" name="theme" value="auto" ${currentTheme === 'auto' ? 'checked' : ''}>
+          <span>🔄 Systemvorgabe</span>
+        </label>
+      </div>
+    </div>
 
     <div class="settings-section">
       <h3>Bearbeiten</h3>
@@ -621,6 +656,11 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = () => update();
+
+  // Theme-Switcher
+  for (const radio of el.querySelectorAll('input[name="theme"]')) {
+    radio.onchange = () => applyTheme(radio.value);
+  }
 
   el.hidden = false;
   el.scrollTop = 0;
