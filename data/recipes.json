@@ -1,5 +1,5 @@
 {
-  "version": 21,
+  "version": 22,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -85,10 +85,23 @@
       "time": "",
       "servings": "",
       "emoji": "🥥",
-      "image": "",
-      "ingredients": [],
+      "image": "data/images/curry-kokos-pasta-1783327060-0.jpg",
+      "images": [
+        "data/images/curry-kokos-pasta-1783327060-0.jpg",
+        "data/images/curry-kokos-pasta-1783327060-1.jpg"
+      ],
+      "ingredients": [
+        "Pasta",
+        "Karotte",
+        "Zucchini",
+        "Räuchertofu",
+        "Kokosmilch",
+        "Curry Paste",
+        "Gemüsebrühe ?"
+      ],
       "steps": [],
-      "notes": "Mit Karotten und Zucchini"
+      "notes": "Mit Karotten und Zucchini",
+      "bereich": "kochen"
     },
     {
       "id": "spaghetti-carbonara",
