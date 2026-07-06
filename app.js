@@ -810,25 +810,35 @@ function openSettings() {
   });
 
   el.querySelector('#refresh-btn').onclick = async () => {
-    showToastWithoutTimeout('Aktualisiere App...');
+    showToastWithoutTimeout('🔄 Force-Update lädt neue App-Version...');
     try {
-      // Lösche alle Caches
+      // SCHRITT 1: Alle Caches brutal löschen
       const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-')).map(name => caches.delete(name)));
+      console.log('Caches vor Löschung:', cacheNames);
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      console.log('✓ Alle Caches gelöscht');
 
-      // Update Service Worker
+      // SCHRITT 2: Service Worker komplett unregistrieren (nicht nur update!)
       if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) await reg.update();
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log('Service Workers vor Unregister:', registrations.length);
+        await Promise.all(registrations.map(reg => reg.unregister()));
+        console.log('✓ Alle Service Workers unregistriert');
       }
 
-      // Update Datenbank
-      await update();
+      // SCHRITT 3: localStorage/sessionStorage löschen (für den Fall dass alte Daten dort sind)
+      localStorage.clear();
+      sessionStorage.clear();
+      console.log('✓ Alle Storage gelöscht');
 
-      // Neu laden
-      setTimeout(() => location.reload(), 500);
+      // SCHRITT 4: Ganz kurz warten, dann neu laden mit Cache Busting
+      setTimeout(() => {
+        console.log('✓ Neu laden mit Cache Busting...');
+        location.href = location.href.split('?')[0] + '?t=' + Date.now();
+      }, 1000);
     } catch (err) {
-      toast('Fehler beim Update: ' + err.message);
+      console.error('Update-Fehler:', err);
+      toast('❌ Fehler beim Hard-Update: ' + err.message);
     }
   };
 
