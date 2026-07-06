@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-06T20:26:00+02:00';
+const APP_BUILD_TIME = '2026-07-06T20:35:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -494,178 +494,28 @@ function saveWeekplan(plan) {
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, new Date().toISOString());
 }
 
-let draggedTag = null;
-let draggedElement = null;
-let dragGhost = null;
-let dragStartY = 0;
-
-function updateGhostPosition(touch) {
-  if (!dragGhost) return;
-  const offsetY = touch.clientY - dragStartY;
-  dragGhost.style.left = (touch.clientX - 60) + 'px';
-  dragGhost.style.top = (touch.clientY - 15) + 'px';
+// HTML für einen Wochenplan-Eintrag — immer mit X-Button zum Entfernen
+function weekplanTagHTML(entry, displayName, dayKey) {
+  return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
+    `<span class="weekplan-tag-text">${esc(displayName)}</span>` +
+    `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button></span>`;
 }
 
-function showMoveToMenu(draggedTag, currentDay) {
-  const days = [
-    { key: 'mo', label: 'Montag' },
-    { key: 'di', label: 'Dienstag' },
-    { key: 'mi', label: 'Mittwoch' },
-    { key: 'do', label: 'Donnerstag' },
-    { key: 'fr', label: 'Freitag' },
-    { key: 'sa', label: 'Samstag' },
-    { key: 'so', label: 'Sonntag' },
-  ];
-
-  const menu = document.createElement('div');
-  menu.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--card);
-    border: 2px solid var(--accent);
-    border-radius: 12px;
-    padding: 16px;
-    z-index: 1000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    max-height: 80vh;
-    overflow-y: auto;
-  `;
-
-  menu.innerHTML = '<h3 style="margin: 0 0 12px 0; text-align: center;">📍 Zu welchem Tag verschieben?</h3>';
-
-  for (const day of days) {
-    if (day.key === currentDay) continue;
-
-    const btn = document.createElement('button');
-    btn.style.cssText = `
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 6px 0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 16px;
-      font-family: inherit;
-    `;
-    btn.textContent = day.label;
-    btn.onclick = () => {
-      performDragDrop(draggedTag.entry, draggedTag.sourceDay, day.key);
-      menu.remove();
-    };
-    menu.appendChild(btn);
-  }
-
-  // Close on click outside
-  menu.addEventListener('click', (e) => {
-    if (e.target === menu) menu.remove();
-  });
-
-  document.body.appendChild(menu);
-  setTimeout(() => menu.focus(), 100);
-}
-
-function attachTagHandlers(selectedDiv, dayKey) {
-  // Remove-Button Handler - direkt auf jedem Button registrieren
+// X-Button-Handler: Eintrag entfernen und sofort speichern
+function attachTagHandlers(selectedDiv, weekplan) {
   for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
     removeBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
       const entry = removeBtn.dataset.entry;
-      const currentDayKey = removeBtn.dataset.day;
-      const idx = weekplan[currentDayKey].indexOf(entry);
+      const dayKey = removeBtn.dataset.day;
+      if (!weekplan[dayKey]) return;
+      const idx = weekplan[dayKey].indexOf(entry);
       if (idx > -1) {
-        weekplan[currentDayKey].splice(idx, 1);
+        weekplan[dayKey].splice(idx, 1);
         saveWeekplan(weekplan);
         removeBtn.closest('.weekplan-tag').remove();
       }
-    };
-  }
-
-  // Drag-Start & Touch-Start Handler
-  for (const tag of selectedDiv.querySelectorAll('.weekplan-tag')) {
-    // Mouse Drag
-    tag.ondragstart = (e) => {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('entry', tag.dataset.entry);
-      e.dataTransfer.setData('sourceDay', dayKey);
-      tag.style.opacity = '0.5';
-    };
-
-    tag.ondragend = (e) => {
-      tag.style.opacity = '1';
-    };
-
-    // Touch Support für Handy - Visuelles Drag & Drop
-    tag.ontouchstart = (e) => {
-      draggedTag = { tag, entry: tag.dataset.entry, sourceDay: dayKey };
-      draggedElement = e.target.closest('.weekplan-tag');
-      dragStartY = e.touches[0].clientY;
-
-      // Erstelle Ghost-Element
-      dragGhost = draggedElement.cloneNode(true);
-      dragGhost.style.cssText = `
-        position: fixed;
-        z-index: 10000;
-        opacity: 0.8;
-        pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        transform: scale(1.05);
-      `;
-      document.body.appendChild(dragGhost);
-      draggedElement.style.opacity = '0.3';
-
-      // Update Ghost Position
-      updateGhostPosition(e.touches[0]);
-    };
-
-    tag.ontouchmove = (e) => {
-      if (!dragGhost) return;
-      e.preventDefault();
-      updateGhostPosition(e.touches[0]);
-    };
-
-    tag.ontouchend = (e) => {
-      if (!dragGhost) return;
-
-      const endY = e.changedTouches[0].clientY;
-      const endX = e.changedTouches[0].clientX;
-
-      // Suche SOFORT das Ziel-Element BEVOR wir den Ghost entfernen
-      // (damit elementFromPoint noch die echten Elemente unter den Koordinaten findet)
-      let targetDay = null;
-
-      // Temporär Ghost unsichtbar machen statt zu entfernen
-      dragGhost.style.pointerEvents = 'none';
-      dragGhost.style.display = 'none';
-
-      // Jetzt können wir elementFromPoint nutzen
-      let element = document.elementFromPoint(endX, endY);
-      console.log('elementFromPoint result:', element?.tagName, element?.className, 'at', endX, endY);
-
-      targetDay = element?.closest('.weekplan-day')?.dataset.day;
-      console.log('targetDay found:', targetDay);
-
-      // Ghost aufräumen
-      dragGhost.remove();
-      dragGhost = null;
-
-      draggedElement.style.opacity = '1';
-
-      // Verschiebe wenn anderer Tag gefunden
-      if (targetDay && targetDay !== dayKey) {
-        console.log('Verschiebe von', dayKey, 'zu', targetDay);
-        performDragDrop(draggedTag.entry, draggedTag.sourceDay, targetDay);
-      } else {
-        console.log('Keine Verschiebung nötig oder kein Tag gefunden');
-      }
-
-      draggedTag = null;
-      draggedElement = null;
     };
   }
 }
@@ -698,12 +548,12 @@ function renderWeekplan() {
       }
 
       if (displayName) {
-        tagsHTML += `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}" data-day="${day.key}">${esc(displayName)}</span>`;
+        tagsHTML += weekplanTagHTML(entry, displayName, day.key);
       }
     }
 
     daysHTML += `
-      <div class="weekplan-day" data-day="${day.key}" draggable="true">
+      <div class="weekplan-day" data-day="${day.key}">
         <label class="weekplan-label">${day.label}</label>
         <div class="weekplan-autocomplete" data-day="${day.key}">
           <div class="weekplan-input-row">
@@ -769,17 +619,17 @@ function renderWeekplan() {
           const recipeId = suggEl.dataset.id;
           const recipe = data.recipes.find(r => r.id === recipeId);
 
-          // Füge zu Array hinzu statt zu ersetzen
+          // Füge zu Array hinzu statt zu ersetzen und speichere sofort
           if (!weekplan[dayKey]) weekplan[dayKey] = [];
           weekplan[dayKey].push(recipeId);
+          saveWeekplan(weekplan);
 
           // Update UI: neues Tag hinzufügen
-          const tagHTML = `<span class="weekplan-tag" draggable="true" data-entry="${esc(recipeId)}">${esc(titleWithEmoji(recipe))} <button class="weekplan-tag-remove" data-entry="${esc(recipeId)}">✕</button></span>`;
-          selectedDiv.insertAdjacentHTML('beforeend', tagHTML);
+          selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(recipeId, titleWithEmoji(recipe), dayKey));
 
           searchInput.value = '';
           suggestionsDiv.hidden = true;
-          attachTagHandlers(selectedDiv, dayKey);
+          attachTagHandlers(selectedDiv, weekplan);
         };
       }
     });
@@ -789,18 +639,18 @@ function renderWeekplan() {
       const text = searchInput.value.trim();
       if (!text) return;
 
-      // Füge zu Array hinzu statt zu ersetzen
+      // Füge zu Array hinzu statt zu ersetzen und speichere sofort
       if (!weekplan[dayKey]) weekplan[dayKey] = [];
       const entry = 'TEXT:' + text;
       weekplan[dayKey].push(entry);
+      saveWeekplan(weekplan);
 
       // Update UI: neues Tag hinzufügen
-      const tagHTML = `<span class="weekplan-tag" draggable="true" data-entry="${esc(entry)}">${esc(text)} <button class="weekplan-tag-remove" data-entry="${esc(entry)}">✕</button></span>`;
-      selectedDiv.insertAdjacentHTML('beforeend', tagHTML);
+      selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
 
       searchInput.value = '';
       suggestionsDiv.hidden = true;
-      attachTagHandlers(selectedDiv, dayKey);
+      attachTagHandlers(selectedDiv, weekplan);
     };
 
     // Enter-Key für Autocomplete-Auswahl oder Freitext
@@ -833,86 +683,7 @@ function renderWeekplan() {
     });
 
     // Attach handlers für bestehende Tags
-    attachTagHandlers(selectedDiv, dayKey);
-  }
-
-  // Drag & Drop Handler für Tage
-  for (const dayEl of el.querySelectorAll('.weekplan-day')) {
-    const dayKey = dayEl.dataset.day;
-    const selectedDiv = dayEl.querySelector('.weekplan-selected');
-
-    // Drag Over (Mouse) - auf der ganzen dayEl
-    dayEl.ondragover = (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      selectedDiv.style.background = 'rgba(232, 89, 12, 0.1)';
-    };
-
-    dayEl.ondragleave = (e) => {
-      selectedDiv.style.background = '';
-    };
-
-    // Drop (Mouse) - auf der selectedDiv
-    selectedDiv.ondrop = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      selectedDiv.style.background = '';
-
-      const entry = e.dataTransfer.getData('entry');
-      const sourceDay = e.dataTransfer.getData('sourceDay');
-
-      if (!entry || !sourceDay) return;
-      performDragDrop(entry, sourceDay, dayKey);
-    };
-
-    // Drop auch auf dayEl fallback
-    dayEl.ondrop = (e) => {
-      if (!e.dataTransfer.getData('entry')) return;
-      e.preventDefault();
-      e.stopPropagation();
-      selectedDiv.style.background = '';
-
-      const entry = e.dataTransfer.getData('entry');
-      const sourceDay = e.dataTransfer.getData('sourceDay');
-
-      if (!entry || !sourceDay) return;
-      performDragDrop(entry, sourceDay, dayKey);
-    };
-
-    // Touch Support für Handy
-    dayEl.ontouchend = (e) => {
-      if (!draggedTag) return;
-      e.preventDefault();
-      selectedDiv.style.background = '';
-      performDragDrop(draggedTag.entry, draggedTag.sourceDay, dayKey);
-    };
-
-    dayEl.ontouchover = (e) => {
-      if (draggedTag) {
-        selectedDiv.style.background = 'rgba(232, 89, 12, 0.1)';
-      }
-    };
-  }
-
-  function performDragDrop(entry, sourceDay, targetDay) {
-    if (!entry || !sourceDay) return;
-
-    // Entferne von Source
-    if (weekplan[sourceDay]) {
-      const idx = weekplan[sourceDay].indexOf(entry);
-      if (idx > -1) {
-        weekplan[sourceDay].splice(idx, 1);
-      }
-    }
-
-    // Füge zu Target hinzu (ohne Duplikat)
-    if (!weekplan[targetDay]) weekplan[targetDay] = [];
-    if (!weekplan[targetDay].includes(entry)) {
-      weekplan[targetDay].push(entry);
-    }
-
-    // Re-render Wochenplan um Changes zu zeigen
-    renderWeekplan();
+    attachTagHandlers(selectedDiv, weekplan);
   }
 
   // Save Button

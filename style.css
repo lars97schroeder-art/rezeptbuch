@@ -1613,6 +1613,8 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .weekplan-autocomplete {
   position: relative;
+  /* Grid-Kind darf schrumpfen, sonst drückt der Inhalt die Box nach rechts raus */
+  min-width: 0;
 }
 
 .weekplan-input-row {
@@ -1623,14 +1625,21 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 @media (max-width: 480px) {
-  .weekplan-input-row {
-    flex-wrap: wrap;
-    gap: 4px;
+  /* Auf dem Handy: Tages-Label über dem Eingabefeld statt daneben,
+     damit das Feld die volle Breite bekommt und nichts rausragt */
+  .weekplan-day {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .weekplan-label {
+    margin-top: 0;
   }
 }
 
 .weekplan-search {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   padding-right: 45px;
   border: 1px solid #d0c5b9;
@@ -1733,6 +1742,13 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
+  max-width: 100%;
+}
+
+.weekplan-tag-text {
+  /* Lange Rezeptnamen brechen um statt rechts rauszulaufen */
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .weekplan-tag-remove {
@@ -1740,12 +1756,13 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   border: none;
   color: white;
   cursor: pointer;
-  padding: 0;
+  padding: 2px 4px;
   font-size: 16px;
   line-height: 1;
   display: flex;
   align-items: center;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .weekplan-tag-remove:hover {
