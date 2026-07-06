@@ -1,5 +1,5 @@
 {
-  "version": 26,
+  "version": 27,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -359,10 +359,15 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/spinatknoedel-1783327381-0.jpg",
+      "images": [
+        "data/images/spinatknoedel-1783327381-0.jpg",
+        "data/images/spinatknoedel-1783327381-1.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "kaspressknoedel",
