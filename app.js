@@ -1325,6 +1325,39 @@ function openSettings() {
     }
   };
 
+  // Clear Cache Button
+  const clearCacheBtn = document.createElement('button');
+  clearCacheBtn.className = 'weekplan-save-btn';
+  clearCacheBtn.style.marginTop = '12px';
+  clearCacheBtn.innerHTML = '🗑️ Cache löschen';
+  clearCacheBtn.onclick = async () => {
+    showToastWithoutTimeout('🗑️ Cache wird gelöscht...');
+    try {
+      // Lösche alle Caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // Unregister Service Workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        registrations.forEach(reg => reg.unregister());
+      }
+
+      // Reload nach kurzer Verzögerung
+      setTimeout(() => {
+        location.reload();
+      }, 500);
+
+      toast('✅ Cache gelöscht! App wird neu geladen...');
+    } catch (err) {
+      console.error('Cache löschen Fehler:', err);
+      toast('❌ Fehler beim Cache löschen');
+    }
+  };
+  el.querySelector('.detail-body').appendChild(clearCacheBtn);
+
   // Theme-Switcher
   for (const radio of el.querySelectorAll('input[name="theme"]')) {
     radio.onchange = () => applyTheme(radio.value);
