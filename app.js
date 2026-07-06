@@ -312,7 +312,7 @@ function render() {
   }
 
   $('#status').textContent = data.recipes.length
-    ? `Stand: ${data.updated || '–'} · ${data.recipes.length} Rezepte`
+    ? `Stand: ${data.updated ? new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–'} · ${data.recipes.length} Rezepte`
     : '';
 }
 
