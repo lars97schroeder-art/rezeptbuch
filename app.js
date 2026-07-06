@@ -245,7 +245,7 @@ function renderGroup(name) {
           </button>`).join('')}
       </div>
     </div>`;
-  el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.querySelector('.detail-home').onclick = () => {
     el.hidden = true;
     document.body.style.overflow = '';
@@ -297,7 +297,7 @@ function renderDetail(id, opts = {}) {
         <ol>${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join('')}</ol>` : ''}
       ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
     </div>`;
-  el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.querySelector('.detail-home').onclick = () => {
     el.hidden = true;
     document.body.style.overflow = '';
@@ -356,7 +356,7 @@ function renderWeekplan() {
       <h2>📅 Wochenplan</h2>
       <div class="detail-meta">Kommt bald... 🚀</div>
     </div>`;
-  el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 }
@@ -405,7 +405,7 @@ function renderTinderCard() {
       </div>
       <div class="tinder-hint">Wischen oder tippen: links = nö, rechts = will ich!</div>
     </div>`;
-  el.querySelector('.detail-close').onclick = () => history.back();
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
   const card = el.querySelector('.t-card.top');
   attachSwipe(card, dir => swipeTinder(dir));
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
@@ -497,7 +497,7 @@ function renderTinderResult(ids) {
         <div class="detail-meta">Vielleicht ist beim nächsten Mischen was dabei.</div>
         <button class="tinder-again">🔀 Nochmal mischen</button>
       </div>`;
-    el.querySelector('.detail-close').onclick = () => history.back();
+    el.querySelector('.detail-close').onclick = () => closeOverlay();
     el.querySelector('.tinder-again').onclick = () => {
       history.replaceState({ view: 'tinder' }, '');
       renderTinder();
@@ -539,7 +539,7 @@ function renderTinderResult(ids) {
         </div>
       </div>`;
 
-    el.querySelector('.detail-close').onclick = () => history.back();
+    el.querySelector('.detail-close').onclick = () => closeOverlay();
     el.querySelector('.detail-home').onclick = () => {
       el.hidden = true;
       document.body.style.overflow = '';
