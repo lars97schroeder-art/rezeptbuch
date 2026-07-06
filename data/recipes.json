@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:33:38.776Z",
+  "updated": "2026-07-06T21:34:48.101Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -330,6 +330,24 @@
       "images": [
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "asia-snoodles-pfanne",
+      "title": "Asia Snoodles Pfanne",
+      "category": [
+        "Asia"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/asia-snoodles-pfanne-1783373686-0.jpg",
+      "images": [
+        "data/images/asia-snoodles-pfanne-1783373686-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
