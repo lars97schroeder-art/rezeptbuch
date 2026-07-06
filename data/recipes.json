@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:17:24.740Z",
+  "updated": "2026-07-06T21:18:44.096Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1026,6 +1026,23 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
+    },
+    {
+      "id": "waffeln",
+      "title": "Waffeln",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/waffeln-1783372721-0.jpg",
+      "images": [
+        "data/images/waffeln-1783372721-0.jpg",
+        "data/images/waffeln-1783372721-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "Die besten Waffelrezepte sind in Annika’s Waffelbuch ♥️",
+      "bereich": "backen"
     }
   ]
 }
