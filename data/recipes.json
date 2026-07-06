@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T20:19:50.885Z",
+  "updated": "2026-07-06T20:20:31.012Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -272,14 +272,20 @@
     {
       "id": "gnocchi-mit-cashew-pesto",
       "title": "Gnocchi mit Cashew-Pesto",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
+      "image": "data/images/gnocchi-mit-cashew-pesto-1783369229-0.jpg",
+      "images": [
+        "data/images/gnocchi-mit-cashew-pesto-1783369229-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "sommerrollen",
