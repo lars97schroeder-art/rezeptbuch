@@ -1,5 +1,5 @@
 {
-  "version": 17,
+  "version": 18,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -591,7 +591,7 @@
         "data/images/haehnchen-mit-gruenem-spargel-1783240941.jpg"
       ],
       "ingredients": [
-        "Chicken (mariniert)",
+        "Chicken (ggf mariniert)",
         "Grüner Spargel",
         "Kartoffeln",
         "Kräuterquark"
