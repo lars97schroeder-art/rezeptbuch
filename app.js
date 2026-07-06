@@ -333,6 +333,24 @@ function openTinder() {
   history.pushState({ view: 'tinder' }, '');
 }
 
+function openWeekplan() {
+  renderWeekplan();
+  history.pushState({ view: 'weekplan' }, '');
+}
+
+function renderWeekplan() {
+  const el = $('#detail');
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="detail-body group-body">
+      <h2>📅 Wochenplan</h2>
+      <div class="detail-meta">Kommt bald... 🚀</div>
+    </div>`;
+  el.querySelector('.detail-close').onclick = () => history.back();
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
 function renderTinder() {
   const pool = filtered().slice();
   for (let i = pool.length - 1; i > 0; i--) {
@@ -704,6 +722,10 @@ function openSettings() {
 }
 
 $('#btn-settings').onclick = openSettings;
+
+$('#btn-weekplan').onclick = () => {
+  openWeekplan();
+};
 
 $('#btn-tinder').onclick = () => {
   if (filtered().length < 2) return toast('Zu wenige Rezepte zum Tindern 🤷');
