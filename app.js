@@ -694,7 +694,7 @@ function openSettings() {
         : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
-    <button class="setting-btn primary" id="refresh-btn">⟳ Datenbank aktualisieren</button>
+    <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
 
     <div class="setting-info">
       <div><strong>Stand:</strong> v${data.version} (${data.updated})</div>

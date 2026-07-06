@@ -383,8 +383,21 @@ window.editorGridCard = () => {
   if (!token || !editEnabled) return null;
   const card = document.createElement('article');
   card.className = 'card add-card';
-  card.innerHTML = `<div class=”photo placeholder”>＋</div>
-    <div class=”info”><div class=”title”>Neues Rezept</div></div>`;
+
+  const photoDiv = document.createElement('div');
+  photoDiv.className = 'photo placeholder';
+  photoDiv.textContent = '＋';
+
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'info';
+
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'title';
+  titleDiv.textContent = 'Neues Rezept';
+
+  infoDiv.appendChild(titleDiv);
+  card.appendChild(photoDiv);
+  card.appendChild(infoDiv);
   card.onclick = () => openEditor(null);
   return card;
 };
