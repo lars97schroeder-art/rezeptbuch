@@ -922,7 +922,8 @@ function openSettings() {
             </label>
             <div class="setting-hint">Token ist gespeichert – schalte Bearbeiten an/aus</div>
           </div>
-          <button class="setting-btn" id="clear-token">Token entfernen</button>`
+          <button class="setting-btn" id="clear-token">Token entfernen</button>
+          <button class="setting-btn" id="share-token">🔗 Token mit Freundin teilen</button>`
         : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
@@ -950,6 +951,43 @@ function openSettings() {
       window.clearToken();
       openSettings();
     }
+  });
+
+  el.querySelector('#share-token')?.addEventListener('click', () => {
+    const token = ghToken();
+    if (!token) {
+      toast('❌ Kein Token vorhanden');
+      return;
+    }
+
+    // Modal mit Token
+    const modal = document.createElement('div');
+    modal.className = 'token-share-modal';
+    modal.innerHTML = `
+      <div class="token-share-content">
+        <button class="token-share-close">✕</button>
+        <h3>🔗 Token für deine Freundin</h3>
+        <p>Teile diesen Token mit deiner Freundin:</p>
+        <input type="text" readonly value="${esc(token)}" class="token-share-input">
+        <button class="token-share-copy">📋 In Zwischenablage kopieren</button>
+        <p class="token-share-hint">Deine Freundin kann den Token dann unter ⚙️ → "Token einrichten" einfügen</p>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.token-share-close').onclick = () => modal.remove();
+    modal.querySelector('.token-share-copy').onclick = () => {
+      const input = modal.querySelector('.token-share-input');
+      input.select();
+      document.execCommand('copy');
+      toast('✅ Token kopiert!');
+    };
+
+    // Modal schließen bei Klick außen
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
   });
 
   el.querySelector('#setup-token')?.addEventListener('click', () => {
