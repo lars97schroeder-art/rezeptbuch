@@ -61,8 +61,33 @@ function esc(s) {
 function loadLocal() {
   try {
     const raw = localStorage.getItem(DATA_KEY);
-    if (raw) data = JSON.parse(raw);
-  } catch (e) { /* kaputte Daten ignorieren, Update holt frische */ }
+    if (raw) {
+      data = JSON.parse(raw);
+
+      // AUTO-RECOVERY: Wenn alte Version erkannt, sofort löschen + Reload erzwingen
+      if (data.version && parseFloat(data.version) < 3.3) {
+        console.error('🚨 ALTE VERSION ERKANNT:', data.version);
+        console.log('🔄 Lösche alte Daten und lade neu...');
+        localStorage.removeItem(DATA_KEY);
+        // Erzwinge Neuload aller Caches
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => reg.unregister());
+          });
+        }
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+        // Nach kurzer Verzögerung neu laden
+        setTimeout(() => {
+          location.href = location.href.split('?')[0] + '?reset=' + Date.now();
+        }, 500);
+      }
+    }
+  } catch (e) {
+    console.error('Fehler beim Laden von localStorage:', e);
+    localStorage.removeItem(DATA_KEY);
+  }
 }
 
 function saveLocal() {
