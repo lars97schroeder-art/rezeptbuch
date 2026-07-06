@@ -1378,30 +1378,31 @@ function openSettings() {
       const hasUpdates = await checkAndUpdateIfNeeded();
       const hasVersionUpdate = fresh.version !== data.version;
 
-      // NUR Cache löschen wenn es ein Update gibt
-      if (hasUpdates || hasVersionUpdate) {
-        showToastWithoutTimeout('🗑️ Cache wird geleert...');
+      // IMMER Cache löschen beim Update-Button
+      showToastWithoutTimeout('🗑️ Cache wird geleert...');
 
-        // Lösche Cache
-        if ('caches' in window) {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-          console.log('✓ Alle Caches gelöscht');
-        }
-
-        // Unregister alte Service Workers
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          registrations.forEach(reg => reg.unregister());
-          console.log('✓ Service Worker unregistriert');
-        }
+      // Lösche ALLE Caches aggressiv
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('✓ Alle Caches gelöscht');
       }
 
-      // Service Worker Update checken (neu registrieren falls nötig)
+      // Unregister alle Service Workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+        console.log('✓ Service Worker unregistriert');
+      }
+
+      // Warte kurz dann neu registrieren
+      await new Promise(r => setTimeout(r, 500));
+
+      // Service Worker neu registrieren mit Timestamp
       if ('serviceWorker' in navigator) {
         try {
-          await navigator.serviceWorker.register('/sw.js');
-          console.log('✓ Service Worker registriert');
+          await navigator.serviceWorker.register('/sw.js?t=' + Date.now());
+          console.log('✓ Service Worker neu registriert');
         } catch (e) {
           console.log('Service Worker registrieren fehlgeschlagen:', e);
         }
@@ -1411,10 +1412,10 @@ function openSettings() {
       localStorage.setItem(APP_VERSION_KEY, fresh.version + '@' + new Date().toISOString());
 
       // Feedback
-      if (hasUpdates) {
-        toast('✅ Updates geladen - v' + fresh.version);
-      } else if (hasVersionUpdate) {
-        toast('✅ Neue Version v' + fresh.version + ' verfügbar');
+      if (hasUpdates || hasVersionUpdate) {
+        toast('✅ Updates geladen! App wird neu geladen... (v' + fresh.version + ')');
+        // Hard reload nach Update
+        setTimeout(() => location.reload(true), 1000);
       } else {
         toast('✅ Alles auf aktuellem Stand');
       }
