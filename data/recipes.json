@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:20:37.444Z",
+  "updated": "2026-07-06T21:21:08.051Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -892,12 +892,18 @@
     {
       "id": "strammer-max-nach-annikas-art",
       "title": "Strammer Max nach Annikas Art",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "🍞",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Leberkäs",
+        "Brot",
+        "Ei",
+        "Käse"
+      ],
       "steps": [],
       "notes": "",
       "bereich": "fruehstueck"
