@@ -798,7 +798,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   font-size: 60px;
   font-weight: 900;
   color: #2f9e44;
-  text-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 3px 15px rgba(255, 255, 255, 0.6);
   transform: rotate(-12deg);
   animation: matchSwing 3.5s ease-in-out forwards;
   letter-spacing: 4px;

@@ -458,10 +458,10 @@ function flyOut(card, dir) {
   const badge = card.querySelector(dir > 0 ? '.t-badge.like' : '.t-badge.nope');
   badge.style.opacity = 1;
   badge.style.transform = `rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
-  card.style.transition = 'transform 0.35s ease, opacity 0.35s ease';
+  card.style.transition = 'transform 0.6s ease, opacity 0.6s ease';
   card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
   card.style.opacity = '0';
-  setTimeout(() => swipeTinder(dir), 300);
+  setTimeout(() => swipeTinder(dir), 550);
 }
 
 function attachSwipe(card, onSwipe) {
