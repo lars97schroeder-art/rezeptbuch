@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -587,9 +587,18 @@
       "servings": "",
       "emoji": "🍗",
       "image": "data/images/haehnchen-mit-gruenem-spargel-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/haehnchen-mit-gruenem-spargel-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Chicken (mariniert)",
+        "Grüner Spargel",
+        "Kartoffeln",
+        "Kräuterquark"
+      ],
       "steps": [],
-      "notes": "Mit Kartoffeln und Quark-Dip"
+      "notes": "Mit Kartoffeln und Quark-Dip",
+      "bereich": "kochen"
     },
     {
       "id": "wraps",
