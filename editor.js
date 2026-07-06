@@ -152,9 +152,8 @@ function openEditor(id) {
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
     <div class="ed-row">
-      <div class="ed-field"><label>Kategorie</label>
-        <input id="ed-category" list="ed-cats" value="${r ? esc(r.category) : ''}">
-        <datalist id="ed-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist></div>
+      <div class="ed-field"><label>Kategorien</label>
+        <div id="ed-categories-container" class="ed-categories-container"></div></div>
       <div class="ed-field"><label>Bereich</label>
         <select id="ed-bereich">
           <option value="kochen"${bereich === 'kochen' ? ' selected' : ''}>🍳 Kochen</option>
@@ -190,6 +189,11 @@ function openEditor(id) {
     </div>
     ${r ? '<button type="button" class="ed-delete">🗑 Rezept löschen</button>' : ''}
   </div>`;
+
+  // Kategorien-Auswahl initialisieren
+  const selectedCats = r ? (Array.isArray(r.category) ? r.category : (r.category ? [r.category] : [])) : [];
+  window.edSelectedCategories = selectedCats;
+  renderCategoriesContainer();
 
   renderEdPhotos();
   $('#ed-photo-input').onchange = async e => {
@@ -256,7 +260,7 @@ async function saveFromEditor(existingId) {
 
     const recipe = {
       id, title,
-      category: $('#ed-category').value.trim(),
+      category: window.edSelectedCategories && window.edSelectedCategories.length > 0 ? window.edSelectedCategories : [],
       time: $('#ed-time').value.trim(),
       servings: $('#ed-servings').value.trim(),
       emoji: $('#ed-emoji').value.trim(),
@@ -377,6 +381,75 @@ function openTokenSetup() {
 /* ---------- Anbindung an die App ---------- */
 
 // Wird von render() aufgerufen: „＋ Neues Rezept”-Kachel, wenn Edit-Mode aktiviert ist
+// Kategorien-Auswahl UI
+function renderCategoriesContainer() {
+  const container = $('#ed-categories-container');
+  if (!container) return;
+
+  const cats = [...new Set(data.recipes.map(x => {
+    if (Array.isArray(x.category)) return x.category;
+    return x.category ? [x.category] : [];
+  }).flat().filter(Boolean))].sort();
+
+  let html = '<div class="ed-categories-chips">';
+  for (const cat of window.edSelectedCategories || []) {
+    html += `<span class="ed-category-chip">${esc(cat)} <button type="button" class="ed-category-remove" data-cat="${esc(cat)}">×</button></span>`;
+  }
+  html += `<button type="button" class="ed-category-add" id="ed-category-add-btn">+ Kategorie</button></div>`;
+
+  container.innerHTML = html;
+
+  // Remove-Button Handler
+  for (const btn of container.querySelectorAll('.ed-category-remove')) {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const cat = btn.dataset.cat;
+      window.edSelectedCategories = window.edSelectedCategories.filter(c => c !== cat);
+      renderCategoriesContainer();
+    };
+  }
+
+  // Add-Button Handler
+  container.querySelector('#ed-category-add-btn').onclick = (e) => {
+    e.preventDefault();
+    openCategorySelector(cats);
+  };
+}
+
+function openCategorySelector(allCats) {
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+
+  let html = '<div class="ed-modal"><h3>Kategorien auswählen</h3><div class="ed-cat-list">';
+
+  for (const cat of allCats) {
+    const checked = (window.edSelectedCategories || []).includes(cat);
+    html += `<label class="ed-cat-option"><input type="checkbox" data-cat="${esc(cat)}" ${checked ? 'checked' : ''}> ${esc(cat)}</label>`;
+  }
+
+  html += `</div><div class="ed-cat-new"><input id="ed-new-category" placeholder="Neue Kategorie..."></div><div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button><button type="button" class="ed-modal-ok">OK</button></div></div>`;
+
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
+
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.ed-modal-ok').onclick = () => {
+    const selected = [];
+    for (const input of modal.querySelectorAll('input[type="checkbox"]:checked')) {
+      selected.push(input.dataset.cat);
+    }
+    const newCat = modal.querySelector('#ed-new-category').value.trim();
+    if (newCat && !selected.includes(newCat)) {
+      selected.push(newCat);
+    }
+    window.edSelectedCategories = selected;
+    renderCategoriesContainer();
+    modal.remove();
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
 window.editorGridCard = () => {
   const token = ghToken();
   const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';

@@ -1201,3 +1201,145 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   text-align: center;
   line-height: 1.4;
 }
+
+/* Editor: Kategorien-Auswahl */
+.ed-categories-container { width: 100%; }
+
+.ed-categories-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1.5vw, 8px);
+  align-items: center;
+}
+
+.ed-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
+  border-radius: 16px;
+  font-size: clamp(12px, 2vw, 13px);
+  font-weight: 500;
+}
+
+.ed-category-remove {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: clamp(14px, 2.5vw, 16px);
+  padding: 0;
+  cursor: pointer;
+  margin-left: 2px;
+}
+
+.ed-category-add {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 14px);
+  border-radius: 8px;
+  font-size: clamp(12px, 2vw, 13px);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Modal für Kategorien-Auswahl */
+.ed-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.ed-modal {
+  background: var(--card);
+  border-radius: clamp(12px, 3vw, 16px);
+  padding: clamp(16px, 3vw, 24px);
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  color: var(--text);
+}
+
+.ed-modal h3 {
+  margin: 0 0 clamp(12px, 2vw, 16px) 0;
+  font-size: clamp(16px, 3vw, 18px);
+}
+
+.ed-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: clamp(12px, 2vw, 16px);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ed-cat-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.ed-cat-option:hover {
+  background: var(--accent-soft);
+}
+
+.ed-cat-option input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.ed-cat-new {
+  margin-bottom: clamp(12px, 2vw, 16px);
+}
+
+.ed-cat-new input {
+  width: 100%;
+  padding: clamp(8px, 1.5vw, 10px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: clamp(12px, 2vw, 13px);
+}
+
+.ed-modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ed-modal-buttons button {
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2vw, 16px);
+  border: none;
+  border-radius: 6px;
+  font-size: clamp(12px, 2vw, 13px);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ed-modal-cancel {
+  background: var(--border);
+  color: var(--text);
+}
+
+.ed-modal-ok {
+  background: var(--accent);
+  color: #fff;
+}
