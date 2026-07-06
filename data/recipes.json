@@ -1,5 +1,5 @@
 {
-  "version": 23,
+  "version": 24,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -200,7 +200,7 @@
       "category": "Pasta & Gnocchi",
       "time": "",
       "servings": "",
-      "emoji": "Gg",
+      "emoji": "🍝",
       "image": "",
       "images": [],
       "ingredients": [],
