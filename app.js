@@ -778,11 +778,19 @@ function renderWeekplan() {
 
     // Reset zoom nach Blur (iOS Safari)
     searchInput.addEventListener('blur', () => {
-      // Warte kurz bis Tastatur weg ist
+      // Warte bis Tastatur weg ist
       setTimeout(() => {
-        // Scroll zu 0,0 um Zoom zurückzusetzen
+        // Zoom zurücksetzen
+        document.body.style.zoom = '100%';
+        document.documentElement.style.zoom = '100%';
         window.scrollTo(0, 0);
-      }, 100);
+
+        // Viewport Meta Tag update
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+        }
+      }, 200);
     });
 
     // Attach handlers für bestehende Tags
