@@ -2,7 +2,7 @@
 
 // APP-FUNKTIONALITÄTS-VERSION: erhöhen bei JEDER Änderung (unabhängig von Rezepten!)
 // Format: YYYYMMDD-HHMM (z.B. 20260707-1930)
-const APP_BUILD_VERSION = '20260707-1935';
+const APP_BUILD_VERSION = '20260706-2007';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1436,7 +1436,7 @@ function openSettings() {
       // Service Worker neu registrieren mit Timestamp
       if ('serviceWorker' in navigator) {
         try {
-          await navigator.serviceWorker.register('/sw.js?t=' + Date.now());
+          await navigator.serviceWorker.register('sw.js?t=' + Date.now());
           console.log('✓ Service Worker neu registriert');
         } catch (e) {
           console.log('Service Worker registrieren fehlgeschlagen:', e);
