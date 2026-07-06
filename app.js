@@ -424,6 +424,7 @@ function renderTinderCard() {
   const [top, next] = tinder.deck;
   const el = $('#detail');
   el.innerHTML = `
+    <button class="detail-close tinder-close" aria-label="Zurück">←</button>
     <div class="tinder">
       <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
@@ -436,6 +437,8 @@ function renderTinderCard() {
       </div>
       <div class="tinder-hint">Wischen oder tippen: links = nö, rechts = will ich!</div>
     </div>`;
+
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
   const card = el.querySelector('.t-card.top');
   attachSwipe(card, dir => swipeTinder(dir));
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
@@ -875,8 +878,8 @@ document.addEventListener('pointermove', (e) => {
   const target = swipeTarget();
   const closeBtn = target.querySelector('.detail-close');
 
-  // Nur swipen, wenn der Zurück-Button sichtbar ist
-  if (!closeBtn || getComputedStyle(closeBtn).display === 'none') {
+  // Nur swipen, wenn der Zurück-Button sichtbar ist (aber nicht auf Tinder-Seite)
+  if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) {
     swipeStart = null;
     return;
   }
