@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:05:19.593Z",
+  "updated": "2026-07-06T22:06:19.702Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1193,6 +1193,28 @@
         "data/images/weihnachtsgans-1783375425-0.jpg"
       ],
       "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen"
+    },
+    {
+      "id": "spinat-pasta",
+      "title": "Spinat Pasta",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/spinat-pasta-1783375578-0.jpg",
+      "images": [
+        "data/images/spinat-pasta-1783375578-0.jpg"
+      ],
+      "ingredients": [
+        "Pasta",
+        "Spinat",
+        "Knoblauch",
+        "Tomaten",
+        "Parmesan"
+      ],
       "steps": [],
       "notes": "",
       "bereich": "kochen"
