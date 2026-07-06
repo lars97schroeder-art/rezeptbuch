@@ -842,32 +842,43 @@ function openSettings() {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const fresh = await res.json();
 
-      // Vergleiche mit lokaler Version
-      const hasUpdate = fresh.version !== data.version || fresh.recipes.length !== data.recipes.length;
+      // Checke ob es ein echtes Update gibt
+      const recipesUpdated = fresh.version !== data.version || fresh.recipes.length !== data.recipes.length;
 
-      if (hasUpdate) {
-        console.log('📢 Update verfügbar:', data.version, '→', fresh.version);
-
-        // Nur WENN es ein Update gibt: Cache löschen
-        const cacheNames = await caches.keys();
-        const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
-        await Promise.all(toDelete.map(name => caches.delete(name)));
-        console.log('✓ ' + toDelete.length + ' Cache(s) gelöscht (wegen Update)');
-      } else {
-        console.log('✅ Bereits aktuell - kein Cache-Löschen nötig');
-      }
-
-      // Service Worker nur updaten (nicht unregistrieren)
+      // Checke ob neue Service Worker Version verfügbar ist
+      let swUpdated = false;
       if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          await reg.update();
-          console.log('✓ Service Worker Update geprüft');
+        try {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) {
+            const updateResult = await reg.update();
+            swUpdated = updateResult && updateResult.active && updateResult.installing;
+            console.log('Service Worker Update geprüft:', swUpdated ? 'neue Version da' : 'aktuell');
+          }
+        } catch (e) {
+          console.log('Service Worker Update Check fehlgeschlagen:', e);
         }
       }
 
-      // Rezepte neu laden
-      await update();
+      // Nur wenn es ein echtes Update gibt (Rezepte ODER Service Worker)
+      if (recipesUpdated || swUpdated) {
+        console.log('📢 Update verfügbar - Rezepte:', recipesUpdated, 'Service Worker:', swUpdated);
+
+        // Cache nur löschen wenn Rezepte aktualisiert
+        if (recipesUpdated) {
+          const cacheNames = await caches.keys();
+          const toDelete = cacheNames.filter(name => name.startsWith('rezeptbuch-') || name.startsWith('rezept-'));
+          await Promise.all(toDelete.map(name => caches.delete(name)));
+          console.log('✓ ' + toDelete.length + ' Cache(s) gelöscht (wegen Rezept-Update)');
+        }
+
+        // Rezepte neu laden (aber alte bleiben sichtbar während Update lädt)
+        await update(false);
+        console.log('✓ Update abgeschlossen');
+      } else {
+        console.log('✅ Bereits aktuell - kein Update nötig');
+        toast('✅ Alles schon aktuell');
+      }
 
     } catch (err) {
       console.error('Update-Fehler:', err);
