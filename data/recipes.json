@@ -1,5 +1,5 @@
 {
-  "version": "3.31",
+  "version": "3.311",
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -298,7 +298,9 @@
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-1.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "A"
+      ],
       "steps": [],
       "notes": "Mit Udon Nudeln oder Reis",
       "bereich": "kochen"
