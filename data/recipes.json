@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T19:57:00+02:00",
+  "updated": "2026-07-06",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -736,14 +736,22 @@
     {
       "id": "italienischer-nudelsalat",
       "title": "Italienischer Nudelsalat",
-      "category": "Ist das Kochen?",
+      "category": [
+        "Ist das Kochen?"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🇮🇹",
       "image": "",
-      "ingredients": [],
+      "images": [],
+      "ingredients": [
+        "Pasta",
+        "Pesto Rosso",
+        "Pinien Kerne"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen"
     },
     {
       "id": "couscous-salat",
