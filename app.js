@@ -606,12 +606,10 @@ function renderWeekplan() {
       }
     });
 
-    // Enter-Key für Freitext
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
+    // Enter-Key oder Blur für Freitext
+    const saveFreetext = () => {
       const text = searchInput.value.trim();
-      if (!text) return;
+      if (!text || suggestionsDiv.children.length > 0) return; // Nur wenn keine Autocomplete-Vorschläge da sind
 
       // Speichere als Freitext (mit Präfix um es von Recipe-IDs zu unterscheiden)
       weekplan[dayKey] = 'TEXT:' + text;
@@ -625,6 +623,17 @@ function renderWeekplan() {
         selectedDiv.innerHTML = '';
         searchInput.value = '';
       };
+    };
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveFreetext();
+      }
+    });
+
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => saveFreetext(), 100);
     });
 
     // Remove-Button für bestehende Tags
