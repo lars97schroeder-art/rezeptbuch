@@ -1,5 +1,5 @@
 {
-  "version": 20,
+  "version": 21,
   "updated": "2026-07-06",
   "recipes": [
     {
@@ -736,6 +736,10 @@
       "servings": "",
       "emoji": "🥣",
       "image": "data/images/granola-1783240941.jpg",
+      "images": [
+        "data/images/granola-1783240941.jpg",
+        "data/images/granola-1783326982-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
