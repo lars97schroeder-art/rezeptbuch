@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T21:26:00.761Z",
+  "updated": "2026-07-06T21:26:09.214Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -885,20 +885,6 @@
         "Gouda mittelalt",
         "➕Tomate, Gurke"
       ],
-      "steps": [],
-      "notes": "",
-      "bereich": "fruehstueck"
-    },
-    {
-      "id": "many-man",
-      "title": "Menemen",
-      "category": [],
-      "time": "",
-      "servings": "",
-      "emoji": "🍳",
-      "image": "",
-      "images": [],
-      "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "fruehstueck"
