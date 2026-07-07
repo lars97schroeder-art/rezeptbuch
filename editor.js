@@ -549,7 +549,8 @@ function openGroupSelector(allGroups) {
 window.editorGridCard = () => {
   const token = ghToken();
   const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
-  if (!token || !editEnabled) return null;
+  const offline = localStorage.getItem('rezeptbuch-offline-mode') === 'true';
+  if (!token || !editEnabled || offline) return null;
   const card = document.createElement('article');
   card.className = 'card add-card';
 
@@ -575,7 +576,8 @@ window.editorGridCard = () => {
 window.editorEnhanceDetail = (el, id) => {
   const token = ghToken();
   const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
-  if (!token || !editEnabled) return;
+  const offline = localStorage.getItem('rezeptbuch-offline-mode') === 'true';
+  if (!token || !editEnabled || offline) return;
   const b = document.createElement('button');
   b.className = 'detail-edit';
   b.textContent = '✏️';

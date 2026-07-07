@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-07T13:47:00+02:00';
+const APP_BUILD_TIME = '2026-07-07T13:51:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -47,8 +47,14 @@ function categoryLabel(r) {
   return recipeCategories(r).join(', ');
 }
 
+// Standard-Emoji je Bereich, wenn Rezept und Kategorie keins hergeben
+const BEREICH_EMOJI = { kochen: '🍳', backen: '🍰', fruehstueck: '🥐' };
+
 function emojiFor(recipe) {
-  return recipe.emoji || CATEGORY_EMOJI[recipeCategories(recipe)[0]] || '🍽️';
+  return recipe.emoji
+    || CATEGORY_EMOJI[recipeCategories(recipe)[0]]
+    || BEREICH_EMOJI[recipeMode(recipe)]
+    || '🍽️';
 }
 
 // Titel mit Emoji dahinter, z. B. "Pizzaaaaa 🍕" (nur bei eigenem Emoji)
@@ -1093,6 +1099,9 @@ const THEME_KEY = 'rezeptbuch-theme';
 const EDIT_ENABLED_KEY = 'rezeptbuch-edit-enabled';
 
 function isEditModeEnabled() {
+  // Offline-Modus überlagert den Bearbeitungsmodus, ohne die gemerkte
+  // Einstellung zu ändern — beim Ausschalten ist alles wie vorher
+  if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') return false;
   return ghToken && ghToken() && localStorage.getItem(EDIT_ENABLED_KEY) !== 'false';
 }
 
@@ -1114,6 +1123,8 @@ function applyTheme(theme) {
 function openSettings() {
   const hasToken = ghToken && ghToken();
   const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
+  const offline = localStorage.getItem(OFFLINE_MODE_KEY) === 'true';
+  // Gemerkte Einstellung bleibt unangetastet — offline wird sie nur überlagert
   const editEnabled = localStorage.getItem(EDIT_ENABLED_KEY) !== 'false' && hasToken;
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
 
@@ -1155,15 +1166,17 @@ function openSettings() {
       </div>
     </div>
 
-    <div class="settings-section">
+    <div class="settings-section"${offline ? ' style="opacity: 0.4; pointer-events: none;"' : ''}>
       <h3>Bearbeiten</h3>
       ${hasToken
         ? `<div class="settings-row">
             <label class="setting-label">
-              <input type="checkbox" id="edit-toggle" ${editEnabled ? 'checked' : ''}>
+              <input type="checkbox" id="edit-toggle" ${editEnabled && !offline ? 'checked' : ''}${offline ? ' disabled' : ''}>
               <span>Bearbeitungsmodus aktiviert</span>
             </label>
-            <div class="setting-hint">Token ist gespeichert – schalte Bearbeiten an/aus</div>
+            <div class="setting-hint">${offline
+              ? 'Im Offline-Modus deaktiviert – wird beim Ausschalten wiederhergestellt'
+              : 'Token ist gespeichert – schalte Bearbeiten an/aus'}</div>
           </div>
           <button class="setting-btn" id="clear-token">Token entfernen</button>
           <button class="setting-btn" id="share-token">🔗 Token teilen</button>`
@@ -1197,6 +1210,9 @@ function openSettings() {
         ? '🔒 Offline-Modus aktiviert (keine Online-Abgleiche)'
         : '🌐 Online-Modus aktiviert (Auto-Abgleiche aktiv)';
       toast(message);
+      // Bearbeiten-Bereich ausgrauen bzw. wiederherstellen und Grid auffrischen
+      openSettings();
+      render();
     };
   }
 
