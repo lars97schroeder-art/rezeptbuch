@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T11:59:28.912Z",
+  "updated": "2026-07-07T11:59:56.576Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1010,7 +1010,7 @@
     {
       "id": "bananenbrot",
       "title": "Bananenbrot",
-      "category": "",
+      "category": [],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1020,7 +1020,7 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Annika meint Kuchen… pfhhhh 😉😘",
       "bereich": "backen"
     },
     {
