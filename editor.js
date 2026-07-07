@@ -152,8 +152,6 @@ function openEditor(id) {
   const r = id ? data.recipes.find(x => x.id === id) : null;
   edKeep = r ? [...imagesOf(r)] : [];
   edNeu = [];
-  const cats = [...new Set(data.recipes.flatMap(x => Array.isArray(x.category) ? x.category : (x.category ? [x.category] : [])).filter(Boolean))];
-  const groups = [...new Set(data.recipes.map(x => x.group).filter(Boolean))];
   const bereich = r ? (r.bereich || 'kochen') : mode;
 
   const el = edEl();
@@ -209,6 +207,12 @@ function openEditor(id) {
   // Gruppen-Auswahl initialisieren
   window.edSelectedGroup = r?.group || '';
   renderGroupsContainer();
+
+  // Bereich gewechselt → Kategorien- und Gruppen-Auswahl auf den neuen Bereich filtern
+  $('#ed-bereich').onchange = () => {
+    renderCategoriesContainer();
+    renderGroupsContainer();
+  };
 
   renderEdPhotos();
   el.querySelector('.ed-close').onclick = closeEditor;
@@ -399,13 +403,25 @@ function openTokenSetup() {
 
 /* ---------- Anbindung an die App ---------- */
 
+// Aktuell im Editor gewählter Bereich (Kochen/Backen/Frühstück)
+function edBereich() {
+  return $('#ed-bereich')?.value || mode;
+}
+
+// Nur Rezepte aus dem im Editor gewählten Bereich — Kategorien und Gruppen
+// gehören zu ihrem Bereich (z.B. "Kuchen" nur bei Backen)
+function edRecipesImBereich() {
+  const b = edBereich();
+  return data.recipes.filter(x => (x.bereich || 'kochen') === b);
+}
+
 // Wird von render() aufgerufen: „＋ Neues Rezept”-Kachel, wenn Edit-Mode aktiviert ist
 // Kategorien-Auswahl UI
 function renderCategoriesContainer() {
   const container = $('#ed-categories-container');
   if (!container) return;
 
-  const cats = [...new Set(data.recipes.map(x => {
+  const cats = [...new Set(edRecipesImBereich().map(x => {
     if (Array.isArray(x.category)) return x.category;
     return x.category ? [x.category] : [];
   }).flat().filter(Boolean))].sort();
@@ -474,7 +490,7 @@ function renderGroupsContainer() {
   const container = $('#ed-groups-container');
   if (!container) return;
 
-  const allGroups = [...new Set(data.recipes.map(x => x.group).filter(Boolean))].sort();
+  const allGroups = [...new Set(edRecipesImBereich().map(x => x.group).filter(Boolean))].sort();
 
   let html = '<div class="ed-groups-chips">';
   if (window.edSelectedGroup) {
