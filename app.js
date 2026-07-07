@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T01:05:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T01:12:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1069,11 +1069,9 @@ function renderTinderResult(ids) {
         <div class="detail-meta">Wer gewinnt?</div>
 
         <div class="slot-machine" id="slot-container" style="display:none;">
-          <div class="slots">${winners.map((w, i) => {
-            const degPerItem = 360 / winners.length;
-            const deg = i * degPerItem;
-            return `<div class="slot-item" style="transform: rotateX(${deg}deg) translateZ(300px);">${titleWithEmoji(w)}</div>`;
-          }).join('')}</div>
+          <div class="slot-window">
+            <div class="slot-reel" id="slot-reel"></div>
+          </div>
         </div>
 
         <div class="slot-buttons">
@@ -1117,45 +1115,65 @@ function renderTinderResult(ids) {
   document.body.style.overflow = 'hidden';
 }
 
+// Höhe einer Slot-Zelle — muss mit CSS (.slot-window/.slot-cell height) übereinstimmen
+const SLOT_CELL_H = 110;
+
+function finishSpin(winners, pick, btn) {
+  const w = winners[pick];
+  btn.textContent = '✨ ' + w.title + (w.emoji ? ' ' + w.emoji : '');
+  btn.disabled = false;
+  btn.onclick = () => {
+    renderDetail(w.id);
+    history.pushState({ view: 'tinder-result-recipe', ids: winners.map(x => x.id), winnerIndex: pick }, '');
+  };
+}
+
+// Vertikale Slot-Walze: läuft mehrere Runden durch und stoppt weich exakt
+// auf dem gewählten Gewinner (immer sichtbar im Fenster, nie leer).
 function spinSlot(winners) {
   const btn = $('#slot-btn');
-  const container = $('#slot-container');
-  const slots = container.querySelector('.slots');
+  const reel = $('#slot-reel');
+  if (!btn || !reel) return;
   btn.disabled = true;
   btn.textContent = '⏳ …';
 
   const pick = Math.floor(Math.random() * winners.length);
-  let count = 0;
-  const maxSpins = 25 + Math.random() * 15;
-  const itemHeight = 140; // muss mit CSS .slot-item height übereinstimmen
+  const cell = w => `<div class="slot-cell">${titleWithEmoji(w)}</div>`;
 
-  const animate = () => {
-    if (count < maxSpins) {
-      // Rad-Rotation: jedes Item ist 360/winners.length Grad
-      const degPerItem = 360 / winners.length;
-      const rotation = (count % winners.length) * degPerItem;
-      slots.style.transform = `rotateX(${rotation}deg)`;
-      slots.style.transition = 'none';
-      count++;
-      const delay = Math.min(35, 15 + count * 1.5);
-      setTimeout(animate, delay);
-    } else {
-      // Final spin zur gewählten Position
-      const degPerItem = 360 / winners.length;
-      const finalRotation = (pick * degPerItem) + (3 * 360); // 3 volle Umdrehungen + Ziel
-      slots.style.transition = `transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)`;
-      slots.style.transform = `rotateX(${finalRotation}deg)`;
-      setTimeout(() => {
-        btn.textContent = '✨ ' + titleWithEmoji(winners[pick]);
-        btn.disabled = false;
-        btn.onclick = () => {
-          renderDetail(winners[pick].id);
-          history.pushState({ view: 'tinder-result-recipe', ids: winners.map(w => w.id), winnerIndex: pick }, '');
-        };
-      }, 750);
-    }
+  // Einzelner Gewinner: direkt anzeigen, keine Walzen-Fahrt
+  if (winners.length === 1) {
+    reel.style.transition = 'none';
+    reel.style.transform = 'translateY(0)';
+    reel.innerHTML = `<div class="slot-cell winner">${titleWithEmoji(winners[0])}</div>`;
+    finishSpin(winners, 0, btn);
+    return;
+  }
+
+  // Walze bauen: mehrere volle Durchläufe, dann bis zum Gewinner
+  const loops = 6;
+  const cells = [];
+  for (let l = 0; l < loops; l++) for (const w of winners) cells.push(w);
+  for (let i = 0; i <= pick; i++) cells.push(winners[i]);
+  const targetIndex = loops * winners.length + pick;
+
+  reel.innerHTML = cells.map(cell).join('');
+  reel.style.transition = 'none';
+  reel.style.transform = 'translateY(0)';
+  void reel.offsetHeight; // erzwungener Reflow: Reset wird registriert (ohne rAF)
+  reel.style.transition = 'transform 2.8s cubic-bezier(0.12, 0.72, 0.15, 1)';
+  reel.style.transform = `translateY(-${targetIndex * SLOT_CELL_H}px)`;
+
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    reel.removeEventListener('transitionend', finish);
+    const target = reel.children[targetIndex];
+    if (target) target.classList.add('winner');
+    finishSpin(winners, pick, btn);
   };
-  animate();
+  reel.addEventListener('transitionend', finish);
+  setTimeout(finish, 3100); // Fallback, falls transitionend nicht feuert
 }
 
 /* ---------- Toast ---------- */
