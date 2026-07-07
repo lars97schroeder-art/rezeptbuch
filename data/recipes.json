@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:00:43.550Z",
+  "updated": "2026-07-07T12:01:33.799Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -753,7 +753,8 @@
       "id": "shakshuka",
       "title": "Shakshuka / Menemen",
       "category": [
-        "Herzhaft"
+        "Herzhaft",
+        "Ei"
       ],
       "time": "",
       "servings": "",
