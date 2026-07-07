@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T01:12:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T01:20:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1065,8 +1065,8 @@ function renderTinderResult(ids) {
       <button class="detail-close" aria-label="Zurück">←</button>
       <button class="detail-home" aria-label="Startseite" style="display:none;">🏠</button>
       <div class="detail-body group-body" style="display:none;">
-        <h2>Eure Top ${winners.length} ❤️</h2>
-        <div class="detail-meta">Wer gewinnt?</div>
+        <h2>Jetzt gilt's! 🎲</h2>
+        <div class="detail-meta">Was kochen wir heute? 😉</div>
 
         <div class="slot-machine" id="slot-container" style="display:none;">
           <div class="slot-window">
