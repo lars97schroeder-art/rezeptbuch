@@ -15,54 +15,31 @@
 <meta name="apple-mobile-web-app-title" content="Schlemmerliste">
 <link rel="stylesheet" href="style.css?v=20260706-2007">
 <script>
-// KRITISCHER version-check: Alte v3.1 muss raus!
-// Dieses Script läuft VOR app.js und löscht alte Daten
+// Version-Check: entfernt kaputte oder uralte Rezeptdaten VOR app.js.
+// WICHTIG: NIEMALS localStorage.clear() — das würde den GitHub-Token und
+// die Wochenplan-Einträge mitlöschen. Nur gezielt rezeptbuch-data anfassen.
 console.log('🔍 Version-Check startet...');
 if (typeof localStorage !== 'undefined') {
   try {
     const stored = localStorage.getItem('rezeptbuch-data');
-    console.log('📦 LocalStorage rezeptbuch-data:', stored ? '✓ vorhanden' : '✗ leer');
-
     if (stored) {
       try {
         const data = JSON.parse(stored);
-        const version = data.version;
-        console.log('📌 Lokale Version:', version);
-
-        // WICHTIG: Numerischer Vergleich, nicht String-Vergleich
-        const localVer = parseFloat(version);
-        const requiredVer = 3.3;
-
-        if (localVer < requiredVer) {
-          console.warn('⚠️ ALTE VERSION ERKANNT:', localVer, '< erforderlich', requiredVer);
-          console.log('🗑️ Lösche localStorage + sessionStorage...');
-          localStorage.clear();
-          sessionStorage.clear();
-          console.log('✅ Storage gelöscht - neue Version wird geladen');
-        } else {
-          console.log('✅ Version ist aktuell:', localVer);
+        const localVer = parseFloat(data.version);
+        if (localVer < 3.3) {
+          console.warn('⚠️ Alte Datenversion erkannt:', localVer, '– Rezeptdaten werden neu geladen');
+          localStorage.removeItem('rezeptbuch-data');
         }
       } catch (parseErr) {
-        console.error('❌ JSON Parse Fehler:', parseErr);
-        console.log('🗑️ Lösche wegen Parse-Fehler...');
-        localStorage.clear();
-        sessionStorage.clear();
+        console.error('❌ Rezeptdaten defekt – werden neu geladen:', parseErr);
+        localStorage.removeItem('rezeptbuch-data');
       }
-    } else {
-      console.log('ℹ️ Storage ist leer - neue Installation oder gerade gelöscht');
     }
   } catch (e) {
-    console.error('❌ Kritischer Fehler im version-check:', e);
-    console.log('🗑️ Sicherheitshalber alles löschen...');
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (clearErr) {
-      console.error('❌ Konnte Storage nicht löschen:', clearErr);
-    }
+    console.error('❌ Version-Check fehlgeschlagen (Storage nicht verfügbar?):', e);
   }
 }
-console.log('✅ Version-Check abgeschlossen\n');
+console.log('✅ Version-Check abgeschlossen');
 </script>
 </head>
 <body>

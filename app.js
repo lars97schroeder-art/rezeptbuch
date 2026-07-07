@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-07T01:15:00+02:00';
+const APP_BUILD_TIME = '2026-07-07T13:34:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -113,7 +113,8 @@ async function fetchRemoteRecipes() {
 
 // Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
 // Gibt true zurück wenn Updates gefunden wurden, false wenn aktuell
-async function checkAndUpdateIfNeeded() {
+// opts.quiet: keine Toast-Meldung (der Aufrufer meldet selbst, z.B. beim Rezept-Klick)
+async function checkAndUpdateIfNeeded(opts = {}) {
   // Skip wenn Offline-Modus aktiv
   if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') {
     console.log('ℹ️ Offline-Modus aktiv - kein Abgleich mit Server');
@@ -138,6 +139,10 @@ async function checkAndUpdateIfNeeded() {
 
     console.log('🔄 Neue Rezepte verfügbar (lokal:', data.updated, 'remote:', fresh.updated + ')');
 
+    // Erstbefüllung (noch keine lokalen Rezepte): still übernehmen,
+    // sonst würden ALLE Rezepte als "aktualisiert" gemeldet
+    const ersteBefuellung = data.recipes.length === 0;
+
     // Finde geänderte Rezepte
     const oldMap = new Map(data.recipes.map(r => [r.id, r]));
     const updated = [];
@@ -159,7 +164,9 @@ async function checkAndUpdateIfNeeded() {
       // Neue Bilder im Hintergrund fürs Offline-Kochen holen
       precacheImages(fresh.recipes);
       console.log('🔄 ' + updated.length + ' Rezept(e) aktualisiert: ' + updated.join(', '));
-      toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
+      if (!opts.quiet && !ersteBefuellung) {
+        toast('🔄 ' + updated.length + ' Rezept(e) aktualisiert');
+      }
       return true;
     }
     return true; // Auch wenn keine Rezepte geändert, aber Struktur aktualisiert
@@ -323,7 +330,7 @@ function openRecipe(id, opts = {}) {
   // ISO-Check im Hintergrund: hat sich GENAU DIESES Rezept geändert,
   // wird die offene Ansicht sofort mit den frischen Daten neu gezeichnet
   const shownBefore = JSON.stringify(data.recipes.find(r => r.id === id) || null);
-  checkAndUpdateIfNeeded().then(changed => {
+  checkAndUpdateIfNeeded({ quiet: true }).then(changed => {
     if (!changed) return;
     const now = data.recipes.find(r => r.id === id);
     if (!now || JSON.stringify(now) === shownBefore) return; // dieses Rezept unverändert
@@ -331,6 +338,7 @@ function openRecipe(id, opts = {}) {
     // Nur neu zeichnen, wenn die Detailansicht noch offen ist (und kein Wochenplan drin)
     if (!detail.hidden && !detail.querySelector('.weekplan-container')) {
       renderDetail(id);
+      toast('🔄 Rezept aktualisiert');
     }
   });
 }
@@ -1457,7 +1465,8 @@ document.addEventListener('click', e => {
   // 2. Führe FORCE-RELOAD durch wenn nötig (nur bei geänderten Funktionalitäten)
   if (shouldReload) {
     console.log('  Grund:', reloadReason);
-    localStorage.removeItem(DATA_KEY);
+    // WICHTIG: Rezepte NICHT löschen — sonst zählt der Check danach alle
+    // Rezepte als "aktualisiert". Der ISO-Abgleich übernimmt Änderungen selbst.
     localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_TIME);
 
     // Service Worker unregistrieren
