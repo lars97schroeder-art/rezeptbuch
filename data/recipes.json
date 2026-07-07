@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:01:43.794Z",
+  "updated": "2026-07-07T12:01:51.685Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -942,7 +942,10 @@
     {
       "id": "maxvorstadt-sandwich",
       "title": "Maxvorstadt Sandwich",
-      "category": [],
+      "category": [
+        "Ei",
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥪",
