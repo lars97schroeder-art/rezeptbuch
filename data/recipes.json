@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-06T22:17:00.945Z",
+  "updated": "2026-07-07T11:44:34.956Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1254,6 +1254,22 @@
       "steps": [],
       "notes": "",
       "bereich": "fruehstueck"
+    },
+    {
+      "id": "karottenkuchen",
+      "title": "Karottenkuchen",
+      "category": [
+        "Kuchen"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "Aka Annika’s Geburtstagskuchen ♥️",
+      "bereich": "backen"
     }
   ]
 }
