@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:01:51.685Z",
+  "updated": "2026-07-07T12:01:59.253Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1035,7 +1035,9 @@
     {
       "id": "weisswurst",
       "title": "Weißwurstfrühstück",
-      "category": [],
+      "category": [
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
