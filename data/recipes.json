@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T11:47:15.750Z",
+  "updated": "2026-07-07T11:59:28.912Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1140,7 +1140,9 @@
     {
       "id": "waffeln",
       "title": "Waffeln",
-      "category": [],
+      "category": [
+        "Sweets"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
