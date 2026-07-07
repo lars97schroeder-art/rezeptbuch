@@ -2,13 +2,11 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-07T13:34:00+02:00';
+const APP_BUILD_TIME = '2026-07-07T13:45:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
 const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
-const LAST_UPDATED_KEY = 'rezeptbuch-last-updated';
-const LAST_APP_VERSION_KEY = 'rezeptbuch-last-app-version';
 
 const CATEGORY_EMOJI = {
   'Pasta & Gnocchi': '🍝', 'Pasta': '🍝', 'Spätzle': '🧀',
@@ -1255,96 +1253,16 @@ function openSettings() {
   el.querySelector('#refresh-btn').onclick = async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
-      // Lade frische Version vom Server zum Vergleichen
-      const fresh = await fetchRemoteRecipes();
-      if (!fresh) throw new Error('Rezepte konnten nicht geladen werden');
-
-      // 1. DATEN-CHECK: Rezept-ISO-Timestamp vergleichen und ggf. übernehmen
+      // 1. DATEN-CHECK: Rezept-ISO-Timestamp vergleichen und ggf. direkt übernehmen
+      // (meldet selbst, wie viele Rezepte aktualisiert wurden)
       const hasUpdates = await checkAndUpdateIfNeeded();
 
       // 2. FUNKTIONALITÄTEN-CHECK: App-Build-ISO-Timestamp der Server-Version vergleichen
-      const remoteBuild = await fetchRemoteBuildTime();
-      const hasAppUpdate = !!remoteBuild &&
-        new Date(remoteBuild).getTime() !== new Date(APP_BUILD_TIME).getTime();
+      const hasAppUpdate = await checkAppUpdateAvailable();
 
-      // IMMER Cache löschen beim Update-Button
-      showToastWithoutTimeout('🗑️ Cache wird geleert...');
-
-      // Lösche ALLE Caches aggressiv
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('✓ Alle Caches gelöscht');
-      }
-
-      // Unregister alle Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(reg => reg.unregister()));
-        console.log('✓ Service Worker unregistriert');
-      }
-
-      // Warte kurz dann neu registrieren
-      await new Promise(r => setTimeout(r, 500));
-
-      // Service Worker neu registrieren mit Timestamp
-      if ('serviceWorker' in navigator) {
-        try {
-          await navigator.serviceWorker.register('sw.js?t=' + Date.now());
-          console.log('✓ Service Worker neu registriert');
-        } catch (e) {
-          console.log('Service Worker registrieren fehlgeschlagen:', e);
-        }
-      }
-
-      // Speichere Timestamp statt Version
-      localStorage.setItem(LAST_UPDATED_KEY, fresh.updated);
-
-      // Feedback
-      if (hasUpdates || hasAppUpdate) {
-        const was = [];
-        if (hasUpdates) was.push('🔄 Neue Rezepte übernommen.');
-        if (hasAppUpdate) was.push('✨ Neue App-Funktionen bereit.');
-        // Zeige Reload-Dialog
-        const reloadDialog = document.createElement('div');
-        reloadDialog.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: var(--card);
-          border: 3px solid var(--accent);
-          border-radius: 12px;
-          padding: 24px;
-          z-index: 2000;
-          text-align: center;
-          max-width: 300px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        `;
-        reloadDialog.innerHTML = `
-          <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ Update verfügbar!</h3>
-          <p style="margin: 0 0 12px 0; color: var(--text);">${was.join('<br>')}</p>
-          <button id="reload-now" style="
-            padding: 12px 24px;
-            margin: 8px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            font-family: inherit;
-          ">🔄 Jetzt neu laden</button>
-        `;
-        document.body.appendChild(reloadDialog);
-
-        document.getElementById('reload-now').onclick = async () => {
-          // Totales Reload mit URL Parameter um HTTP Cache zu umgehen
-          const randomParam = '?t=' + Date.now() + '&r=' + Math.random();
-          window.location.href = window.location.pathname + randomParam;
-        };
-      } else {
+      if (hasAppUpdate) {
+        showAppUpdateDialog();
+      } else if (!hasUpdates) {
         toast('✅ Alles aktuell – Rezepte und App-Funktionen');
       }
     } catch (err) {
@@ -1443,71 +1361,66 @@ document.addEventListener('click', e => {
   }
 });
 
-// FORCE-RELOAD beim Start: überprüfe ob Updates da sind BEVOR wir was anzeigen
-(async () => {
-  let shouldReload = false;
-  let reloadReason = '';
+/* ---------- App-Update (Funktionalitäten) ---------- */
 
-  // 1. FUNKTIONALITÄTEN-CHECK: App allgemein, Wochenplan, Tindern (alles Code in app.js)
-  // Vergleich über ISO-Parsing: altes/ungültiges Format ergibt NaN und triggert damit automatisch ein Update
-  const lastBuildTime = new Date(localStorage.getItem(LAST_APP_VERSION_KEY)).getTime();
-  const currentBuildTime = new Date(APP_BUILD_TIME).getTime();
-  if (lastBuildTime !== currentBuildTime) {
-    shouldReload = true;
-    reloadReason = `Funktionalitäten geändert: ${localStorage.getItem(LAST_APP_VERSION_KEY)} → ${APP_BUILD_TIME}`;
-    console.log('🔄 FORCE-REFRESH: ' + reloadReason);
-  }
-
-  // Rezept-Änderungen lösen KEINEN Force-Reload mehr aus: die übernimmt
-  // checkAndUpdateIfNeeded() beim Start sanft per ISO-Vergleich, ohne Neuladen.
-  // Wochenplan-Einträge (rezeptbuch-weekplan) werden bei Reloads nie angetastet.
-
-  // 2. Führe FORCE-RELOAD durch wenn nötig (nur bei geänderten Funktionalitäten)
-  if (shouldReload) {
-    console.log('  Grund:', reloadReason);
-    // WICHTIG: Rezepte NICHT löschen — sonst zählt der Check danach alle
-    // Rezepte als "aktualisiert". Der ISO-Abgleich übernimmt Änderungen selbst.
-    localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_TIME);
-
-    // Service Worker unregistrieren
-    if ('serviceWorker' in navigator) {
-      try {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r => r.unregister()));
-      } catch (e) { console.log('SW unregister error:', e); }
-    }
-
-    // Caches löschen
+// Führt das App-Update durch: Caches leeren, Service Worker neu, frisch laden.
+// Wird NUR auf Nutzer-Wunsch ausgelöst (Dialog oder Update-Knopf) — nie automatisch.
+async function performAppUpdate() {
+  showToastWithoutTimeout('🔄 Update wird geladen …');
+  try {
     if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      } catch (e) { console.log('Cache delete error:', e); }
+      const names = await caches.keys();
+      await Promise.all(names.map(n => caches.delete(n)));
     }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  } catch (e) { console.log('Update-Aufräumen fehlgeschlagen:', e); }
+  window.location.href = window.location.pathname + '?force=' + Date.now();
+}
 
-    // FORCE RELOAD mit Cache-Buster
-    console.log('💥 Force-Reload mit Cache-Buster!');
-    window.location.href = window.location.pathname + '?force=' + Date.now() + '&r=' + Math.random();
-    return;
-  }
+// Dialog: neue App-Funktionen verfügbar → jetzt updaten oder später (ignorieren)
+function showAppUpdateDialog() {
+  if (document.querySelector('.app-update-dialog')) return; // nicht doppelt zeigen
+  const dialog = document.createElement('div');
+  dialog.className = 'app-update-dialog';
+  dialog.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--card); border: 3px solid var(--accent); border-radius: 12px;
+    padding: 24px; z-index: 2000; text-align: center; max-width: 300px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);`;
+  const btnStyle = `padding: 12px 20px; margin: 6px; border: none; border-radius: 6px;
+    cursor: pointer; font-size: 15px; font-weight: bold; font-family: inherit;`;
+  dialog.innerHTML = `
+    <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ App-Update verfügbar!</h3>
+    <p style="margin: 0 0 12px 0; color: var(--text);">Neue Funktionen sind bereit.</p>
+    <button class="app-update-now" style="${btnStyle} background: var(--accent); color: white;">🔄 Jetzt updaten</button>
+    <button class="app-update-later" style="${btnStyle} background: none; color: var(--muted); border: 1px solid var(--muted);">Später</button>`;
+  document.body.appendChild(dialog);
+  dialog.querySelector('.app-update-now').onclick = () => { dialog.remove(); performAppUpdate(); };
+  dialog.querySelector('.app-update-later').onclick = () => dialog.remove();
+}
 
-  // Speichere aktuelle App-Version
-  localStorage.setItem(LAST_APP_VERSION_KEY, APP_BUILD_TIME);
+// Prüft per ISO-Vergleich, ob auf dem Server neuere App-Funktionen liegen
+async function checkAppUpdateAvailable() {
+  const remoteBuild = await fetchRemoteBuildTime();
+  return !!remoteBuild && new Date(remoteBuild).getTime() > new Date(APP_BUILD_TIME).getTime();
+}
 
-  // Wenn KEIN Update: normal laden
-  renderModeUI();
-  loadLocal();
-  render();
-})();
+/* ---------- App-Start ---------- */
 
-// Beim Start: leichter ISO-Abgleich der Rezepte (kein kompletter Neu-Download)
+// Lokale Daten sofort anzeigen — kein automatischer Reload mehr
+renderModeUI();
+loadLocal();
+render();
+
+// Rezepte: leichter ISO-Abgleich im Hintergrund (übernimmt Änderungen still)
 checkAndUpdateIfNeeded();
 
-// Gibt es neue App-Funktionen auf dem Server? Nur Hinweis zeigen, nicht automatisch laden
-fetchRemoteBuildTime().then(remoteBuild => {
-  if (remoteBuild && new Date(remoteBuild).getTime() > new Date(APP_BUILD_TIME).getTime()) {
-    toast('✨ App-Update verfügbar – über ⚙️ → ⟳ Update laden');
-  }
+// App-Funktionen: gibt es Neues auf dem Server → Dialog (updaten oder später)
+checkAppUpdateAvailable().then(available => {
+  if (available) showAppUpdateDialog();
 });
 
 if ('serviceWorker' in navigator) {
