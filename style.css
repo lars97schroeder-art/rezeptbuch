@@ -37,6 +37,41 @@ html.theme-dark {
   }
 }
 
+/* ===== Farbschemata (unabhängig von Hell/Dunkel) ===== */
+/* Blau */
+html.color-blue { --accent: #1466c4; --accent-soft: #d8e8ff; }
+html.color-blue.theme-dark { --accent: #4d9bff; --accent-soft: #16304f; }
+@media (prefers-color-scheme: dark) {
+  html.color-blue:not(.theme-light) { --accent: #4d9bff; --accent-soft: #16304f; }
+}
+
+/* Rainbow: kräftiges Pink als Basis plus bunte Akzente */
+html.color-rainbow { --accent: #d6249f; --accent-soft: #ffe1f3; }
+html.color-rainbow.theme-dark { --accent: #ff5cc0; --accent-soft: #3a1030; }
+@media (prefers-color-scheme: dark) {
+  html.color-rainbow:not(.theme-light) { --accent: #ff5cc0; --accent-soft: #3a1030; }
+}
+html.color-rainbow .topbar h1 {
+  background: linear-gradient(90deg, #e53935, #fb8c00, #fdd835, #43a047, #1e88e5, #8e24aa);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+html.color-rainbow .chip.active,
+html.color-rainbow .setting-btn.primary,
+html.color-rainbow .weekplan-save-btn,
+html.color-rainbow .app-update-now,
+html.color-rainbow .weekplan-tag {
+  background: linear-gradient(90deg, #e53935, #fb8c00, #43a047, #1e88e5, #8e24aa) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+html.color-rainbow .card { border-top: 4px solid; }
+html.color-rainbow #grid .card:nth-child(6n+1) { border-top-color: #e53935; }
+html.color-rainbow #grid .card:nth-child(6n+2) { border-top-color: #fb8c00; }
+html.color-rainbow #grid .card:nth-child(6n+3) { border-top-color: #fdd835; }
+html.color-rainbow #grid .card:nth-child(6n+4) { border-top-color: #43a047; }
+html.color-rainbow #grid .card:nth-child(6n+5) { border-top-color: #1e88e5; }
+html.color-rainbow #grid .card:nth-child(6n)   { border-top-color: #8e24aa; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -214,6 +249,77 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   border-color: var(--accent);
   color: #fff;
   font-weight: 600;
+}
+
+/* Chips-Zeile mit fixem Sortier-Button rechts */
+.chips-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chips-row #chips { flex: 1; min-width: 0; }
+
+.sort-wrap { position: relative; flex: 0 0 auto; }
+
+#sort-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: clamp(5px, 1.2vw, 7px) clamp(9px, 2vw, 11px);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#sort-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 15;
+  margin-top: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(80, 40, 10, 0.2);
+  overflow: hidden;
+  min-width: 210px;
+}
+#sort-menu[hidden] { display: none; }
+
+.sort-opt {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  text-align: left;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+.sort-opt:last-child { border-bottom: none; }
+.sort-opt.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+/* Buchstaben-Trenner in der alphabetischen "Alle"-Ansicht */
+.grid-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: clamp(4px, 1.5vw, 8px) 2px 0;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.grid-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 #grid {
@@ -1920,4 +2026,10 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(22px);
+}
+
+/* iOS: 16px+ auf Eingabefeldern verhindert das Auto-Zoom beim Fokus,
+   damit man immer das ganze Bild sieht */
+@media (max-width: 480px) {
+  input, textarea, select { font-size: 16px; }
 }

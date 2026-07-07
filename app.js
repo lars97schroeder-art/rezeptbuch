@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-07T13:51:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T00:56:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -226,6 +226,59 @@ async function fetchRemoteBuildTime() {
 
 /* ---------- Anzeige ---------- */
 
+// Sortierung der Übersicht: 'alpha' (Standard) | 'time' | 'recent'
+const SORT_KEY = 'rezeptbuch-sort';
+let sortMode = localStorage.getItem(SORT_KEY) || 'alpha';
+
+function itemTitle(item) {
+  return item.group ? item.group : item.recipe.title;
+}
+
+// Führende Zahl aus einer Zeitangabe ("30 Min." → 30); ohne Angabe ans Ende
+function parseTimeMinutes(t) {
+  const m = String(t || '').match(/\d+/);
+  return m ? parseInt(m[0], 10) : Infinity;
+}
+
+function itemTime(item) {
+  const recs = item.group ? item.members : [item.recipe];
+  return Math.min(...recs.map(r => parseTimeMinutes(r.time)));
+}
+
+// Sortierschlüssel "zuletzt hinzugefügt": created-Timestamp falls vorhanden,
+// sonst Array-Position (später im File = neuer). Größer = neuer.
+function itemRecentKey(item) {
+  const recs = item.group ? item.members : [item.recipe];
+  let best = -Infinity;
+  for (const r of recs) {
+    const key = r.created ? new Date(r.created).getTime() : data.recipes.indexOf(r);
+    if (key > best) best = key;
+  }
+  return best;
+}
+
+function sortItems(items) {
+  const arr = items.slice();
+  const byTitle = (a, b) => itemTitle(a).localeCompare(itemTitle(b), 'de');
+  if (sortMode === 'time') {
+    arr.sort((a, b) => itemTime(a) - itemTime(b) || byTitle(a, b));
+  } else if (sortMode === 'recent') {
+    arr.sort((a, b) => itemRecentKey(b) - itemRecentKey(a) || byTitle(a, b));
+  } else {
+    arr.sort(byTitle);
+  }
+  return arr;
+}
+
+// Buchstabe für den Divider in der alphabetischen "Alle"-Ansicht
+function dividerLetter(item) {
+  let c = (itemTitle(item).trim()[0] || '#').toUpperCase();
+  const map = { 'Ä': 'A', 'Ö': 'O', 'Ü': 'U' };
+  if (map[c]) c = map[c];
+  if (!/[A-ZÀ-Þ]/.test(c)) c = '#'; // Zahlen/Emojis sammeln sich unter #
+  return c;
+}
+
 function categories() {
   const inMode = data.recipes.filter(r => recipeMode(r) === mode);
   const cats = [...new Set(inMode.flatMap(r => recipeCategories(r)))];
@@ -275,7 +328,7 @@ function render() {
   // Rezept-Karten
   const grid = $('#grid');
   grid.innerHTML = '';
-  const items = groupedList();
+  const items = sortItems(groupedList());
 
   if (!data.recipes.length) {
     grid.innerHTML = `<div class="empty">Noch keine Rezepte geladen.<br>
@@ -284,7 +337,21 @@ function render() {
     grid.innerHTML = `<div class="empty">Nichts gefunden 🤷</div>`;
   }
 
+  // Buchstaben-Divider nur in der alphabetischen "Alle"-Ansicht ohne Suche
+  const showDividers = sortMode === 'alpha' && activeCategory === 'Alle' && !query.trim();
+  let lastLetter = null;
+
   for (const item of items) {
+    if (showDividers) {
+      const letter = dividerLetter(item);
+      if (letter !== lastLetter) {
+        lastLetter = letter;
+        const divider = document.createElement('div');
+        divider.className = 'grid-divider';
+        divider.innerHTML = `<span>${letter}</span>`;
+        grid.appendChild(divider);
+      }
+    }
     const card = document.createElement('article');
     card.className = 'card';
     if (item.group) {
@@ -322,7 +389,7 @@ function render() {
   }
 
   $('#status').textContent = data.recipes.length
-    ? `Stand: ${data.updated ? new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–'} · ${data.recipes.length} Rezepte`
+    ? `${data.recipes.length} Rezepte · Stand: ${data.updated ? new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–'}`
     : '';
 }
 
@@ -447,20 +514,30 @@ function renderDetail(id, opts = {}) {
   document.body.style.overflow = 'hidden';
 }
 
-function closeOverlay() {
+// Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
+function hideDetail() {
   $('#detail').hidden = true;
   document.body.style.overflow = '';
 }
 
-// Zurück-Navigation: null = Übersicht, sonst Gruppe oder Rezept wiederherstellen
+// Schließen läuft IMMER über die History (history.back), damit der Verlauf
+// synchron bleibt. Sonst bleiben alte Zustände auf dem Stack liegen und man
+// landet beim nächsten Zurück auf einem „zufälligen" alten Rezept.
+function closeOverlay() {
+  if (history.state) history.back();
+  else hideDetail();
+}
+
+// Zurück-Navigation: null = Übersicht, sonst die jeweilige Ansicht wiederherstellen
 window.addEventListener('popstate', e => {
   const s = e.state;
-  if (!s) return closeOverlay();
+  if (!s) return hideDetail();
   if (s.view === 'group') renderGroup(s.group);
   else if (s.view === 'recipe') renderDetail(s.id, { random: s.random });
+  else if (s.view === 'weekplan') renderWeekplan();
   else if (s.view === 'tinder') renderTinder();
-  else if (s.view === 'tinder-result') renderTinderResult(s.ids || []);
-  else if (s.view === 'tinder-result-recipe') renderTinderResult(s.ids || []);
+  else if (s.view === 'tinder-result' || s.view === 'tinder-result-recipe') renderTinderResult(s.ids || []);
+  else hideDetail();
 });
 
 /* ---------- Rezept-Tinder 🔥 ---------- */
@@ -585,6 +662,16 @@ function attachTagHandlers(selectedDiv, weekplan) {
   }
 }
 
+// Aktuelle Kalenderwoche nach ISO 8601 (deutsche Zählweise: KW beginnt montags)
+function isoKalenderwoche(d = new Date()) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  // Auf den Donnerstag derselben Woche schieben (der bestimmt die KW)
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  return 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+}
+
 function renderWeekplan(skipSync = false) {
   const el = $('#detail');
   const weekplan = getWeekplan();
@@ -634,7 +721,10 @@ function renderWeekplan(skipSync = false) {
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <div class="detail-body group-body">
-      <h2>📅 Wochenplan</h2>
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <h2>📅 Wochenplan</h2>
+        <span style="color: var(--muted); font-weight: 600; font-size: 14px;">KW ${isoKalenderwoche()}</span>
+      </div>
       <div class="weekplan-container">
         ${daysHTML}
       </div>
@@ -730,22 +820,7 @@ function renderWeekplan(skipSync = false) {
       }
     });
 
-    // Reset zoom nach Blur (iOS Safari)
-    searchInput.addEventListener('blur', () => {
-      // Warte bis Tastatur weg ist
-      setTimeout(() => {
-        // Zoom zurücksetzen
-        document.body.style.zoom = '100%';
-        document.documentElement.style.zoom = '100%';
-        window.scrollTo(0, 0);
-
-        // Viewport Meta Tag update
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
-        }
-      }, 200);
-    });
+    // Rauszoomen nach dem Tippen übernimmt der globale focusout-Handler
 
     // Attach handlers für bestehende Tags
     attachTagHandlers(selectedDiv, weekplan);
@@ -1096,6 +1171,7 @@ function showToastWithoutTimeout(msg) {
 
 const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
 const THEME_KEY = 'rezeptbuch-theme';
+const COLOR_KEY = 'rezeptbuch-colorscheme';
 const EDIT_ENABLED_KEY = 'rezeptbuch-edit-enabled';
 
 function isEditModeEnabled() {
@@ -1114,10 +1190,22 @@ function applyTheme(theme) {
   localStorage.setItem(THEME_KEY, theme);
 }
 
-// Theme beim Start laden
+// Farbschema (unabhängig von Hell/Dunkel): 'orange' (Standard) | 'blue' | 'rainbow'
+const COLOR_THEME_META = { orange: '#e8590c', blue: '#1466c4', rainbow: '#d6249f' };
+
+function applyColorScheme(scheme) {
+  const html = document.documentElement;
+  html.classList.remove('color-orange', 'color-blue', 'color-rainbow');
+  html.classList.add('color-' + scheme);
+  localStorage.setItem(COLOR_KEY, scheme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta && COLOR_THEME_META[scheme]) meta.setAttribute('content', COLOR_THEME_META[scheme]);
+}
+
+// Theme + Farbschema beim Start laden
 (() => {
-  const saved = localStorage.getItem(THEME_KEY) || 'auto';
-  applyTheme(saved);
+  applyTheme(localStorage.getItem(THEME_KEY) || 'auto');
+  applyColorScheme(localStorage.getItem(COLOR_KEY) || 'orange');
 })();
 
 function openSettings() {
@@ -1127,6 +1215,7 @@ function openSettings() {
   // Gemerkte Einstellung bleibt unangetastet — offline wird sie nur überlagert
   const editEnabled = localStorage.getItem(EDIT_ENABLED_KEY) !== 'false' && hasToken;
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
+  const currentColor = localStorage.getItem(COLOR_KEY) || 'orange';
 
   const el = $('#editor'); // Reuse editor div für Modal
   el.innerHTML = `
@@ -1153,6 +1242,24 @@ function openSettings() {
     </div>
 
     <div class="settings-section">
+      <h3>Farbschema</h3>
+      <div class="settings-row">
+        <label class="setting-radio">
+          <input type="radio" name="colorscheme" value="orange" ${currentColor === 'orange' ? 'checked' : ''}>
+          <span>🟧 Orange</span>
+        </label>
+        <label class="setting-radio">
+          <input type="radio" name="colorscheme" value="blue" ${currentColor === 'blue' ? 'checked' : ''}>
+          <span>🟦 Blau</span>
+        </label>
+        <label class="setting-radio">
+          <input type="radio" name="colorscheme" value="rainbow" ${currentColor === 'rainbow' ? 'checked' : ''}>
+          <span>🌈 Rainbow</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <h3>Verbindung</h3>
       <div class="settings-row">
         <label class="setting-label">
@@ -1171,8 +1278,11 @@ function openSettings() {
       ${hasToken
         ? `<div class="settings-row">
             <label class="setting-label">
-              <input type="checkbox" id="edit-toggle" ${editEnabled && !offline ? 'checked' : ''}${offline ? ' disabled' : ''}>
-              <span>Bearbeitungsmodus aktiviert</span>
+              <div class="toggle-slider">
+                <input type="checkbox" id="edit-toggle" ${editEnabled && !offline ? 'checked' : ''}${offline ? ' disabled' : ''}>
+                <span class="slider"></span>
+              </div>
+              <span>✏️ Bearbeitungsmodus</span>
             </label>
             <div class="setting-hint">${offline
               ? 'Im Offline-Modus deaktiviert – wird beim Ausschalten wiederhergestellt'
@@ -1292,6 +1402,11 @@ function openSettings() {
     radio.onchange = () => applyTheme(radio.value);
   }
 
+  // Farbschema-Switcher
+  for (const radio of el.querySelectorAll('input[name="colorscheme"]')) {
+    radio.onchange = () => { applyColorScheme(radio.value); render(); };
+  }
+
   el.hidden = false;
   el.scrollTop = 0;
   document.body.style.overflow = 'hidden';
@@ -1374,6 +1489,36 @@ $('#mode-btn').onclick = e => {
 document.addEventListener('click', e => {
   if (!e.target.closest('#mode-menu') && !e.target.closest('#mode-btn')) {
     $('#mode-menu').hidden = true;
+  }
+});
+
+// Sortier-Button: Menü mit Alphabet / Zubereitungszeit / Zuletzt hinzugefügt
+const SORT_OPTIONS = [
+  ['alpha', '🔤 Alphabetisch'],
+  ['time', '⏱️ Zubereitungszeit'],
+  ['recent', '🆕 Zuletzt hinzugefügt'],
+];
+
+$('#sort-btn').onclick = e => {
+  e.stopPropagation();
+  const menu = $('#sort-menu');
+  if (!menu.hidden) { menu.hidden = true; return; }
+  menu.innerHTML = SORT_OPTIONS.map(([v, l]) =>
+    `<button class="sort-opt${v === sortMode ? ' active' : ''}" data-sort="${v}">${l}</button>`).join('');
+  menu.hidden = false;
+  for (const b of menu.querySelectorAll('.sort-opt')) {
+    b.onclick = () => {
+      sortMode = b.dataset.sort;
+      localStorage.setItem(SORT_KEY, sortMode);
+      menu.hidden = true;
+      render();
+    };
+  }
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sort-menu') && !e.target.closest('#sort-btn')) {
+    $('#sort-menu').hidden = true;
   }
 });
 
@@ -1460,11 +1605,33 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// Nach dem Tippen in ein Textfeld auf iOS wieder rauszoomen, damit man
+// das ganze Bild sieht. Kurzzeitig maximum-scale=1 erzwingt das Zurückzoomen,
+// danach wird Pinch-Zoom wieder erlaubt.
+const VIEWPORT_BASE = 'width=device-width, initial-scale=1, viewport-fit=cover';
+function resetZoom() {
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (!vp) return;
+  vp.setAttribute('content', VIEWPORT_BASE + ', maximum-scale=1');
+  setTimeout(() => vp.setAttribute('content', VIEWPORT_BASE), 350);
+}
+document.addEventListener('focusout', e => {
+  if (e.target && e.target.matches && e.target.matches('input, textarea, select')) {
+    // erst wenn kein anderes Feld direkt den Fokus übernimmt
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (!a || !a.matches || !a.matches('input, textarea, select')) resetZoom();
+    }, 50);
+  }
+});
+
 // Swipe-to-back Geste: von links nach rechts wischen
 let swipeStart = null;
 const swipeTarget = () => $('#detail').hidden ? $('#editor') : $('#detail');
 
 document.addEventListener('pointerdown', (e) => {
+  // Auf der Rezeptübersicht (keine Ansicht offen) gibt es nichts zum Zurückwischen
+  if ($('#detail').hidden && $('#editor').hidden) return;
   if (e.clientX < 50) swipeStart = e.clientX;
 }, false);
 
@@ -1486,13 +1653,15 @@ document.addEventListener('pointermove', (e) => {
     target.style.opacity = Math.max(0.5, 1 - swipeDistance / 300);
   }
 
-  // Wenn genug geswipet wurde: schließen
+  // Wenn genug geswipet wurde: schließen. #detail läuft über die History
+  // (closeOverlay → history.back), damit man auf der richtigen Übersicht landet.
+  // #editor (Einstellungen/Editor) hat keinen History-State → direkt verstecken.
   if (swipeDistance > 100 && e.clientX < 200) {
     swipeStart = null;
     target.style.transform = '';
     target.style.opacity = '';
-    target.hidden = true;
-    document.body.style.overflow = '';
+    if (target.id === 'detail') closeOverlay();
+    else { target.hidden = true; document.body.style.overflow = ''; }
   }
 }, false);
 

@@ -295,6 +295,8 @@ async function saveFromEditor(existingId) {
       bereich: $('#ed-bereich').value,
     };
     if (window.edSelectedGroup) recipe.group = window.edSelectedGroup;
+    // Hinzugefügt-Zeitpunkt: beim Bearbeiten erhalten, bei neuem Rezept jetzt
+    recipe.created = old?.created || new Date().toISOString();
 
     if (old) {
       remote.recipes[remote.recipes.indexOf(old)] = recipe;
