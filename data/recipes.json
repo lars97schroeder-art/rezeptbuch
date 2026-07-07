@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:01:59.253Z",
+  "updated": "2026-07-07T12:02:12.361Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -990,7 +990,9 @@
     {
       "id": "granola",
       "title": "Granola",
-      "category": [],
+      "category": [
+        "Sweet"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥣",
