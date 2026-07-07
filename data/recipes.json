@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:02:12.361Z",
+  "updated": "2026-07-07T12:02:29.565Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1259,7 +1259,10 @@
     {
       "id": "annika-s-san-diego-breakfast-bagel",
       "title": "Annika’s San Diego Breakfast Bagel 🥯",
-      "category": [],
+      "category": [
+        "Ei",
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
