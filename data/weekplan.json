@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T18:57:37.689Z",
+  "updated": "2026-07-07T18:24:33.390Z",
   "days": {
     "mo": [
       "TEXT:Ich hab dich lieb"
@@ -8,7 +8,9 @@
       "TEXT:Ich hab dich auch lieb!!!"
     ],
     "mi": [],
-    "do": [],
+    "do": [
+      "burger"
+    ],
     "fr": [],
     "sa": [],
     "so": []
