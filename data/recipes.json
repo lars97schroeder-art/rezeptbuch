@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T11:47:15.750Z",
+  "updated": "2026-07-07T12:02:29.565Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -753,7 +753,8 @@
       "id": "shakshuka",
       "title": "Shakshuka / Menemen",
       "category": [
-        "Ofen & Pfanne"
+        "Herzhaft",
+        "Ei"
       ],
       "time": "",
       "servings": "",
@@ -912,7 +913,10 @@
     {
       "id": "breakfast-wrap",
       "title": "Breakfast Wrap",
-      "category": [],
+      "category": [
+        "Ei",
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌯",
@@ -938,7 +942,10 @@
     {
       "id": "maxvorstadt-sandwich",
       "title": "Maxvorstadt Sandwich",
-      "category": [],
+      "category": [
+        "Ei",
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥪",
@@ -983,7 +990,9 @@
     {
       "id": "granola",
       "title": "Granola",
-      "category": [],
+      "category": [
+        "Sweet"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥣",
@@ -1010,7 +1019,9 @@
     {
       "id": "bananenbrot",
       "title": "Bananenbrot",
-      "category": "",
+      "category": [
+        "Kuchen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1020,13 +1031,15 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Annika meint Kuchen… pfhhhh 😉😘",
       "bereich": "backen"
     },
     {
       "id": "weisswurst",
       "title": "Weißwurstfrühstück",
-      "category": [],
+      "category": [
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1140,7 +1153,9 @@
     {
       "id": "waffeln",
       "title": "Waffeln",
-      "category": [],
+      "category": [
+        "Sweets"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1244,7 +1259,10 @@
     {
       "id": "annika-s-san-diego-breakfast-bagel",
       "title": "Annika’s San Diego Breakfast Bagel 🥯",
-      "category": [],
+      "category": [
+        "Ei",
+        "Herzhaft"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
