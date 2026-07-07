@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T11:43:14.158Z",
+  "updated": "2026-07-07T11:44:34.956Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1258,7 +1258,9 @@
     {
       "id": "karottenkuchen",
       "title": "Karottenkuchen",
-      "category": [],
+      "category": [
+        "Kuchen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
