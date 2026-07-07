@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T00:56:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T01:05:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -234,6 +234,16 @@ function itemTitle(item) {
   return item.group ? item.group : item.recipe.title;
 }
 
+// Titel ab dem ersten echten Buchstaben — führende Klammern, Emojis, Zahlen
+// usw. werden übersprungen. "(Veggie) Burger" → "Veggie) Burger", "🍕 Pizza"
+// → "Pizza". Wird für Sortierung UND Buchstaben-Divider genutzt, damit beides
+// konsistent ist. Ohne jeden Buchstaben (reiner Emoji-Titel) bleibt das Original.
+function sortableTitle(item) {
+  const t = itemTitle(item);
+  const m = t.match(/\p{L}/u);
+  return m ? t.slice(m.index) : t;
+}
+
 // Führende Zahl aus einer Zeitangabe ("30 Min." → 30); ohne Angabe ans Ende
 function parseTimeMinutes(t) {
   const m = String(t || '').match(/\d+/);
@@ -259,7 +269,7 @@ function itemRecentKey(item) {
 
 function sortItems(items) {
   const arr = items.slice();
-  const byTitle = (a, b) => itemTitle(a).localeCompare(itemTitle(b), 'de');
+  const byTitle = (a, b) => sortableTitle(a).localeCompare(sortableTitle(b), 'de');
   if (sortMode === 'time') {
     arr.sort((a, b) => itemTime(a) - itemTime(b) || byTitle(a, b));
   } else if (sortMode === 'recent') {
@@ -270,12 +280,13 @@ function sortItems(items) {
   return arr;
 }
 
-// Buchstabe für den Divider in der alphabetischen "Alle"-Ansicht
+// Buchstabe für den Divider in der alphabetischen "Alle"-Ansicht.
+// Nutzt den Titel ab dem ersten echten Buchstaben (s. sortableTitle).
 function dividerLetter(item) {
-  let c = (itemTitle(item).trim()[0] || '#').toUpperCase();
+  let c = (sortableTitle(item).trim()[0] || '#').toUpperCase();
   const map = { 'Ä': 'A', 'Ö': 'O', 'Ü': 'U' };
   if (map[c]) c = map[c];
-  if (!/[A-ZÀ-Þ]/.test(c)) c = '#'; // Zahlen/Emojis sammeln sich unter #
+  if (!/[A-ZÀ-Þ]/.test(c)) c = '#'; // reine Emoji-/Zahlen-Titel sammeln sich unter #
   return c;
 }
 
