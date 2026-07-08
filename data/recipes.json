@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:58:01.869Z",
+  "updated": "2026-07-08T07:58:27.604Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1223,7 +1223,7 @@
         "Ofen & Pfanne",
         "Süßes"
       ],
-      "time": "2 Stunden",
+      "time": "",
       "servings": "",
       "emoji": "",
       "image": "data/images/annika-s-pfannkuchen-crepes-1783373617-0.jpg",
@@ -1232,10 +1232,10 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "Süß oder salzig  😋😋😋",
       "bereich": "kochen",
       "created": "2026-07-08T07:40:28.257Z",
-      "updated": "2026-07-08T07:58:01.869Z"
+      "updated": "2026-07-08T07:58:27.604Z"
     },
     {
       "id": "chicken-wings-2",
