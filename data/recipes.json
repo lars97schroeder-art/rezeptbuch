@@ -1,11 +1,13 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:05:28.361Z",
+  "updated": "2026-07-08T08:06:16.631Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
       "title": "Käsespätzle",
-      "category": "Spätzle",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🧀",
@@ -21,13 +23,15 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "group": "Spätzle"
+      "group": "Spätzle",
+      "created": "2026-07-08T07:55:53.497Z",
+      "updated": "2026-07-08T07:56:41.621Z"
     },
     {
       "id": "krautspaetzle",
       "title": "Krautspätzle",
       "category": [
-        "Spätzle"
+        "Zünftig"
       ],
       "time": "",
       "servings": "",
@@ -42,13 +46,15 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "group": "Spätzle"
+      "group": "Spätzle",
+      "created": "2026-07-08T07:56:21.015Z",
+      "updated": "2026-07-08T07:57:23.400Z"
     },
     {
       "id": "spitzkohlspaetzle",
       "title": "Spitzkohlspätzle",
       "category": [
-        "Spätzle"
+        "Zünftig"
       ],
       "time": "",
       "servings": "",
@@ -65,20 +71,28 @@
       "steps": [],
       "notes": "Mit Hack oder Bacon",
       "bereich": "kochen",
-      "group": "Spätzle"
+      "group": "Spätzle",
+      "created": "2026-07-08T07:56:50.733Z",
+      "updated": "2026-07-08T07:56:50.733Z"
     },
     {
       "id": "spaetzle-mit-lauch-und-hack",
       "title": "Spätzle mit Lauch und Hack",
-      "category": "Spätzle",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "group": "Spätzle"
+      "bereich": "kochen",
+      "group": "Spätzle",
+      "created": "2026-07-08T07:56:58.617Z",
+      "updated": "2026-07-08T07:56:58.617Z"
     },
     {
       "id": "basic-bitch-pasta",
@@ -211,14 +225,30 @@
     {
       "id": "tuerkische-pasta",
       "title": "Türkische Pasta",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "data/images/tuerkische-pasta-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/tuerkische-pasta-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Pasta",
+        "Hackfleischhhhhh",
+        "Joghurt",
+        "Butter",
+        "Knoblauch",
+        "Minze (haben wir noch nie benutzt Hahahha)",
+        "Paprikapulver"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T08:06:16.631Z",
+      "updated": "2026-07-08T08:06:16.631Z"
     },
     {
       "id": "kuerbispasta-mit-unternehmensburrata",
@@ -430,18 +460,6 @@
       "notes": ""
     },
     {
-      "id": "chicken-wings",
-      "title": "Chicken Wings",
-      "category": "Streetfood",
-      "time": "",
-      "servings": "",
-      "emoji": "🍗",
-      "image": "data/images/chicken-wings-1783240941.jpg",
-      "ingredients": [],
-      "steps": [],
-      "notes": ""
-    },
-    {
       "id": "spinatknoedel",
       "title": "Spinatknödel",
       "category": "Zünftig",
@@ -501,7 +519,7 @@
     },
     {
       "id": "frikadellen",
-      "title": "Frikadellen",
+      "title": "Frikadellen (Fleischpflanzerl, Buletten…)",
       "category": [
         "Zünftig"
       ],
@@ -515,7 +533,9 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:45:04.158Z",
+      "updated": "2026-07-08T07:45:04.158Z"
     },
     {
       "id": "wuerstelgulasch",
@@ -562,15 +582,23 @@
     },
     {
       "id": "bratwuerste-mit-sauerkraut",
-      "title": "Bratwürste mit Sauerkraut & Püree",
-      "category": "Zünftig",
+      "title": "Nürnbergeli mit Sauerkraut & Kartoffelpüree",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌭",
       "image": "data/images/bratwuerste-mit-sauerkraut-1783240941.jpg",
+      "images": [
+        "data/images/bratwuerste-mit-sauerkraut-1783240941.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:44:34.158Z",
+      "updated": "2026-07-08T07:44:34.158Z"
     },
     {
       "id": "kuerbissuppe",
@@ -815,20 +843,26 @@
     {
       "id": "backcamembert-mit-salat",
       "title": "Backcamembert mit Salat",
-      "category": "Ist das Kochen?",
-      "time": "",
+      "category": [
+        "Ist das Kochen?"
+      ],
+      "time": "15 min",
       "servings": "",
       "emoji": "🧀",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:40:12.275Z",
+      "updated": "2026-07-08T07:40:12.275Z"
     },
     {
       "id": "caesar-salat",
       "title": "Cesar Salat",
       "category": [
-        "Ist das Kochen?"
+        "Salat"
       ],
       "time": "",
       "servings": "",
@@ -841,13 +875,15 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:54:32.716Z",
+      "updated": "2026-07-08T07:54:32.716Z"
     },
     {
       "id": "italienischer-nudelsalat",
       "title": "Italienischer Nudelsalat",
       "category": [
-        "Ist das Kochen?"
+        "Salat"
       ],
       "time": "",
       "servings": "",
@@ -864,13 +900,15 @@
       ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:54:15.917Z",
+      "updated": "2026-07-08T07:54:15.917Z"
     },
     {
       "id": "couscous-salat",
       "title": "Couscous-Salat",
       "category": [
-        "Ist das Kochen?"
+        "Salat"
       ],
       "time": "",
       "servings": "",
@@ -882,7 +920,9 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:54:43.551Z",
+      "updated": "2026-07-08T07:54:43.551Z"
     },
     {
       "id": "italienisches-baguette",
@@ -913,6 +953,25 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
+    },
+    {
+      "id": "hot-dogs",
+      "title": "Hot Dogs",
+      "category": [
+        "Ist das Kochen?",
+        "Streetfood"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🌭",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:50:51.507Z",
+      "updated": "2026-07-08T07:50:51.507Z"
     },
     {
       "id": "breakfast-wrap",
@@ -1176,7 +1235,10 @@
     {
       "id": "annika-s-pfannkuchen-crepes",
       "title": "Annika’s Pfannkuchen (Crepes 😉)",
-      "category": [],
+      "category": [
+        "Ofen & Pfanne",
+        "Süßes"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1186,13 +1248,17 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
-      "bereich": "kochen"
+      "notes": "Süß oder salzig  😋😋😋",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:40:28.257Z",
+      "updated": "2026-07-08T07:58:27.604Z"
     },
     {
       "id": "chicken-wings-2",
       "title": "Chicken Wings",
-      "category": [],
+      "category": [
+        "Streetfood"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1204,7 +1270,9 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:53:34.859Z",
+      "updated": "2026-07-08T07:54:04.347Z"
     },
     {
       "id": "weihnachtsgans",
@@ -1292,6 +1360,29 @@
       "steps": [],
       "notes": "Aka Annika’s Geburtstagskuchen ♥️",
       "bereich": "backen"
+    },
+    {
+      "id": "griechischer-salat",
+      "title": "Griechischer Salat",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🇬🇷",
+      "image": "",
+      "images": [],
+      "ingredients": [
+        "Tomate",
+        "Gurke",
+        "Fetaaaa",
+        "Zwiebeln"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:52:18.006Z",
+      "updated": "2026-07-08T07:52:18.006Z"
     }
   ]
 }
