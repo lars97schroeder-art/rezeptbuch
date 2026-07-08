@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T09:07:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T09:18:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -590,7 +590,12 @@ function openTinder() {
   history.pushState({ view: 'tinder' }, '');
 }
 
+// Welche Woche gerade im Wochenplan angezeigt wird (Standard: aktuelle Woche)
+let weekplanViewDate = new Date();
+let weekplanViewKey = null;
+
 function openWeekplan() {
+  weekplanViewDate = new Date(); // beim Öffnen immer zurück auf die laufende Woche
   renderWeekplan();
   history.pushState({ view: 'weekplan' }, '');
 }
@@ -598,49 +603,64 @@ function openWeekplan() {
 const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
 const WEEKPLAN_UPDATED_KEY = 'rezeptbuch-weekplan-updated';
 
-function getWeekplan() {
-  try {
-    const stored = localStorage.getItem(WEEKPLAN_KEY);
-    if (!stored) {
-      return { mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] };
-    }
-    const plan = JSON.parse(stored);
-    // Konvertiere alte String-Format zu Array-Format
-    const converted = {};
-    for (const key in plan) {
-      if (Array.isArray(plan[key])) {
-        converted[key] = plan[key];
-      } else if (plan[key]) {
-        converted[key] = [plan[key]];
-      } else {
-        converted[key] = [];
-      }
-    }
-    return converted;
-  } catch (e) {
-    return { mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] };
+const emptyDays = () => ({ mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] });
+
+// Alte String-Werte zu Arrays normalisieren
+function normalizeDays(plan) {
+  const days = emptyDays();
+  for (const k in days) {
+    const v = plan ? plan[k] : null;
+    days[k] = Array.isArray(v) ? v : (v ? [v] : []);
   }
+  return days;
 }
 
-function saveWeekplan(plan) {
-  localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(plan));
-  // Daten-Timestamp der Wochenplan-Einträge (ISO, gleiche Logik wie bei den Rezepten)
+// Alle Wochen als { "2026-W28": {mo:[],...}, ... }.
+// Migriert das alte Einzelwochen-Format in die aktuelle Woche.
+function getAllWeekplans() {
+  try {
+    const raw = localStorage.getItem(WEEKPLAN_KEY);
+    if (!raw) return {};
+    const stored = JSON.parse(raw);
+    if (stored && stored.weeks) return stored.weeks;
+    if (stored && ('mo' in stored || 'di' in stored)) return { [weekKey()]: normalizeDays(stored) };
+    return {};
+  } catch (e) { return {}; }
+}
+
+function persistWeekplans(weeks) {
+  localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, new Date().toISOString());
 }
 
+// Tage einer bestimmten Woche
+function getWeekplanFor(key) {
+  return normalizeDays(getAllWeekplans()[key]);
+}
+
+// Eine Woche speichern (setzt auch den Daten-Timestamp, wie bei den Rezepten)
+function saveWeekplanFor(key, days) {
+  const weeks = getAllWeekplans();
+  weeks[key] = days;
+  persistWeekplans(weeks);
+}
+
+// Bequemer Wrapper: speichert in die gerade angezeigte Woche
+function saveWeekplan(days) {
+  saveWeekplanFor(weekplanViewKey, days);
+}
+
 /* Wochenplan-Sync über GitHub (data/weekplan.json):
-   Speichern lädt den Plan hoch, beim Öffnen wird der neueste Stand geholt.
-   Neuester ISO-Timestamp gewinnt. */
+   Speichern lädt alle Wochen hoch, beim Öffnen wird der neueste Stand geholt.
+   Neuester ISO-Timestamp gewinnt (ganze Datei). */
 
 async function fetchRemoteWeekplan() {
-  // Mit Token: direkt über die GitHub-API (sofort aktuell, kein Pages-Cache)
   if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
     try {
       const info = await ghGet('data/weekplan.json');
       return JSON.parse(utf8b64(info.content));
     } catch (e) { /* Datei existiert evtl. noch nicht */ }
   }
-  // Ohne Token: über GitHub Pages (kann ein paar Minuten hinterherhängen)
   try {
     const res = await fetch('data/weekplan.json?t=' + Date.now(), { cache: 'no-store' });
     if (res.ok) return await res.json();
@@ -648,27 +668,36 @@ async function fetchRemoteWeekplan() {
   return null;
 }
 
+// Remote-Struktur → Wochen-Map (migriert altes { days }-Format in die aktuelle Woche)
+function remoteToWeeks(remote) {
+  if (!remote) return null;
+  if (remote.weeks) return remote.weeks;
+  if (remote.days) return { [weekKey()]: normalizeDays(remote.days) };
+  return null;
+}
+
 // Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
 async function syncWeekplanFromRemote() {
   const remote = await fetchRemoteWeekplan();
-  if (!remote || !remote.days) return false;
+  const weeks = remoteToWeeks(remote);
+  if (!weeks) return false;
   const localUpdated = new Date(localStorage.getItem(WEEKPLAN_UPDATED_KEY)).getTime() || 0;
   const remoteUpdated = new Date(remote.updated).getTime() || 0;
   if (remoteUpdated > localUpdated) {
-    localStorage.setItem(WEEKPLAN_KEY, JSON.stringify(remote.days));
+    localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
     localStorage.setItem(WEEKPLAN_UPDATED_KEY, remote.updated);
     return true;
   }
   return false;
 }
 
-// Lädt den lokalen Plan zu GitHub hoch, damit andere Geräte ihn sehen
-async function uploadWeekplan(plan) {
+// Lädt ALLE lokalen Wochen zu GitHub hoch, damit andere Geräte sie sehen
+async function uploadWeekplan() {
   if (typeof ghToken !== 'function' || !ghToken()) {
     toast('💾 Nur lokal gespeichert (kein Token auf diesem Gerät)');
     return;
   }
-  const payload = { updated: new Date().toISOString(), days: plan };
+  const payload = { updated: new Date().toISOString(), weeks: getAllWeekplans() };
   let sha;
   try { sha = (await ghGet('data/weekplan.json')).sha; } catch (e) { /* erste Übertragung */ }
   await ghPut('data/weekplan.json', b64utf8(JSON.stringify(payload, null, 2)),
@@ -677,14 +706,15 @@ async function uploadWeekplan(plan) {
   toast('✅ Wochenplan gespeichert & geteilt');
 }
 
-// HTML für einen Wochenplan-Eintrag — immer mit X-Button zum Entfernen
+// HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept)
 function weekplanTagHTML(entry, displayName, dayKey) {
+  const isRecipe = !entry.startsWith('TEXT:');
   return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
-    `<span class="weekplan-tag-text">${esc(displayName)}</span>` +
+    `<span class="weekplan-tag-text${isRecipe ? ' clickable' : ''}">${esc(displayName)}</span>` +
     `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button></span>`;
 }
 
-// X-Button-Handler: Eintrag entfernen und sofort speichern
+// Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen öffnet das Rezept
 function attachTagHandlers(selectedDiv, weekplan) {
   for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
     removeBtn.onclick = (e) => {
@@ -701,21 +731,49 @@ function attachTagHandlers(selectedDiv, weekplan) {
       }
     };
   }
+  for (const textEl of selectedDiv.querySelectorAll('.weekplan-tag-text.clickable')) {
+    const entry = textEl.closest('.weekplan-tag')?.dataset.entry;
+    textEl.onclick = () => {
+      if (entry && data.recipes.some(r => r.id === entry)) openRecipe(entry);
+    };
+  }
 }
 
-// Aktuelle Kalenderwoche nach ISO 8601 (deutsche Zählweise: KW beginnt montags)
-function isoKalenderwoche(d = new Date()) {
+// ISO-8601-Wochendaten (Woche beginnt montags; der Donnerstag bestimmt Jahr + KW)
+function weekInfo(d = new Date()) {
   const date = new Date(d);
   date.setHours(0, 0, 0, 0);
-  // Auf den Donnerstag derselben Woche schieben (der bestimmt die KW)
   date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
   const week1 = new Date(date.getFullYear(), 0, 4);
-  return 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  const week = 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  return { year: date.getFullYear(), week };
+}
+
+function isoKalenderwoche(d = new Date()) { return weekInfo(d).week; }
+
+// Eindeutiger Wochenschlüssel, z. B. "2026-W28"
+function weekKey(d = new Date()) {
+  const { year, week } = weekInfo(d);
+  return year + '-W' + String(week).padStart(2, '0');
+}
+
+// Montag der Woche zu einem Datum
+function mondayOf(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  return date;
 }
 
 function renderWeekplan(skipSync = false) {
   const el = $('#detail');
-  const weekplan = getWeekplan();
+  weekplanViewKey = weekKey(weekplanViewDate);
+  const weekplan = getWeekplanFor(weekplanViewKey);
+  const istAktuelleWoche = weekplanViewKey === weekKey();
+  const mon = mondayOf(weekplanViewDate);
+  const son = new Date(mon); son.setDate(son.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+  const rangeText = `${fmt(mon)} – ${fmt(son)}`;
   const days = [
     { key: 'mo', label: 'Montag' },
     { key: 'di', label: 'Dienstag' },
@@ -761,10 +819,14 @@ function renderWeekplan(skipSync = false) {
 
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
-    <div class="detail-body group-body">
-      <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <h2>📅 Wochenplan</h2>
-        <span style="color: var(--muted); font-weight: 600; font-size: 14px;">KW ${isoKalenderwoche()}</span>
+    <div class="detail-body group-body weekplan-body">
+      <div class="weekplan-header">
+        <button class="weekplan-nav" data-dir="-1" aria-label="Woche zurück">‹</button>
+        <div class="weekplan-weektitle">
+          <div class="weekplan-kw">📅 KW ${isoKalenderwoche(weekplanViewDate)}${istAktuelleWoche ? ' <span class="weekplan-now">jetzt</span>' : ''}</div>
+          <div class="weekplan-range">${rangeText}</div>
+        </div>
+        <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
       <div class="weekplan-container">
         ${daysHTML}
@@ -773,6 +835,15 @@ function renderWeekplan(skipSync = false) {
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
+
+  // Wochen-Navigation: eine Woche zurück/vor, gleiche Ansicht neu zeichnen
+  for (const navBtn of el.querySelectorAll('.weekplan-nav')) {
+    navBtn.onclick = () => {
+      weekplanViewDate = new Date(weekplanViewDate);
+      weekplanViewDate.setDate(weekplanViewDate.getDate() + 7 * Number(navBtn.dataset.dir));
+      renderWeekplan(true);
+    };
+  }
 
   // Autocomplete Setup
   for (const dayEl of el.querySelectorAll('.weekplan-autocomplete')) {
@@ -867,11 +938,11 @@ function renderWeekplan(skipSync = false) {
     attachTagHandlers(selectedDiv, weekplan);
   }
 
-  // Save Button: lokal speichern UND zu GitHub hochladen (für das andere Gerät)
+  // Save Button: lokal speichern UND alle Wochen zu GitHub hochladen (für das andere Gerät)
   el.querySelector('.weekplan-save-btn').onclick = async () => {
     saveWeekplan(weekplan);
     try {
-      await uploadWeekplan(weekplan);
+      await uploadWeekplan();
     } catch (e) {
       console.log('Wochenplan-Upload fehlgeschlagen:', e);
       toast('⚠️ Lokal gespeichert, Teilen fehlgeschlagen (offline?)');

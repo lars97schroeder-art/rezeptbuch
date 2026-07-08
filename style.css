@@ -677,18 +677,49 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 /* ---------- Rezept-Tinder ---------- */
 
 .tinder {
-  max-width: 460px;
-  margin: 0 auto;
+  position: relative;
+  width: 100%;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: calc(env(safe-area-inset-top) + 66px) 20px calc(env(safe-area-inset-bottom) + 20px);
+}
+
+/* Bunter, lebendiger Hintergrund (folgt dem Farbschema, dezent animiert) */
+.tinder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 22% 8%, rgba(255, 255, 255, 0.38), transparent 55%),
+    radial-gradient(circle at 88% 98%, rgba(0, 0, 0, 0.22), transparent 55%),
+    var(--accent);
+  animation: tinderShift 8s ease-in-out infinite alternate;
+}
+@keyframes tinderShift {
+  from { filter: saturate(1) hue-rotate(0deg); }
+  to { filter: saturate(1.2) hue-rotate(10deg); }
+}
+
+/* Inhalt zentriert über dem Hintergrund */
+.tinder > * {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+}
+
+html.color-rainbow .tinder::before {
+  background: linear-gradient(160deg, #e53935, #fb8c00, #fdd835, #43a047, #1e88e5, #8e24aa);
 }
 
 .tinder-status {
   text-align: center;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
   font-size: 14px;
   margin-bottom: 14px;
 }
@@ -915,7 +946,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .tinder-hint {
   text-align: center;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
 }
 
@@ -1714,30 +1745,86 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 /* Wochenplan */
+/* Wochen-Navigation oben: ‹ KW › mit Datumsbereich */
+.weekplan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+
+.weekplan-nav {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.weekplan-nav:active { transform: scale(0.88); }
+
+.weekplan-weektitle { flex: 1; text-align: center; }
+.weekplan-kw {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.weekplan-now {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.weekplan-range { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
 .weekplan-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 20px 0;
+  gap: 10px;
+  margin: 0 0 8px;
 }
 
 .weekplan-day {
   display: grid;
-  grid-template-columns: 100px 1fr;
+  grid-template-columns: 96px 1fr;
   gap: 12px;
-  align-items: flex-start;
+  align-items: start;
   padding: 12px;
-  background: var(--bg);
-  border-radius: 8px;
-  border: 1px solid #e0d5c7;
+  background: var(--card);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .weekplan-label {
-  font-weight: 600;
-  color: var(--text);
-  font-size: 14px;
+  justify-self: start;
+  align-self: start;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 5px 12px;
   white-space: nowrap;
-  margin-top: 4px;
 }
 
 .weekplan-autocomplete {
@@ -1748,20 +1835,15 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .weekplan-input-row {
   display: flex;
-  gap: 0;
   align-items: stretch;
   position: relative;
 }
 
 @media (max-width: 480px) {
-  /* Auf dem Handy: Tages-Label über dem Eingabefeld statt daneben,
-     damit das Feld die volle Breite bekommt und nichts rausragt */
+  /* Auf dem Handy: Tages-Label über dem Eingabefeld */
   .weekplan-day {
     grid-template-columns: 1fr;
-    gap: 6px;
-  }
-  .weekplan-label {
-    margin-top: 0;
+    gap: 8px;
   }
 }
 
@@ -1769,24 +1851,21 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: 10px 12px;
-  padding-right: 45px;
-  border: 1px solid #d0c5b9;
-  border-radius: 6px;
-  background: var(--card);
+  padding: 10px 45px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
   color: var(--text);
   font-size: 16px;
   font-family: inherit;
 }
 
-.weekplan-search::placeholder {
-  color: var(--muted);
-}
+.weekplan-search::placeholder { color: var(--muted); }
 
 .weekplan-search:focus {
   outline: none;
-  border-color: #e8590c;
-  box-shadow: 0 0 0 2px rgba(232, 89, 12, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .weekplan-add-btn {
@@ -1798,24 +1877,15 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   height: 36px;
   padding: 0;
   border: none;
-  background: none;
-  border-radius: 6px;
-  background: var(--card);
+  border-radius: 8px;
+  background: var(--accent-soft);
   color: var(--accent);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.1s;
 }
-
-.weekplan-add-btn:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-}
-
-.weekplan-add-btn:active {
-  transform: scale(0.95);
-}
+.weekplan-add-btn:active { transform: translateY(-50%) scale(0.9); }
 
 .weekplan-suggestions {
   position: absolute;
@@ -1823,23 +1893,15 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   left: 0;
   right: 0;
   background: var(--card);
-  border: 1px solid #d0c5b9;
+  border: 1px solid var(--border);
   border-top: none;
-  border-radius: 0 0 6px 6px;
+  border-radius: 0 0 10px 10px;
   max-height: 250px;
   overflow-y: auto;
   z-index: 100;
-  visibility: visible;
-  height: auto;
-  opacity: 1;
+  box-shadow: var(--shadow);
 }
-
-.weekplan-suggestions[hidden] {
-  visibility: hidden;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
+.weekplan-suggestions[hidden] { display: none; }
 
 .weekplan-suggestion {
   padding: 10px 12px;
@@ -1848,73 +1910,68 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   cursor: pointer;
   transition: background 0.15s;
 }
-
-.weekplan-suggestion:hover {
-  background: #f5f0ea;
-}
+.weekplan-suggestion:hover { background: var(--accent-soft); }
 
 .weekplan-selected {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
-  min-height: 24px;
+  margin-top: 10px;
 }
 
 .weekplan-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: #e8590c;
-  color: white;
-  border-radius: 20px;
+  padding: 6px 8px 6px 12px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   max-width: 100%;
 }
 
 .weekplan-tag-text {
-  /* Lange Rezeptnamen brechen um statt rechts rauszulaufen */
   overflow-wrap: anywhere;
   min-width: 0;
 }
+.weekplan-tag-text.clickable { cursor: pointer; }
 
 .weekplan-tag-remove {
-  background: none;
+  background: rgba(255, 255, 255, 0.25);
   border: none;
-  color: white;
+  color: #fff;
   cursor: pointer;
-  padding: 2px 4px;
-  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 13px;
   line-height: 1;
   display: flex;
   align-items: center;
-  transition: opacity 0.2s;
+  justify-content: center;
   flex-shrink: 0;
+  transition: background 0.2s;
 }
-
-.weekplan-tag-remove:hover {
-  opacity: 0.7;
-}
+.weekplan-tag-remove:hover { background: rgba(255, 255, 255, 0.45); }
 
 .weekplan-save-btn {
   width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  background: #e8590c;
-  color: white;
+  padding: 15px;
+  margin-top: 14px;
+  background: var(--accent);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.1s, filter 0.2s;
+  box-shadow: 0 6px 18px var(--accent-soft);
 }
-
-.weekplan-save-btn:active {
-  background: #d04708;
-}
+.weekplan-save-btn:active { transform: scale(0.99); filter: brightness(0.92); }
 
 /* Token Share Modal */
 .token-share-modal {
