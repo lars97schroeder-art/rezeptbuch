@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:56:50.733Z",
+  "updated": "2026-07-08T07:56:58.617Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -78,15 +78,21 @@
     {
       "id": "spaetzle-mit-lauch-und-hack",
       "title": "Spätzle mit Lauch und Hack",
-      "category": "Spätzle",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "group": "Spätzle"
+      "bereich": "kochen",
+      "group": "Spätzle",
+      "created": "2026-07-08T07:56:58.617Z",
+      "updated": "2026-07-08T07:56:58.617Z"
     },
     {
       "id": "basic-bitch-pasta",
