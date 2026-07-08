@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:56:41.621Z",
+  "updated": "2026-07-08T07:56:50.733Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -54,7 +54,7 @@
       "id": "spitzkohlspaetzle",
       "title": "Spitzkohlspätzle",
       "category": [
-        "Spätzle"
+        "Zünftig"
       ],
       "time": "",
       "servings": "",
@@ -71,7 +71,9 @@
       "steps": [],
       "notes": "Mit Hack oder Bacon",
       "bereich": "kochen",
-      "group": "Spätzle"
+      "group": "Spätzle",
+      "created": "2026-07-08T07:56:50.733Z",
+      "updated": "2026-07-08T07:56:50.733Z"
     },
     {
       "id": "spaetzle-mit-lauch-und-hack",
