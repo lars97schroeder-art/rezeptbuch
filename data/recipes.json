@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:05:28.361Z",
+  "updated": "2026-07-08T07:40:12.276Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -815,14 +815,20 @@
     {
       "id": "backcamembert-mit-salat",
       "title": "Backcamembert mit Salat",
-      "category": "Ist das Kochen?",
-      "time": "",
+      "category": [
+        "Ist das Kochen?"
+      ],
+      "time": "15 min",
       "servings": "",
       "emoji": "🧀",
       "image": "",
+      "images": [],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:40:12.275Z",
+      "updated": "2026-07-08T07:40:12.275Z"
     },
     {
       "id": "caesar-salat",
