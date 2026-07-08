@@ -1,12 +1,12 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:56:21.015Z",
+  "updated": "2026-07-08T07:56:32.967Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
       "title": "Käsespätzle",
       "category": [
-        "Pasta & Gnocchi"
+        "Zünftig"
       ],
       "time": "",
       "servings": "",
@@ -25,7 +25,7 @@
       "bereich": "kochen",
       "group": "Spätzle",
       "created": "2026-07-08T07:55:53.497Z",
-      "updated": "2026-07-08T07:55:53.497Z"
+      "updated": "2026-07-08T07:56:32.967Z"
     },
     {
       "id": "krautspaetzle",
