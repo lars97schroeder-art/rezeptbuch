@@ -1847,6 +1847,12 @@ html.color-rainbow .tinder::before {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+  /* Dünner Trennstrich unter dem Wochentag, grenzt ihn von den Rezepten darunter ab */
+  .weekplan-label {
+    justify-self: stretch;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
 }
 
 .weekplan-search {
@@ -1922,17 +1928,7 @@ html.color-rainbow .tinder::before {
 /* Einträge stehen jetzt oben — Abstand nur, wenn welche da sind */
 .weekplan-selected:not(:empty) { margin-bottom: 10px; }
 
-/* Vergangene Wochen: nur ansehen, ausgegraut */
-.weekplan-readonly-hint {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--accent-soft);
-  border-radius: 10px;
-  padding: 8px 12px;
-  margin: -4px 0 14px;
-}
+/* Vergangene Wochen: nur ansehen — Ausgrauen signalisiert das bereits */
 .weekplan-body.readonly .weekplan-day { opacity: 0.55; }
 
 .weekplan-tag {

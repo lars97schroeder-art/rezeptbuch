@@ -295,9 +295,13 @@ async function saveFromEditor(existingId) {
       bereich: $('#ed-bereich').value,
     };
     if (window.edSelectedGroup) recipe.group = window.edSelectedGroup;
-    // Hinzugefügt-Zeitpunkt: beim Bearbeiten erhalten, bei neuem Rezept jetzt.
+    // Hinzugefügt-Zeitpunkt: nur bei wirklich neuem Rezept setzen. Bestehende
+    // Rezepte ohne created (ältere Bestandsrezepte) bekommen KEIN created,
+    // sonst würde ein simples Bearbeiten fälschlich als "Neu" statt "Update"
+    // markiert werden (created wäre sonst "jetzt" gewesen).
+    if (!old) recipe.created = new Date().toISOString();
+    else if (old.created) recipe.created = old.created;
     // Geändert-Zeitpunkt: immer jetzt — steuert den Neu/Update-Hinweis (1 Tag).
-    recipe.created = old?.created || new Date().toISOString();
     recipe.updated = new Date().toISOString();
 
     if (old) {

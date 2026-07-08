@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T09:27:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T18:59:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -835,7 +835,6 @@ function renderWeekplan(skipSync = false) {
         </div>
         <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
-      ${readonly ? '<div class="weekplan-readonly-hint">🔒 Vergangene Woche – nur zum Ansehen</div>' : ''}
       <div class="weekplan-container">
         ${daysHTML}
       </div>
