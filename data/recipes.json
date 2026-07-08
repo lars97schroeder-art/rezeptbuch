@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:52:18.007Z",
+  "updated": "2026-07-08T07:53:34.860Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1229,7 +1229,9 @@
     {
       "id": "chicken-wings-2",
       "title": "Chicken Wings",
-      "category": [],
+      "category": [
+        "Streetfood"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -1241,7 +1243,9 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:53:34.859Z",
+      "updated": "2026-07-08T07:53:34.859Z"
     },
     {
       "id": "weihnachtsgans",
