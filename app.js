@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T09:18:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T09:27:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -706,12 +706,14 @@ async function uploadWeekplan() {
   toast('✅ Wochenplan gespeichert & geteilt');
 }
 
-// HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept)
-function weekplanTagHTML(entry, displayName, dayKey) {
+// HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept).
+// In vergangenen Wochen (readonly) entfällt der X-Button zum Entfernen.
+function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
   const isRecipe = !entry.startsWith('TEXT:');
   return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
     `<span class="weekplan-tag-text${isRecipe ? ' clickable' : ''}">${esc(displayName)}</span>` +
-    `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button></span>`;
+    (readonly ? '' : `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button>`) +
+    `</span>`;
 }
 
 // Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen öffnet das Rezept
@@ -770,6 +772,8 @@ function renderWeekplan(skipSync = false) {
   weekplanViewKey = weekKey(weekplanViewDate);
   const weekplan = getWeekplanFor(weekplanViewKey);
   const istAktuelleWoche = weekplanViewKey === weekKey();
+  // Vergangene Wochen sind nur zum Ansehen (Wochenschlüssel sind chronologisch vergleichbar)
+  const readonly = weekplanViewKey < weekKey();
   const mon = mondayOf(weekplanViewDate);
   const son = new Date(mon); son.setDate(son.getDate() + 6);
   const fmt = d => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
@@ -799,27 +803,30 @@ function renderWeekplan(skipSync = false) {
       }
 
       if (displayName) {
-        tagsHTML += weekplanTagHTML(entry, displayName, day.key);
+        tagsHTML += weekplanTagHTML(entry, displayName, day.key, readonly);
       }
     }
 
+    // Reihenfolge: erst die Einträge, darunter das Eingabefeld (in vergangenen
+    // Wochen entfällt das Eingabefeld komplett — nur ansehen)
     daysHTML += `
       <div class="weekplan-day" data-day="${day.key}">
         <label class="weekplan-label">${day.label}</label>
         <div class="weekplan-autocomplete" data-day="${day.key}">
+          <div class="weekplan-selected">${tagsHTML}</div>
+          ${readonly ? '' : `
           <div class="weekplan-input-row">
-            <input type="text" class="weekplan-search" placeholder="Rezept suchen..." autocomplete="off">
+            <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
             <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
           </div>
-          <div class="weekplan-suggestions" hidden></div>
-          <div class="weekplan-selected">${tagsHTML}</div>
+          <div class="weekplan-suggestions" hidden></div>`}
         </div>
       </div>`;
   }
 
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
-    <div class="detail-body group-body weekplan-body">
+    <div class="detail-body group-body weekplan-body${readonly ? ' readonly' : ''}">
       <div class="weekplan-header">
         <button class="weekplan-nav" data-dir="-1" aria-label="Woche zurück">‹</button>
         <div class="weekplan-weektitle">
@@ -828,10 +835,11 @@ function renderWeekplan(skipSync = false) {
         </div>
         <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
+      ${readonly ? '<div class="weekplan-readonly-hint">🔒 Vergangene Woche – nur zum Ansehen</div>' : ''}
       <div class="weekplan-container">
         ${daysHTML}
       </div>
-      <button class="weekplan-save-btn">💾 Speichern & teilen</button>
+      ${readonly ? '' : '<button class="weekplan-save-btn">💾 Speichern & teilen</button>'}
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -848,10 +856,15 @@ function renderWeekplan(skipSync = false) {
   // Autocomplete Setup
   for (const dayEl of el.querySelectorAll('.weekplan-autocomplete')) {
     const dayKey = dayEl.dataset.day;
+    const selectedDiv = dayEl.querySelector('.weekplan-selected');
+    // Tag-Klicks (Rezept öffnen) und X-Entfernen — auch in vergangenen Wochen
+    // öffnen Rezept-Klicks das Rezept (nur X/Eingabe entfallen)
+    attachTagHandlers(selectedDiv, weekplan);
+
     const searchInput = dayEl.querySelector('.weekplan-search');
+    if (!searchInput) continue; // Vergangene Woche: kein Eingabefeld
     const addBtn = dayEl.querySelector('.weekplan-add-btn');
     const suggestionsDiv = dayEl.querySelector('.weekplan-suggestions');
-    const selectedDiv = dayEl.querySelector('.weekplan-selected');
 
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
@@ -872,12 +885,11 @@ function renderWeekplan(skipSync = false) {
         return;
       }
 
-      // Zeige Vorschläge
-      suggestionsDiv.innerHTML = matches.map(r => `
-        <div class="weekplan-suggestion" data-id="${esc(r.id)}">
-          ${emojiFor(r)} ${esc(titleWithEmoji(r))}
-        </div>
-      `).join('');
+      // Zeige Vorschläge (kein Whitespace/Zeilenumbrüche → keine leere Zeile,
+      // emojiFor liefert schon das Emoji, daher nur der reine Titel dahinter)
+      suggestionsDiv.innerHTML = matches.map(r =>
+        `<div class="weekplan-suggestion" data-id="${esc(r.id)}">${emojiFor(r)} ${esc(r.title)}</div>`
+      ).join('');
       suggestionsDiv.hidden = false;
 
       // Click Handler für Vorschläge
@@ -933,13 +945,11 @@ function renderWeekplan(skipSync = false) {
     });
 
     // Rauszoomen nach dem Tippen übernimmt der globale focusout-Handler
-
-    // Attach handlers für bestehende Tags
-    attachTagHandlers(selectedDiv, weekplan);
   }
 
-  // Save Button: lokal speichern UND alle Wochen zu GitHub hochladen (für das andere Gerät)
-  el.querySelector('.weekplan-save-btn').onclick = async () => {
+  // Save Button: lokal speichern UND alle Wochen zu GitHub hochladen (fehlt in vergangenen Wochen)
+  const saveBtn = el.querySelector('.weekplan-save-btn');
+  if (saveBtn) saveBtn.onclick = async () => {
     saveWeekplan(weekplan);
     try {
       await uploadWeekplan();
