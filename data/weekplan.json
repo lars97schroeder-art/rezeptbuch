@@ -1,18 +1,47 @@
 {
-  "updated": "2026-07-07T18:24:33.390Z",
-  "days": {
-    "mo": [
-      "TEXT:Ich hab dich lieb"
-    ],
-    "di": [
-      "TEXT:Ich hab dich auch lieb!!!"
-    ],
-    "mi": [],
-    "do": [
-      "burger"
-    ],
-    "fr": [],
-    "sa": [],
-    "so": []
+  "updated": "2026-07-08T07:36:31.718Z",
+  "weeks": {
+    "2026-W28": {
+      "mo": [
+        "TEXT:Ich hab dich lieb"
+      ],
+      "di": [
+        "TEXT:Ich hab dich auch lieb!!!"
+      ],
+      "mi": [],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": []
+    },
+    "2026-W32": {
+      "mo": [],
+      "di": [],
+      "mi": [],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": []
+    },
+    "2026-W33": {
+      "mo": [
+        "TEXT:Heyyyy"
+      ],
+      "di": [],
+      "mi": [],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": []
+    },
+    "2026-W31": {
+      "mo": [],
+      "di": [],
+      "mi": [],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": []
+    }
   }
 }
