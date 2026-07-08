@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:44:34.159Z",
+  "updated": "2026-07-08T07:45:04.158Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -501,7 +501,7 @@
     },
     {
       "id": "frikadellen",
-      "title": "Frikadellen",
+      "title": "Frikadellen (Fleischpflanzerl, Buletten…)",
       "category": [
         "Zünftig"
       ],
@@ -515,7 +515,9 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:45:04.158Z",
+      "updated": "2026-07-08T07:45:04.158Z"
     },
     {
       "id": "wuerstelgulasch",
