@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:56:32.967Z",
+  "updated": "2026-07-08T07:56:41.621Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -25,7 +25,7 @@
       "bereich": "kochen",
       "group": "Spätzle",
       "created": "2026-07-08T07:55:53.497Z",
-      "updated": "2026-07-08T07:56:32.967Z"
+      "updated": "2026-07-08T07:56:41.621Z"
     },
     {
       "id": "krautspaetzle",
