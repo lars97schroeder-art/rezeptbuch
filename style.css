@@ -1862,7 +1862,13 @@ html.color-rainbow .tinder::before {
   align-items: start;
   transition: opacity 0.15s;
 }
-.weekplan-day.day-off .weekplan-day-inner { opacity: 0.4; }
+.weekplan-day.day-off .weekplan-day-inner { opacity: 0.5; align-items: center; }
+
+.weekplan-off-hint {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+}
 
 /* Ausblenden-Knopf oben rechts an der Tages-Karte (wie die Neu/Update-Badges) */
 .weekplan-day-toggle {

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T19:14:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T19:22:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -840,38 +840,45 @@ function renderWeekplan(skipSync = false) {
     const isOff = (weekplan.off || []).includes(day.key);
     let tagsHTML = '';
 
-    for (const entry of entries) {
-      let displayName = '';
-      if (entry.startsWith('TEXT:')) {
-        displayName = entry.substring(5);
-      } else {
-        const recipe = data.recipes.find(r => r.id === entry);
-        displayName = recipe ? titleWithEmoji(recipe) : '';
-      }
+    // Ausgeblendete Tage zeigen weder Einträge noch das Eingabefeld — die
+    // Einträge bleiben aber in weekplan[day.key] unangetastet gespeichert und
+    // erscheinen beim Wiedereinblenden unverändert erneut.
+    if (!isOff) {
+      for (const entry of entries) {
+        let displayName = '';
+        if (entry.startsWith('TEXT:')) {
+          displayName = entry.substring(5);
+        } else {
+          const recipe = data.recipes.find(r => r.id === entry);
+          displayName = recipe ? titleWithEmoji(recipe) : '';
+        }
 
-      if (displayName) {
-        tagsHTML += weekplanTagHTML(entry, displayName, day.key, readonly);
+        if (displayName) {
+          tagsHTML += weekplanTagHTML(entry, displayName, day.key, readonly);
+        }
       }
     }
 
     // Reihenfolge: erst die Einträge, darunter das Eingabefeld (in vergangenen
-    // Wochen entfällt das Eingabefeld komplett — nur ansehen). Ausgeblendete
-    // Tage (isOff) werden gedimmt; der Umschalt-Knopf selbst bleibt oben
-    // rechts an der Karte immer voll sichtbar (eigener Layer, nicht gedimmt).
+    // Wochen entfällt das Eingabefeld komplett — nur ansehen). Der
+    // Umschalt-Knopf selbst bleibt oben rechts an der Karte immer voll
+    // sichtbar (eigener Layer, nicht gedimmt).
     daysHTML += `
       <div class="weekplan-day${isOff ? ' day-off' : ''}" data-day="${day.key}">
         ${readonly ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
         <div class="weekplan-day-inner">
           <label class="weekplan-label">${day.label}</label>
-          <div class="weekplan-autocomplete" data-day="${day.key}">
-            <div class="weekplan-selected">${tagsHTML}</div>
-            ${readonly ? '' : `
-            <div class="weekplan-input-row">
-              <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
-              <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
-            </div>
-            <div class="weekplan-suggestions" hidden></div>`}
-          </div>
+          ${isOff
+            ? `<div class="weekplan-off-hint">🔕 Ausgeblendet</div>`
+            : `<div class="weekplan-autocomplete" data-day="${day.key}">
+                <div class="weekplan-selected">${tagsHTML}</div>
+                ${readonly ? '' : `
+                <div class="weekplan-input-row">
+                  <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
+                  <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
+                </div>
+                <div class="weekplan-suggestions" hidden></div>`}
+              </div>`}
         </div>
       </div>`;
   }
