@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:58:27.604Z",
+  "updated": "2026-07-08T08:06:16.631Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -225,14 +225,30 @@
     {
       "id": "tuerkische-pasta",
       "title": "Türkische Pasta",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
       "image": "data/images/tuerkische-pasta-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/tuerkische-pasta-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Pasta",
+        "Hackfleischhhhhh",
+        "Joghurt",
+        "Butter",
+        "Knoblauch",
+        "Minze (haben wir noch nie benutzt Hahahha)",
+        "Paprikapulver"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T08:06:16.631Z",
+      "updated": "2026-07-08T08:06:16.631Z"
     },
     {
       "id": "kuerbispasta-mit-unternehmensburrata",
