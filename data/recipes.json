@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:53:34.860Z",
+  "updated": "2026-07-08T07:53:41.610Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -425,18 +425,6 @@
       "servings": "",
       "emoji": "🍖",
       "image": "data/images/spareribs-1783243065.jpg",
-      "ingredients": [],
-      "steps": [],
-      "notes": ""
-    },
-    {
-      "id": "chicken-wings",
-      "title": "Chicken Wings",
-      "category": "Streetfood",
-      "time": "",
-      "servings": "",
-      "emoji": "🍗",
-      "image": "data/images/chicken-wings-1783240941.jpg",
       "ingredients": [],
       "steps": [],
       "notes": ""
