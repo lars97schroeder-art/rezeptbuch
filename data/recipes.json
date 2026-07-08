@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:57:23.400Z",
+  "updated": "2026-07-08T07:57:49.658Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1219,7 +1219,9 @@
     {
       "id": "annika-s-pfannkuchen-crepes",
       "title": "Annika’s Pfannkuchen (Crepes 😉)",
-      "category": [],
+      "category": [
+        "Süßes"
+      ],
       "time": "2 Stunden",
       "servings": "",
       "emoji": "",
@@ -1232,7 +1234,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-08T07:40:28.257Z",
-      "updated": "2026-07-08T07:40:42.128Z"
+      "updated": "2026-07-08T07:57:49.658Z"
     },
     {
       "id": "chicken-wings-2",
