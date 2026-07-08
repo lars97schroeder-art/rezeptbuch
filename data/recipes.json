@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:40:42.128Z",
+  "updated": "2026-07-08T07:44:34.159Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -562,15 +562,23 @@
     },
     {
       "id": "bratwuerste-mit-sauerkraut",
-      "title": "Bratwürste mit Sauerkraut & Püree",
-      "category": "Zünftig",
+      "title": "Nürnbergeli mit Sauerkraut & Kartoffelpüree",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌭",
       "image": "data/images/bratwuerste-mit-sauerkraut-1783240941.jpg",
+      "images": [
+        "data/images/bratwuerste-mit-sauerkraut-1783240941.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:44:34.158Z",
+      "updated": "2026-07-08T07:44:34.158Z"
     },
     {
       "id": "kuerbissuppe",
