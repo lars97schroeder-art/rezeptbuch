@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-07T12:02:29.565Z",
+  "updated": "2026-07-08T07:04:48.329Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -349,10 +349,14 @@
       "images": [
         "data/images/asia-snoodles-pfanne-1783373686-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "Ramen Snoodels"
+      ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:04:48.327Z",
+      "updated": "2026-07-08T07:04:48.328Z"
     },
     {
       "id": "pizzaaaaa",
