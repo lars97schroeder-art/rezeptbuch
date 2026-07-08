@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T23:02:54.777Z",
+  "updated": "2026-07-08T23:03:17.809Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -372,7 +372,7 @@
       "category": [
         "Asia"
       ],
-      "time": "1 Std. 2",
+      "time": "30 min",
       "servings": "",
       "emoji": "",
       "image": "data/images/asia-snoodles-pfanne-1783373686-0.jpg",
@@ -386,7 +386,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-08T07:04:48.327Z",
-      "updated": "2026-07-08T23:02:54.777Z"
+      "updated": "2026-07-08T23:03:17.809Z"
     },
     {
       "id": "pizzaaaaa",
