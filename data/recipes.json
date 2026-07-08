@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:50:51.508Z",
+  "updated": "2026-07-08T07:52:18.007Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1329,6 +1329,29 @@
       "steps": [],
       "notes": "Aka Annika’s Geburtstagskuchen ♥️",
       "bereich": "backen"
+    },
+    {
+      "id": "griechischer-salat",
+      "title": "Griechischer Salat",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🇬🇷",
+      "image": "",
+      "images": [],
+      "ingredients": [
+        "Tomate",
+        "Gurke",
+        "Fetaaaa",
+        "Zwiebeln"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:52:18.006Z",
+      "updated": "2026-07-08T07:52:18.006Z"
     }
   ]
 }
