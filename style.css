@@ -1864,6 +1864,11 @@ html.color-rainbow .tinder::before {
 }
 .weekplan-day.day-off .weekplan-day-inner { opacity: 0.5; align-items: center; }
 
+/* Einzelner Tag schon vorbei (innerhalb einer sonst noch bearbeitbaren
+   Woche): Rezepte bleiben lesbar, nur etwas gedimmt — Hinzufügen und der
+   Ausblenden-Knopf entfallen bereits über das Template */
+.weekplan-day.past-day .weekplan-day-inner { opacity: 0.6; }
+
 .weekplan-off-hint {
   font-size: 13px;
   font-style: italic;
@@ -1928,8 +1933,9 @@ html.color-rainbow .tinder::before {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  /* Platz für den Ausblenden-Knopf oben rechts freihalten */
-  .weekplan-day { padding-right: 40px; }
+  /* Strich und Eingabefeld gehen bis zum rechten Kartenrand (bündig mit dem
+     Minus-Knopf) — der Knopf liegt per position:absolute darüber, kein
+     zusätzlicher Platz nötig */
   /* Dünner Trennstrich unter dem Wochentag, grenzt ihn von den Rezepten darunter ab */
   .weekplan-label {
     justify-self: stretch;

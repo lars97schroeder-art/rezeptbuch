@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T19:22:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T19:26:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -824,6 +824,7 @@ function renderWeekplan(skipSync = false) {
   const son = new Date(mon); son.setDate(son.getDate() + 6);
   const fmt = d => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
   const rangeText = `${fmt(mon)} – ${fmt(son)}`;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   const days = [
     { key: 'mo', label: 'Montag' },
     { key: 'di', label: 'Dienstag' },
@@ -835,9 +836,16 @@ function renderWeekplan(skipSync = false) {
   ];
 
   let daysHTML = '';
-  for (const day of days) {
+  for (let di = 0; di < days.length; di++) {
+    const day = days[di];
     const entries = weekplan[day.key] || [];
     const isOff = (weekplan.off || []).includes(day.key);
+    // Einzelner Tag schon vorbei (unabhängig davon, ob die ganze Woche
+    // vergangen ist) — Rezepte bleiben sichtbar, aber Hinzufügen und der
+    // Ausblenden-Knopf ergeben für einen bereits gelaufenen Tag keinen Sinn
+    const dayDate = new Date(mon); dayDate.setDate(mon.getDate() + di);
+    const isPastDay = dayDate < today;
+    const noEdit = readonly || isPastDay;
     let tagsHTML = '';
 
     // Ausgeblendete Tage zeigen weder Einträge noch das Eingabefeld — die
@@ -859,20 +867,20 @@ function renderWeekplan(skipSync = false) {
       }
     }
 
-    // Reihenfolge: erst die Einträge, darunter das Eingabefeld (in vergangenen
-    // Wochen entfällt das Eingabefeld komplett — nur ansehen). Der
-    // Umschalt-Knopf selbst bleibt oben rechts an der Karte immer voll
-    // sichtbar (eigener Layer, nicht gedimmt).
+    // Reihenfolge: erst die Einträge, darunter das Eingabefeld (entfällt in
+    // vergangenen Wochen UND bei bereits gelaufenen Einzeltagen — nur
+    // ansehen). Der Umschalt-Knopf selbst bleibt oben rechts an der Karte
+    // immer voll sichtbar (eigener Layer, nicht gedimmt).
     daysHTML += `
-      <div class="weekplan-day${isOff ? ' day-off' : ''}" data-day="${day.key}">
-        ${readonly ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
+      <div class="weekplan-day${isOff ? ' day-off' : ''}${isPastDay ? ' past-day' : ''}" data-day="${day.key}">
+        ${noEdit ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
         <div class="weekplan-day-inner">
           <label class="weekplan-label">${day.label}</label>
           ${isOff
             ? `<div class="weekplan-off-hint">🔕 Ausgeblendet</div>`
             : `<div class="weekplan-autocomplete" data-day="${day.key}">
                 <div class="weekplan-selected">${tagsHTML}</div>
-                ${readonly ? '' : `
+                ${noEdit ? '' : `
                 <div class="weekplan-input-row">
                   <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
                   <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
