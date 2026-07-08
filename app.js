@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T01:20:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T01:36:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -205,18 +205,17 @@ async function precacheImages(recipes) {
 }
 
 // Funktionalitäten-Timestamp der Server-Version auslesen (aus app.js).
-// Gleiche Lese-Logik wie bei den Rezepten: mit Token über die API, sonst Pages.
+// WICHTIG: bewusst NUR über GitHub Pages (die relative app.js), NICHT über
+// die GitHub-API. Die API liefert sofort den neuesten Commit, aber beim
+// Neuladen kommt die App von Pages, das dem API-Stand ein paar Minuten
+// hinterherhängt. Verglichen mit der API würde "Update verfügbar" endlos
+// wiederkommen, weil das Update auf Pages noch gar nicht ankommt. Gegen
+// Pages verglichen verschwindet der Hinweis, sobald das Update wirklich da ist.
 async function fetchRemoteBuildTime() {
   try {
-    let text = null;
-    if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
-      try { text = utf8b64((await ghGet('app.js')).content); } catch (e) { /* Pages-Fallback */ }
-    }
-    if (!text) {
-      const res = await fetch('app.js?t=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) return null;
-      text = await res.text();
-    }
+    const res = await fetch('app.js?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return null;
+    const text = await res.text();
     const m = text.match(/APP_BUILD_TIME\s*=\s*'([^']+)'/);
     return m ? m[1] : null;
   } catch (e) {
@@ -288,6 +287,28 @@ function dividerLetter(item) {
   if (map[c]) c = map[c];
   if (!/[A-ZÀ-Þ]/.test(c)) c = '#'; // reine Emoji-/Zahlen-Titel sammeln sich unter #
   return c;
+}
+
+// Neu/Update-Hinweis: erscheint für einen Tag nach Erstellen bzw. Ändern.
+// Gilt geräteübergreifend, weil created/updated als ISO-Zeit im Rezept stehen.
+const RECIPE_BADGE_MS = 24 * 60 * 60 * 1000;
+
+function recipeBadge(r) {
+  const now = Date.now();
+  const created = r.created ? new Date(r.created).getTime() : NaN;
+  const updated = r.updated ? new Date(r.updated).getTime() : NaN;
+  if (!isNaN(created) && now - created < RECIPE_BADGE_MS) return 'neu';
+  if (!isNaN(updated) && now - updated < RECIPE_BADGE_MS) return 'update';
+  return null;
+}
+
+// Für eine Kachel (Einzelrezept oder Gruppe): 'neu' schlägt 'update'
+function itemBadge(item) {
+  const recs = item.group ? item.members : [item.recipe];
+  const badges = recs.map(recipeBadge);
+  if (badges.includes('neu')) return 'neu';
+  if (badges.includes('update')) return 'update';
+  return null;
 }
 
 function categories() {
@@ -389,6 +410,15 @@ function render() {
         (meta ? `<div class="meta">${esc(meta)}</div>` : '');
       card.appendChild(info);
       card.onclick = () => openRecipe(r.id);
+    }
+    // Neu/Update-Hinweis: Umrandung + Ecken-Badge (für einen Tag)
+    const badge = itemBadge(item);
+    if (badge) {
+      card.classList.add('badge-' + badge);
+      const b = document.createElement('span');
+      b.className = 'card-badge ' + badge;
+      b.textContent = badge === 'neu' ? 'Neu' : 'Update';
+      card.appendChild(b);
     }
     grid.appendChild(card);
   }
@@ -1654,19 +1684,37 @@ document.addEventListener('focusout', e => {
   }
 });
 
-// Swipe-to-back Geste: von links nach rechts wischen
+// Wisch-Gesten vom linken Rand nach rechts:
+//  - in einer Ansicht (#detail/#editor): zurück
+//  - auf der Rezeptübersicht: Einstellungen öffnen ("nach vorne")
 let swipeStart = null;
+let swipeStartY = 0;
+let swipeMode = null; // 'back' | 'settings'
 const swipeTarget = () => $('#detail').hidden ? $('#editor') : $('#detail');
 
 document.addEventListener('pointerdown', (e) => {
-  // Auf der Rezeptübersicht (keine Ansicht offen) gibt es nichts zum Zurückwischen
-  if ($('#detail').hidden && $('#editor').hidden) return;
-  if (e.clientX < 50) swipeStart = e.clientX;
+  if (e.clientX >= 50) return;
+  swipeStart = e.clientX;
+  swipeStartY = e.clientY;
+  swipeMode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
 }, false);
 
 document.addEventListener('pointermove', (e) => {
-  if (!swipeStart) return;
+  if (swipeStart === null) return;
   const swipeDistance = e.clientX - swipeStart;
+  const dy = Math.abs(e.clientY - swipeStartY);
+
+  // Übersicht: Wisch nach rechts öffnet die Einstellungen
+  if (swipeMode === 'settings') {
+    if (swipeDistance > 80 && dy < 60) {
+      swipeStart = null; swipeMode = null;
+      openSettings();
+    } else if (swipeDistance < -10 || dy > 80) {
+      swipeStart = null; swipeMode = null; // vertikales Scrollen / falsche Richtung
+    }
+    return;
+  }
+
   const target = swipeTarget();
   const closeBtn = target.querySelector('.detail-close');
 
@@ -1695,10 +1743,11 @@ document.addEventListener('pointermove', (e) => {
 }, false);
 
 document.addEventListener('pointerup', () => {
-  if (swipeStart) {
-    swipeStart = null;
+  if (swipeStart !== null && swipeMode === 'back') {
     const target = swipeTarget();
     target.style.transform = '';
     target.style.opacity = '';
   }
+  swipeStart = null;
+  swipeMode = null;
 }, false);

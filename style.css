@@ -332,6 +332,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 .card {
+  position: relative;
   background: var(--card);
   border-radius: clamp(12px, 3vw, 16px);
   overflow: hidden;
@@ -342,6 +343,26 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 
 .card:active { transform: scale(0.97); }
+
+/* Neu/Update-Hinweis: farbiger Ring (box-shadow wird nicht abgeschnitten) + Ecken-Badge */
+.card.badge-neu { box-shadow: 0 0 0 2px #2f9e44, var(--shadow); }
+.card.badge-update { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+
+.card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+.card-badge.neu { background: #2f9e44; }
+.card-badge.update { background: var(--accent); }
 
 .card .photo {
   width: 100%;
