@@ -76,6 +76,11 @@ html.color-rainbow #grid .card:nth-child(6n)   { border-top-color: #8e24aa; }
 
 html { -webkit-text-size-adjust: 100%; }
 
+html, body {
+  /* Native-Feel: kein Browser-Wisch nach vorne/zurück (nur unsere Gesten zählen) */
+  overscroll-behavior-x: none;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
@@ -179,6 +184,24 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   box-shadow: 0 clamp(2px, 0.5vw, 4px) clamp(8px, 2vw, 12px) rgba(232, 89, 12, 0.3) !important;
   width: clamp(40px, 8vw, 44px) !important;
   height: clamp(40px, 8vw, 44px) !important;
+}
+
+/* Menü/Einstellungen als breiterer „Griff" — macht die Wisch-Geste sichtbar */
+#btn-settings {
+  width: auto !important;
+  min-width: clamp(58px, 14vw, 72px) !important;
+  padding: 0 clamp(12px, 3vw, 16px);
+  border-radius: 999px !important;
+  justify-content: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+#btn-settings::after {
+  content: '›';
+  font-size: 0.9em;
+  opacity: 0.85;
+  margin-left: auto;
 }
 
 #btn-update.spinning { animation: spin 0.9s linear infinite; }
