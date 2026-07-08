@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T18:59:00+02:00';
+const APP_BUILD_TIME = '2026-07-08T19:14:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -249,6 +249,33 @@ function parseTimeMinutes(t) {
   return m ? parseInt(m[0], 10) : Infinity;
 }
 
+// Anzeige-Format für Dauer: unter 1 Std. nur Minuten, ab 1 Std. "Std. mm"
+// (führende Nullen weggelassen, "mm" entfällt bei glatten Stunden)
+function formatDuration(totalMinutes) {
+  const mins = Math.round(totalMinutes);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return m === 0 ? `${h} Std.` : `${h} Std. ${m}`;
+}
+
+// r.time bleibt als Freitext-String gespeichert (Altbestand), aber bei
+// erkennbarer Minutenzahl wird für die Anzeige einheitlich formatiert
+function displayDuration(timeStr) {
+  const mins = parseTimeMinutes(timeStr);
+  return isFinite(mins) ? formatDuration(mins) : (timeStr || '');
+}
+
+// Für das Rad-Eingabefeld (input[type=time]) im Editor
+function minutesToHHMM(totalMinutes) {
+  if (!isFinite(totalMinutes)) return '';
+  const h = Math.floor(totalMinutes / 60), m = totalMinutes % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+function hhmmToMinutes(hhmm) {
+  const [h, m] = String(hhmm || '').split(':').map(Number);
+  return isFinite(h) && isFinite(m) ? h * 60 + m : null;
+}
+
 function itemTime(item) {
   const recs = item.group ? item.members : [item.recipe];
   return Math.min(...recs.map(r => parseTimeMinutes(r.time)));
@@ -405,7 +432,7 @@ function render() {
         : `<div class="photo placeholder">${emojiFor(r)}</div>`;
       const info = document.createElement('div');
       info.className = 'info';
-      const meta = [categoryLabel(r), r.time].filter(Boolean).join(' · ');
+      const meta = [categoryLabel(r), displayDuration(r.time)].filter(Boolean).join(' · ');
       info.innerHTML = `<div class="title">${titleWithEmoji(r)}</div>` +
         (meta ? `<div class="meta">${esc(meta)}</div>` : '');
       card.appendChild(info);
@@ -498,8 +525,12 @@ function detailPhotosHTML(r) {
   const imgs = imagesOf(r);
   if (!imgs.length) return `<div class="detail-photo placeholder">${emojiFor(r)}</div>`;
   if (imgs.length === 1) return `<img class="detail-photo" src="${esc(imgs[0])}" alt="">`;
-  return `<div class="detail-photos">
-      ${imgs.map(i => `<img class="detail-photo" src="${esc(i)}" alt="">`).join('')}
+  return `<div class="detail-photos-wrap">
+      <div class="detail-photos">
+        ${imgs.map(i => `<img class="detail-photo" src="${esc(i)}" alt="">`).join('')}
+      </div>
+      <button class="photo-nav prev" aria-label="Vorheriges Foto">‹</button>
+      <button class="photo-nav next" aria-label="Nächstes Foto">›</button>
     </div>
     <div class="photo-dots">${imgs.map((_, i) => `<span${i === 0 ? ' class="on"' : ''}></span>`).join('')}</div>`;
 }
@@ -508,17 +539,29 @@ function wirePhotoDots(el) {
   const strip = el.querySelector('.detail-photos');
   if (!strip) return;
   const dots = el.querySelectorAll('.photo-dots span');
-  strip.addEventListener('scroll', () => {
+  const update = () => {
     const i = Math.round(strip.scrollLeft / strip.clientWidth);
     dots.forEach((d, n) => d.classList.toggle('on', n === i));
-  }, { passive: true });
+  };
+  strip.addEventListener('scroll', update, { passive: true });
+
+  // Pfeil-Buttons an den Fotoseiten: ein Bild weiter/zurück scrollen
+  const count = strip.children.length;
+  el.querySelector('.photo-nav.prev')?.addEventListener('click', () => {
+    const i = Math.max(0, Math.round(strip.scrollLeft / strip.clientWidth) - 1);
+    strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' });
+  });
+  el.querySelector('.photo-nav.next')?.addEventListener('click', () => {
+    const i = Math.min(count - 1, Math.round(strip.scrollLeft / strip.clientWidth) + 1);
+    strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' });
+  });
 }
 
 function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
   const el = $('#detail');
-  const meta = [categoryLabel(r), r.time, r.servings].filter(Boolean).join(' · ');
+  const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join(' · ');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <button class="detail-home" aria-label="Startseite">🏠</button>
@@ -596,6 +639,7 @@ let weekplanViewKey = null;
 
 function openWeekplan() {
   weekplanViewDate = new Date(); // beim Öffnen immer zurück auf die laufende Woche
+  clearWeekplanUpdateDot();
   renderWeekplan();
   history.pushState({ view: 'weekplan' }, '');
 }
@@ -603,7 +647,9 @@ function openWeekplan() {
 const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
 const WEEKPLAN_UPDATED_KEY = 'rezeptbuch-weekplan-updated';
 
-const emptyDays = () => ({ mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [] });
+// "off" ist eine Liste ausgeblendeter Wochentage (z. B. "diese Woche kochen
+// wir montags nicht") — wird wie ein normaler Tages-Eintrag mitgespeichert.
+const emptyDays = () => ({ mo: [], di: [], mi: [], do: [], fr: [], sa: [], so: [], off: [] });
 
 // Alte String-Werte zu Arrays normalisieren
 function normalizeDays(plan) {
@@ -791,6 +837,7 @@ function renderWeekplan(skipSync = false) {
   let daysHTML = '';
   for (const day of days) {
     const entries = weekplan[day.key] || [];
+    const isOff = (weekplan.off || []).includes(day.key);
     let tagsHTML = '';
 
     for (const entry of entries) {
@@ -808,18 +855,23 @@ function renderWeekplan(skipSync = false) {
     }
 
     // Reihenfolge: erst die Einträge, darunter das Eingabefeld (in vergangenen
-    // Wochen entfällt das Eingabefeld komplett — nur ansehen)
+    // Wochen entfällt das Eingabefeld komplett — nur ansehen). Ausgeblendete
+    // Tage (isOff) werden gedimmt; der Umschalt-Knopf selbst bleibt oben
+    // rechts an der Karte immer voll sichtbar (eigener Layer, nicht gedimmt).
     daysHTML += `
-      <div class="weekplan-day" data-day="${day.key}">
-        <label class="weekplan-label">${day.label}</label>
-        <div class="weekplan-autocomplete" data-day="${day.key}">
-          <div class="weekplan-selected">${tagsHTML}</div>
-          ${readonly ? '' : `
-          <div class="weekplan-input-row">
-            <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
-            <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
+      <div class="weekplan-day${isOff ? ' day-off' : ''}" data-day="${day.key}">
+        ${readonly ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
+        <div class="weekplan-day-inner">
+          <label class="weekplan-label">${day.label}</label>
+          <div class="weekplan-autocomplete" data-day="${day.key}">
+            <div class="weekplan-selected">${tagsHTML}</div>
+            ${readonly ? '' : `
+            <div class="weekplan-input-row">
+              <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
+              <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
+            </div>
+            <div class="weekplan-suggestions" hidden></div>`}
           </div>
-          <div class="weekplan-suggestions" hidden></div>`}
         </div>
       </div>`;
   }
@@ -828,12 +880,12 @@ function renderWeekplan(skipSync = false) {
     <button class="detail-close" aria-label="Zurück">←</button>
     <div class="detail-body group-body weekplan-body${readonly ? ' readonly' : ''}">
       <div class="weekplan-header">
-        <button class="weekplan-nav" data-dir="-1" aria-label="Woche zurück">‹</button>
+        <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">‹</button>
         <div class="weekplan-weektitle">
           <div class="weekplan-kw">📅 KW ${isoKalenderwoche(weekplanViewDate)}${istAktuelleWoche ? ' <span class="weekplan-now">jetzt</span>' : ''}</div>
           <div class="weekplan-range">${rangeText}</div>
         </div>
-        <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
+        <button class="weekplan-nav" data-dir="-1" aria-label="Woche zurück">›</button>
       </div>
       <div class="weekplan-container">
         ${daysHTML}
@@ -848,6 +900,18 @@ function renderWeekplan(skipSync = false) {
     navBtn.onclick = () => {
       weekplanViewDate = new Date(weekplanViewDate);
       weekplanViewDate.setDate(weekplanViewDate.getDate() + 7 * Number(navBtn.dataset.dir));
+      renderWeekplan(true);
+    };
+  }
+
+  // Tag ausblenden/einblenden: nur den Toggle-Zustand speichern, Rest bleibt erhalten
+  for (const toggleBtn of el.querySelectorAll('.weekplan-day-toggle')) {
+    toggleBtn.onclick = () => {
+      const dayKey = toggleBtn.dataset.day;
+      const off = new Set(weekplan.off || []);
+      if (off.has(dayKey)) off.delete(dayKey); else off.add(dayKey);
+      weekplan.off = [...off];
+      saveWeekplan(weekplan);
       renderWeekplan(true);
     };
   }
@@ -990,7 +1054,7 @@ function tinderCardHTML(r, cls) {
       : `<div class="t-emoji">${emojiFor(r)}</div>`}
     <div class="t-info">
       <div class="t-title">${titleWithEmoji(r)}</div>
-      <div class="t-meta">${esc([categoryLabel(r), r.time].filter(Boolean).join(' · '))}</div>
+      <div class="t-meta">${esc([categoryLabel(r), displayDuration(r.time)].filter(Boolean).join(' · '))}</div>
     </div>
     <div class="t-badge like">WILL ICH 😍</div>
     <div class="t-badge nope">NÖ 🙅</div>
@@ -1593,7 +1657,7 @@ $('#search-clear').onclick = () => {
   query = '';
   $('#search-clear').hidden = true;
   render();
-  $('#search').focus();
+  // Bewusst KEIN .focus() hier — sonst springt die Tastatur ungewollt wieder auf
 };
 
 /* ---------- Bereichs-Umschalter (Frühstück / Kochen / Backen) ---------- */
@@ -1728,21 +1792,38 @@ if ('serviceWorker' in navigator) {
 }
 
 // App kommt in den Vordergrund (Handy entsperrt, Tab gewechselt):
-// sofort per ISO-Timestamp prüfen, ob das andere Gerät etwas geändert hat
+// sofort per ISO-Timestamp prüfen, ob das andere Gerät etwas geändert hat.
+// Echte Push-Benachrichtigungen (auch mit geschlossener App) sind auf dem
+// iPhone für diese Art App nicht möglich: iOS unterstützt für Web-Apps kein
+// Hintergrund-Abrufen in festen Abständen (Periodic Background Sync gibt es
+// in Safari nicht), und echte Web-Push bräuchte zusätzlich einen eigenen
+// Server, der bei jeder Änderung aktiv eine Nachricht verschickt — das reine
+// Hosting auf GitHub Pages reicht dafür nicht. Stattdessen: sobald die App im
+// Vordergrund ist, wird sofort geprüft und bei Änderung ein Hinweis-Punkt am
+// 📅-Knopf gezeigt, falls der Wochenplan gerade nicht offen ist.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   checkAndUpdateIfNeeded();
-  // Falls der Wochenplan gerade offen ist, auch dessen neuesten Stand holen
-  const detail = $('#detail');
-  if (!detail.hidden && detail.querySelector('.weekplan-container')) {
-    syncWeekplanFromRemote().then(changed => {
-      if (changed) {
-        toast('🔄 Wochenplan vom anderen Gerät übernommen');
-        renderWeekplan(true);
-      }
-    });
-  }
+  syncWeekplanFromRemote().then(changed => {
+    if (!changed) return;
+    const detail = $('#detail');
+    if (!detail.hidden && detail.querySelector('.weekplan-container')) {
+      toast('🔄 Wochenplan vom anderen Gerät übernommen');
+      renderWeekplan(true);
+    } else {
+      showWeekplanUpdateDot();
+    }
+  });
 });
+
+// Kleiner roter Punkt am Wochenplan-Knopf: zeigt "es gibt was Neues", ohne
+// dass man den Plan schon geöffnet hat. Verschwindet beim Öffnen.
+function showWeekplanUpdateDot() {
+  $('#btn-weekplan').classList.add('has-update-dot');
+}
+function clearWeekplanUpdateDot() {
+  $('#btn-weekplan').classList.remove('has-update-dot');
+}
 
 // Nach dem Tippen in ein Textfeld auf iOS wieder rauszoomen, damit man
 // das ganze Bild sieht. Kurzzeitig maximum-scale=1 erzwingt das Zurückzoomen,

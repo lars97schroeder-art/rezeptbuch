@@ -179,7 +179,7 @@ function openEditor(id) {
     </div>
     <div class="ed-row">
       <div class="ed-field"><label>Zeit</label>
-        <input id="ed-time" placeholder="z. B. 30 Min." value="${r ? esc(r.time) : ''}"></div>
+        <input id="ed-time" type="time" value="${r ? esc(minutesToHHMM(parseTimeMinutes(r.time))) : ''}"></div>
       <div class="ed-field"><label>Portionen</label>
         <input id="ed-servings" placeholder="z. B. 2 Portionen" value="${r ? esc(r.servings) : ''}"></div>
     </div>
@@ -284,7 +284,8 @@ async function saveFromEditor(existingId) {
     const recipe = {
       id, title,
       category: window.edSelectedCategories && window.edSelectedCategories.length > 0 ? window.edSelectedCategories : [],
-      time: $('#ed-time').value.trim(),
+      // Rad-Eingabe liefert "HH:MM" — in unser Anzeige-Format umrechnen
+      time: (() => { const m = hhmmToMinutes($('#ed-time').value); return m != null ? formatDuration(m) : ''; })(),
       servings: $('#ed-servings').value.trim(),
       emoji: $('#ed-emoji').value.trim(),
       image: images[0] || '',
@@ -327,7 +328,19 @@ async function saveFromEditor(existingId) {
     data = remote;
     saveLocal();
     closeEditor();
-    closeOverlay();
+    // Auf der (jetzt aktualisierten) Rezeptseite bleiben statt eine Ebene
+    // zurückzuspringen. closeOverlay()/history.back() würde bei Rezepten, die
+    // über die Tinder-Slot-Machine geöffnet wurden, auf der Slot-Machine
+    // landen statt beim Rezept — das wollen wir hier vermeiden.
+    renderDetail(recipe.id);
+    if ($('#detail').hidden) {
+      // z. B. über die "+ Neues Rezept"-Kachel ohne offene Detailansicht
+      $('#detail').hidden = false;
+      document.body.style.overflow = 'hidden';
+      history.pushState({ view: 'recipe', id: recipe.id }, '');
+    } else {
+      history.replaceState({ view: 'recipe', id: recipe.id }, '');
+    }
     render();
     toast('Gespeichert ✓');
   } catch (e) {
