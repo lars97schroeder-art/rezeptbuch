@@ -43,6 +43,10 @@ console.log('✅ Version-Check abgeschlossen');
 </script>
 </head>
 <body>
+<!-- Schmale Zone am linken Rand: touch-action:none verhindert, dass Safari
+     den Wisch als eigene Vor/Zurück-Browsergeste erkennt, bevor unser
+     Wisch-Handler (nach rechts = Einstellungen bzw. Zurück) greift. -->
+<div id="edge-swipe-guard" aria-hidden="true"></div>
 <header>
   <div class="topbar">
     <button id="mode-btn" aria-label="Bereich wechseln">
