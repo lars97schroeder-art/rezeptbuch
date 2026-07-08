@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:45:04.158Z",
+  "updated": "2026-07-08T07:50:51.508Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -929,6 +929,25 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen"
+    },
+    {
+      "id": "hot-dogs",
+      "title": "Hot Dogs",
+      "category": [
+        "Ist das Kochen?",
+        "Streetfood"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🌭",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-08T07:50:51.507Z",
+      "updated": "2026-07-08T07:50:51.507Z"
     },
     {
       "id": "breakfast-wrap",
