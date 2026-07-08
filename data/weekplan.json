@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-08T23:01:47.403Z",
+  "updated": "2026-07-08T23:01:50.528Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -15,7 +15,9 @@
       "sa": [
         "TEXT:Hier haben wir das Sofa, da braucht’s was auf der Couch ;)"
       ],
-      "so": [],
+      "so": [
+        "TEXT:Iwas Comfort Food"
+      ],
       "off": []
     },
     "2026-W32": {
