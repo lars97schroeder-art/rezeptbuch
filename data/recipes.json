@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T07:54:04.348Z",
+  "updated": "2026-07-08T07:54:15.917Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -851,7 +851,7 @@
       "id": "italienischer-nudelsalat",
       "title": "Italienischer Nudelsalat",
       "category": [
-        "Ist das Kochen?"
+        "Salat"
       ],
       "time": "",
       "servings": "",
@@ -868,7 +868,9 @@
       ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-08T07:54:15.917Z",
+      "updated": "2026-07-08T07:54:15.917Z"
     },
     {
       "id": "couscous-salat",
