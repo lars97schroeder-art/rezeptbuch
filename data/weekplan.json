@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-09T10:02:13.744Z",
+  "updated": "2026-07-09T10:02:19.650Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -7,7 +7,9 @@
       ],
       "di": [],
       "mi": [],
-      "do": [],
+      "do": [
+        "TEXT:Bei Alex"
+      ],
       "fr": [
         "TEXT:Dean & david ? 😂🫶🏼",
         "TEXT:Abends mit Alex und Maki"
