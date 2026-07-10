@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-10T15:49:15.793Z",
+  "updated": "2026-07-10T15:50:03.835Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -540,14 +540,27 @@
     {
       "id": "wuerstelgulasch",
       "title": "Würstelgulasch",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌭",
       "image": "data/images/wuerstelgulasch-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/wuerstelgulasch-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Kartoffeln",
+        "Leberkäse oder Wienerli",
+        "Möhren",
+        "Sellerie",
+        "Zwiebeln"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "updated": "2026-07-10T15:50:03.835Z"
     },
     {
       "id": "koettbullar",
