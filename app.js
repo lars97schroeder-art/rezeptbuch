@@ -1189,6 +1189,7 @@ function attachSwipe(card, onSwipe) {
     startX = point.clientX;
     startY = point.clientY;
     card.style.transition = 'none';
+    e.preventDefault();
     if (e.pointerId != null) {
       try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
     }
