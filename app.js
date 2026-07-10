@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T16:28:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T16:37:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -877,7 +877,7 @@ function renderWeekplan(skipSync = false) {
         <div class="weekplan-day-inner">
           <label class="weekplan-label">${day.label}</label>
           ${isOff
-            ? `<div class="weekplan-off-hint">🔕 Ausgeblendet</div>`
+            ? ''
             : `<div class="weekplan-autocomplete" data-day="${day.key}">
                 <div class="weekplan-selected">${tagsHTML}</div>
                 ${noEdit ? '' : `
@@ -1071,8 +1071,8 @@ function tinderCardHTML(r, cls) {
       <div class="t-title">${titleWithEmoji(r)}</div>
       <div class="t-meta">${esc([categoryLabel(r), displayDuration(r.time)].filter(Boolean).join(' · '))}</div>
     </div>
-    <div class="t-card-badge-text like-text">WILL ICH 😍</div>
-    <div class="t-card-badge-text nope-text">NÖ 🙅</div>
+    <div class="t-card-badge-text like-text"><span>WILL ICH 😍</span></div>
+    <div class="t-card-badge-text nope-text"><span>NÖ 🙅</span></div>
   </div>`;
 }
 
@@ -1082,6 +1082,19 @@ function tinderCardHTML(r, cls) {
       <div class="t-info">
         <div class="t-title">Noch eine Karte...</div>
         <div class="t-meta">Tippe oder wische, um weiterzumachen</div>
+      </div>
+    </div>`;
+  }
+
+  // Zeigt NICHT das echte nächste Rezept (kein Spoiler beim Wegwischen der
+  // oberen Karte) — nur ein generischer Platzhalter, bis die Karte wirklich
+  // an der Reihe ist und neu (mit echtem Inhalt) gerendert wird.
+  function tinderNextPreviewHTML() {
+    return `<div class="t-card behind placeholder">
+      <div class="t-emoji">🍽️</div>
+      <div class="t-info">
+        <div class="t-title">Food Match</div>
+        <div class="t-meta">Dein nächstes Gericht wartet …</div>
       </div>
     </div>`;
   }
@@ -1097,7 +1110,7 @@ function renderTinderCard() {
     <div class="tinder">
       <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
-        ${next ? tinderCardHTML(next, 'behind') : tinderPlaceholderHTML()}
+        ${next ? tinderNextPreviewHTML() : tinderPlaceholderHTML()}
         ${tinderCardHTML(top, 'top')}
       </div>
       <div class="tinder-buttons">
@@ -1146,11 +1159,14 @@ function superlike(recipe) {
 }
 
 function flyOut(card, dir) {
-  // Passenden Stempel groß mittig einblenden, dann Karte rausfliegen lassen
+  // Passenden Stempel groß mittig einblenden, dann Karte rausfliegen lassen.
+  // Nur das innere <span> dreht/skaliert, die äußere Box bleibt zentriert
+  // und fliegt automatisch als Kind der Karte mit deren transform mit.
   const badge = card.querySelector(dir > 0 ? '.like-text' : '.nope-text');
-  if (badge) {
+  const badgeInner = badge?.querySelector('span');
+  if (badge && badgeInner) {
     badge.style.opacity = 1;
-    badge.style.transform = `translate(-50%, -50%) rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
+    badgeInner.style.transform = `rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
   }
 
   // Verzögerte Animation für Karte
@@ -1168,12 +1184,18 @@ function attachSwipe(card, onSwipe) {
   let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
   // Nur noch die mittige Box — die kleine Ecken-Box wurde entfernt, ihr
   // drag-abhängiges Ein-/Ausblenden läuft jetzt direkt auf der mittigen Box.
+  // Rotation/Skalierung passiert NUR auf dem inneren <span>, die äußere Box
+  // (badgeLike/badgeNope) behält ihr Zentrierungs-transform aus dem
+  // Stylesheet permanent und wird von hier nur noch ein-/ausgeblendet —
+  // dadurch kann die Box strukturell nie von der Kartenmitte abdriften.
   const badgeLike = card.querySelector('.t-card-badge-text.like-text');
   const badgeNope = card.querySelector('.t-card-badge-text.nope-text');
+  const badgeLikeInner = badgeLike?.querySelector('span');
+  const badgeNopeInner = badgeNope?.querySelector('span');
   const img = card.querySelector('img');
 
   // Fehlerschutz: wenn kritische Elemente nicht existieren, nicht weitermachen
-  if (!badgeLike || !badgeNope) {
+  if (!badgeLike || !badgeNope || !badgeLikeInner || !badgeNopeInner) {
     console.warn('[SW] attachSwipe: fehlende kritische Elemente, Swipe deaktiviert');
     return;
   }
@@ -1200,15 +1222,15 @@ function attachSwipe(card, onSwipe) {
 
     const p = Math.min(1, Math.abs(dx) / 100);
     const scale = 0.6 + 0.55 * p;
-    // translate(-50%,-50%) muss erhalten bleiben, sonst springt die Box aus
-    // der Bildmitte (die Basis-Zentrierung kommt sonst aus dem Stylesheet)
+    // Nur das innere <span> dreht/skaliert — die äußere Box bleibt immer
+    // exakt zentriert (ihr transform wird hier nie angefasst)
     if (dx > 0) {
       badgeLike.style.opacity = p;
-      badgeLike.style.transform = `translate(-50%, -50%) rotate(-14deg) scale(${scale})`;
+      badgeLikeInner.style.transform = `rotate(-14deg) scale(${scale})`;
       badgeNope.style.opacity = 0;
     } else {
       badgeNope.style.opacity = p;
-      badgeNope.style.transform = `translate(-50%, -50%) rotate(14deg) scale(${scale})`;
+      badgeNopeInner.style.transform = `rotate(14deg) scale(${scale})`;
       badgeLike.style.opacity = 0;
     }
     if (img) {
@@ -1227,9 +1249,9 @@ function attachSwipe(card, onSwipe) {
       card.style.transition = 'transform 0.25s ease';
       card.style.transform = '';
       badgeLike.style.opacity = 0;
-      badgeLike.style.transform = 'translate(-50%, -50%)';
+      badgeLikeInner.style.transform = '';
       badgeNope.style.opacity = 0;
-      badgeNope.style.transform = 'translate(-50%, -50%)';
+      badgeNopeInner.style.transform = '';
       if (img) {
         img.style.filter = 'brightness(1)';
       }
