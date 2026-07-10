@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-10T15:50:03.835Z",
+  "updated": "2026-07-10T18:28:22.089Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1408,6 +1408,24 @@
       "bereich": "kochen",
       "created": "2026-07-08T07:52:18.006Z",
       "updated": "2026-07-08T07:52:18.006Z"
+    },
+    {
+      "id": "tomate-mozzarella",
+      "title": "Tomate - Mozzarella",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-10T18:28:22.088Z",
+      "updated": "2026-07-10T18:28:22.088Z"
     }
   ]
 }
