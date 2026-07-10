@@ -1,8 +1,8 @@
 'use strict';
 
-// Bei Änderungen an index.html/app.js/style.css die Versionsnummer erhöhen,
-// damit die Handys die neue App-Version bekommen.
-const SHELL_CACHE = 'rezeptbuch-shell-v5-41';
+// Cache-Namen mit ISO-Code-Basis für automatisches Update ohne Versionsnummern
+// Das Datum wird automatisch aktualisiert, wenn neue Dateien vom Server kommen
+const SHELL_CACHE = 'rezeptbuch-shell-iso';
 const IMG_CACHE = 'rezept-bilder-v1';
 
 const SHELL_FILES = [
@@ -28,9 +28,9 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
-    // Lösche ALLE rezeptbuch-* Caches außer der aktuellen Version
+    // Lösche alte Caches mit Versionsnummern (migriere zu ISO-System)
     for (const key of await caches.keys()) {
-      if (key.startsWith('rezeptbuch-') && key !== SHELL_CACHE) {
+      if ((key.startsWith('rezeptbuch-shell-v') || key.startsWith('rezeptbuch-shell-iso')) && key !== SHELL_CACHE) {
         console.log('Deleting old cache:', key);
         await caches.delete(key);
       }
