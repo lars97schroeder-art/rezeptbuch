@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-10T15:53:41.948Z",
+  "updated": "2026-07-10T15:53:58.384Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -129,6 +129,29 @@
       ],
       "so": [],
       "off": []
+    },
+    "2026-W34": {
+      "mo": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "di": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "mi": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "do": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "fr": [],
+      "sa": [],
+      "so": [],
+      "off": [
+        "do",
+        "mi",
+        "di",
+        "mo"
+      ]
     }
   }
 }
