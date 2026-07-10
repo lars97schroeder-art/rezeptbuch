@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T16:37:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T16:52:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -752,6 +752,76 @@ async function uploadWeekplan() {
   toast('✅ Wochenplan gespeichert & geteilt');
 }
 
+/* Rezept-Notizen ("Backlog"): einfaches Textfeld unter dem Wochenplan zum
+   Sammeln von Rezepten, die man irgendwann mal kochen will. Nicht an eine
+   Woche gebunden — bleibt beim Wechseln der Wochen unverändert. Sync läuft
+   exakt wie beim Wochenplan: ISO-Timestamp-Vergleich, neuester gewinnt. */
+
+const BACKLOG_KEY = 'rezeptbuch-notes';
+const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
+
+function getBacklogText() {
+  return localStorage.getItem(BACKLOG_KEY) || '';
+}
+
+function saveBacklogLocal(text) {
+  localStorage.setItem(BACKLOG_KEY, text);
+  localStorage.setItem(BACKLOG_UPDATED_KEY, new Date().toISOString());
+}
+
+async function fetchRemoteBacklog() {
+  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
+    try {
+      const info = await ghGet('data/backlog.json');
+      return JSON.parse(utf8b64(info.content));
+    } catch (e) { /* Datei existiert evtl. noch nicht */ }
+  }
+  try {
+    const res = await fetch('data/backlog.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) return await res.json();
+  } catch (e) { /* offline */ }
+  return null;
+}
+
+// Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
+async function syncBacklogFromRemote() {
+  const remote = await fetchRemoteBacklog();
+  if (!remote || typeof remote.text !== 'string') return false;
+  const localUpdated = new Date(localStorage.getItem(BACKLOG_UPDATED_KEY)).getTime() || 0;
+  const remoteUpdated = new Date(remote.updated).getTime() || 0;
+  if (remoteUpdated > localUpdated) {
+    localStorage.setItem(BACKLOG_KEY, remote.text);
+    localStorage.setItem(BACKLOG_UPDATED_KEY, remote.updated);
+    return true;
+  }
+  return false;
+}
+
+// Lädt den lokalen Text zu GitHub hoch, damit andere Geräte ihn sehen
+async function uploadBacklog(text) {
+  if (typeof ghToken !== 'function' || !ghToken()) return;
+  const payload = { updated: new Date().toISOString(), text };
+  let sha;
+  try { sha = (await ghGet('data/backlog.json')).sha; } catch (e) { /* erste Übertragung */ }
+  await ghPut('data/backlog.json', b64utf8(JSON.stringify(payload, null, 2)),
+    'Notizen aktualisiert (aus der App)', sha);
+  localStorage.setItem(BACKLOG_UPDATED_KEY, payload.updated);
+}
+
+// Speichert lokal SOFORT (kein Datenverlust) und lädt gedrosselt hoch,
+// damit nicht bei jedem Tastendruck ein GitHub-Commit ausgelöst wird
+let backlogUploadTimer = null;
+function saveBacklogDebounced(text) {
+  saveBacklogLocal(text);
+  clearTimeout(backlogUploadTimer);
+  backlogUploadTimer = setTimeout(() => uploadBacklog(text), 700);
+}
+// Sofort hochladen (z. B. beim Verlassen des Feldes) statt auf die Drosselung zu warten
+function flushBacklogUpload(text) {
+  clearTimeout(backlogUploadTimer);
+  uploadBacklog(text);
+}
+
 // HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept).
 // In vergangenen Wochen (readonly) entfällt der X-Button zum Entfernen.
 function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
@@ -906,9 +976,22 @@ function renderWeekplan(skipSync = false) {
         ${daysHTML}
       </div>
       ${readonly ? '' : '<button class="weekplan-save-btn">💾 Speichern & teilen</button>'}
+
+      <div class="backlog-divider"></div>
+      <div class="backlog-section">
+        <h3 class="backlog-heading">📝 Rezept-Notizen</h3>
+        <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche</div>
+        <textarea class="backlog-textarea" placeholder="z. B. Kürbisrisotto, Ramen mit Ei, Omas Apfelkuchen …">${esc(getBacklogText())}</textarea>
+      </div>
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
+
+  // Rezept-Notizen: sofort lokal speichern, gedrosselt hochladen; beim
+  // Verlassen des Feldes sofort hochladen (kein Datenverlust bei Wochenwechsel)
+  const backlogArea = el.querySelector('.backlog-textarea');
+  backlogArea.addEventListener('input', () => saveBacklogDebounced(backlogArea.value));
+  backlogArea.addEventListener('blur', () => flushBacklogUpload(backlogArea.value));
 
   // Wochen-Navigation: eine Woche zurück/vor, gleiche Ansicht neu zeichnen
   for (const navBtn of el.querySelectorAll('.weekplan-nav')) {
@@ -1040,13 +1123,23 @@ function renderWeekplan(skipSync = false) {
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 
-  // Im Hintergrund: neuesten Stand vom anderen Gerät holen und anzeigen
+  // Im Hintergrund: neuesten Stand vom anderen Gerät holen und anzeigen.
+  // Läuft nur beim Öffnen (nicht bei jedem Wochen-Wechsel-Klick).
   if (!skipSync) {
     syncWeekplanFromRemote().then(changed => {
       // Nur neu rendern wenn der Wochenplan noch offen ist
       if (changed && !el.hidden && el.querySelector('.weekplan-container')) {
         toast('🔄 Wochenplan vom anderen Gerät übernommen');
         renderWeekplan(true);
+      }
+    });
+    // Rezept-Notizen unabhängig davon abgleichen (nicht an eine Woche
+    // gebunden) — nur das Textfeld aktualisieren, nicht die ganze Ansicht
+    // neu zeichnen, und nicht während der Nutzer gerade darin tippt.
+    syncBacklogFromRemote().then(changed => {
+      const area = el.querySelector('.backlog-textarea');
+      if (changed && area && document.activeElement !== area) {
+        area.value = getBacklogText();
       }
     });
   }
@@ -1087,14 +1180,19 @@ function tinderCardHTML(r, cls) {
   }
 
   // Zeigt NICHT das echte nächste Rezept (kein Spoiler beim Wegwischen der
-  // oberen Karte) — nur ein generischer Platzhalter, bis die Karte wirklich
-  // an der Reihe ist und neu (mit echtem Inhalt) gerendert wird.
+  // oberen Karte) — stattdessen ein großflächiges "Food Match"-Logo als
+  // Deckblatt, bis die Karte wirklich an der Reihe ist und mit dem echten
+  // Rezept neu gerendert wird.
   function tinderNextPreviewHTML() {
-    return `<div class="t-card behind placeholder">
-      <div class="t-emoji">🍽️</div>
-      <div class="t-info">
-        <div class="t-title">Food Match</div>
-        <div class="t-meta">Dein nächstes Gericht wartet …</div>
+    return `<div class="t-card behind foodmatch">
+      <span class="foodmatch-deco d1">🍅</span>
+      <span class="foodmatch-deco d2">🌿</span>
+      <span class="foodmatch-deco d3">🧄</span>
+      <span class="foodmatch-deco d4">🧀</span>
+      <span class="foodmatch-icon">🍽️</span>
+      <div class="foodmatch-text">
+        <div class="foodmatch-title">Food Match</div>
+        <div class="foodmatch-sub">Dein nächstes Gericht wartet …</div>
       </div>
     </div>`;
   }
