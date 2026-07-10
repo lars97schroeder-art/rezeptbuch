@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T10:43:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T16:18:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1182,26 +1182,23 @@ function attachSwipe(card, onSwipe) {
 
   card.style.touchAction = 'none';
 
-  const getPoint = e => (e.touches && e.touches[0]) ? e.touches[0] : e;
+  // NUR Pointer Events (deckt Touch/Maus/Stift einheitlich ab). Zusätzlich
+  // Touch-Events zu registrieren führte auf echten Touchscreens dazu, dass
+  // pointerdown/-move UND touchstart/-move für dieselbe Geste doppelt
+  // feuerten — das brach das Wischen (Bug aus einer anderen Bearbeitung).
   const onDown = e => {
-    const point = getPoint(e);
     dragging = true;
-    startX = point.clientX;
-    startY = point.clientY;
+    startX = e.clientX;
+    startY = e.clientY;
     card.style.transition = 'none';
-    e.preventDefault();
-    if (e.pointerId != null) {
-      try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
-    }
+    try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
   };
 
   const onMove = e => {
     if (!dragging || done) return;
-    const point = getPoint(e);
-    dx = point.clientX - startX;
-    const dy = point.clientY - startY;
+    dx = e.clientX - startX;
+    const dy = e.clientY - startY;
     card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 12}deg)`;
-    e.preventDefault();
 
     const p = Math.min(1, Math.abs(dx) / 100);
     const scale = 0.6 + 0.55 * p;
@@ -1243,10 +1240,6 @@ function attachSwipe(card, onSwipe) {
   card.addEventListener('pointerup', end);
   card.addEventListener('pointercancel', end);
   card.addEventListener('lostpointercapture', end);
-  card.addEventListener('touchstart', onDown, { passive: false });
-  card.addEventListener('touchmove', onMove, { passive: false });
-  card.addEventListener('touchend', end);
-  card.addEventListener('touchcancel', end);
 }
 
 function showTinderResult(ids) {
