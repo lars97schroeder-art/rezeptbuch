@@ -1158,6 +1158,8 @@ function attachSwipe(card, onSwipe) {
   let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
   const badgeLike = card.querySelector('.t-badge.like');
   const badgeNope = card.querySelector('.t-badge.nope');
+  const likeText = card.querySelector('.t-card-badge-text.like-text');
+  const nopeText = card.querySelector('.t-card-badge-text.nope-text');
   const img = card.querySelector('img');
 
   // Fehlerschutz: wenn kritische Elemente nicht existieren, nicht weitermachen
