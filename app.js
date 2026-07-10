@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T16:24:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T16:28:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1110,6 +1110,12 @@ function renderTinderCard() {
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   const card = el.querySelector('.t-card.top');
+  // Die Eintritts-Animation (tinderFadeIn) hält transform/opacity per
+  // fill-mode "both" fest — das blockiert später per JS gesetzte Inline-
+  // Transforms (Ziehen, Wegfliegen) komplett, obwohl die Logik normal
+  // durchläuft. Nach Ende der Animation die Klasse setzen, die sie abschaltet.
+  card.addEventListener('animationend', () => card.classList.add('entered'), { once: true });
+  setTimeout(() => card.classList.add('entered'), 260); // Fallback, z. B. reduced motion
   attachSwipe(card, dir => swipeTinder(dir));
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
   el.querySelector('.t-like').onclick = () => flyOut(card, 1);

@@ -810,6 +810,13 @@ html.color-rainbow .tinder::before {
   animation: tinderFadeIn 220ms ease both;
 }
 
+/* Schaltet die Eintritts-Animation ab, sobald sie fertig ist — sonst hält
+   fill-mode:both transform/opacity fest und blockiert später per JS
+   gesetzte Transforms (Ziehen, Wegfliegen beim Wischen) komplett. */
+.t-card.top.entered {
+  animation: none;
+}
+
 .t-card.behind {
   z-index: 20;
 }
