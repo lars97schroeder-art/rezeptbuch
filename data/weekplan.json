@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-10T15:52:37.824Z",
+  "updated": "2026-07-10T15:53:41.948Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -50,13 +50,31 @@
       ]
     },
     "2026-W33": {
-      "mo": [],
-      "di": [],
-      "mi": [],
-      "do": [],
-      "fr": [],
-      "sa": [],
-      "so": []
+      "mo": [
+        "TEXT:Siggi Housesitting"
+      ],
+      "di": [
+        "TEXT:Siggi Housesitting"
+      ],
+      "mi": [
+        "TEXT:Siggi Housesitting"
+      ],
+      "do": [
+        "TEXT:Siggi Housesitting"
+      ],
+      "fr": [
+        "TEXT:Siggi Housesitting"
+      ],
+      "sa": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "so": [
+        "TEXT:Urlaaaaaub, Urlaub in Italien"
+      ],
+      "off": [
+        "sa",
+        "so"
+      ]
     },
     "2026-W31": {
       "mo": [],
