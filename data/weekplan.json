@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-10T14:42:25.387Z",
+  "updated": "2026-07-10T15:50:58.874Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -51,7 +51,9 @@
       "so": []
     },
     "2026-W29": {
-      "mo": [],
+      "mo": [
+        "TEXT:Annika In München"
+      ],
       "di": [
         "TEXT:Annika in München"
       ],
