@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-10T15:50:58.874Z",
+  "updated": "2026-07-10T15:51:39.942Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -63,6 +63,30 @@
       "do": [],
       "fr": [],
       "sa": [],
+      "so": [],
+      "off": [
+        "mo",
+        "di",
+        "mi"
+      ]
+    },
+    "2026-W30": {
+      "mo": [],
+      "di": [
+        "TEXT:Antonia in Luzern"
+      ],
+      "mi": [
+        "TEXT:Antonia in Luzern"
+      ],
+      "do": [
+        "TEXT:Antonia in Luzern"
+      ],
+      "fr": [
+        "TEXT:Antonia in Luzern"
+      ],
+      "sa": [
+        "TEXT:Antonia in Luzern"
+      ],
       "so": [],
       "off": []
     }
