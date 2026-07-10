@@ -1075,8 +1075,20 @@ function tinderCardHTML(r, cls) {
     <div class="t-badge nope">NÖ 🙅</div>
     <div class="t-card-badge-text like-text">WILL ICH 😍</div>
     <div class="t-card-badge-text nope-text">NÖ 🙅</div>
+    <div class="t-badge like">WILL ICH</div>
+    <div class="t-badge nope">NÖ</div>
   </div>`;
 }
+
+  function tinderPlaceholderHTML() {
+    return `<div class="t-card behind placeholder">
+      <div class="t-emoji">✨</div>
+      <div class="t-info">
+        <div class="t-title">Noch eine Karte...</div>
+        <div class="t-meta">Tippe oder wische, um weiterzumachen</div>
+      </div>
+    </div>`;
+  }
 
 function renderTinderCard() {
   if (tinder.likes.length >= 3 || !tinder.deck.length) {
@@ -1089,7 +1101,7 @@ function renderTinderCard() {
     <div class="tinder">
       <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
-        ${next ? tinderCardHTML(next, 'behind') : ''}
+        ${next ? tinderCardHTML(next, 'behind') : tinderPlaceholderHTML()}
         ${tinderCardHTML(top, 'top')}
       </div>
       <div class="tinder-buttons">
