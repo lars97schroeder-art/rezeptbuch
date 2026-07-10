@@ -107,21 +107,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App-Dateien: IMMER vom Netz zuerst (app.js, style.css, etc.)
+  // App-Dateien: Network-First mit Timeout, dann Cache
   event.respondWith((async () => {
     const cache = await caches.open(SHELL_CACHE);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 Sekunden Timeout
 
-    // Versuche ZUERST vom Netz
+    // Versuche ZUERST vom Netz mit kurzen Timeout
     try {
-      const network = await fetch(event.request, { cache: 'no-cache' });
+      const network = await fetch(event.request, { 
+        cache: 'no-store',  // KEINE HTTP-Cache, IMMER vom Server
+        signal: controller.signal 
+      });
+      clearTimeout(timeoutId);
       if (network.ok) {
         // Speichere neue Version
         cache.put(event.request, network.clone());
         return network;
       }
     } catch (e) {
-      // Netz nicht verfügbar, nutze Cache
+      // Timeout oder Fehler – nutze Cache
+      console.log('[SW] Network failed, using cache:', event.request.url);
     }
+    clearTimeout(timeoutId);
 
     // Fallback zu Cache
     const hit = await cache.match(event.request, { ignoreSearch: true });
