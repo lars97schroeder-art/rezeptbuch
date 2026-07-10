@@ -390,17 +390,24 @@ function render() {
   const items = sortItems(groupedList());
 
   if (!data.recipes.length) {
-    grid.innerHTML = `<div class="empty">Noch keine Rezepte geladen.<br>
-      Tippe oben auf <strong>⟳</strong>, wenn du Internet hast.</div>`;
+    grid.innerHTML = `<div class="empty empty-state">
+      <div class="empty-icon">🍽️</div>
+      <strong>Noch keine Rezepte da</strong>
+      <div class="empty-subtitle">Wenn du Internet hast, tippe oben auf ⟳, damit die Liste frisch geladen wird.</div>
+    </div>`;
   } else if (!items.length) {
-    grid.innerHTML = `<div class="empty">Nichts gefunden 🤷</div>`;
+    grid.innerHTML = `<div class="empty empty-state">
+      <div class="empty-icon">🔎</div>
+      <strong>Keine Treffer gefunden</strong>
+      <div class="empty-subtitle">Versuch es mit einem anderen Begriff oder schaue in eine andere Kategorie.</div>
+    </div>`;
   }
 
   // Buchstaben-Divider nur in der alphabetischen "Alle"-Ansicht ohne Suche
   const showDividers = sortMode === 'alpha' && activeCategory === 'Alle' && !query.trim();
   let lastLetter = null;
 
-  for (const item of items) {
+  for (const [index, item] of items.entries()) {
     if (showDividers) {
       const letter = dividerLetter(item);
       if (letter !== lastLetter) {
@@ -412,7 +419,8 @@ function render() {
       }
     }
     const card = document.createElement('article');
-    card.className = 'card';
+    card.className = 'card card-enter';
+    card.style.setProperty('--card-delay', `${index * 35}ms`);
     if (item.group) {
       const groupImgs = item.members.flatMap(m => imagesOf(m));
       card.innerHTML = groupImgs.length
@@ -487,6 +495,22 @@ function openGroup(name) {
   history.pushState({ view: 'group', group: name }, '');
 }
 
+function showDetailOverlay() {
+  const el = $('#detail');
+  el.hidden = false;
+  requestAnimationFrame(() => el.classList.add('is-open'));
+  document.body.style.overflow = 'hidden';
+}
+
+function hideDetailOverlay() {
+  const el = $('#detail');
+  el.classList.remove('is-open');
+  document.body.style.overflow = '';
+  window.setTimeout(() => {
+    if (!el.classList.contains('is-open')) el.hidden = true;
+  }, 220);
+}
+
 function renderGroup(name) {
   const members = data.recipes.filter(r => r.group === name);
   if (!members.length) return;
@@ -509,15 +533,11 @@ function renderGroup(name) {
       </div>
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
-  el.querySelector('.detail-home').onclick = () => {
-    el.hidden = true;
-    document.body.style.overflow = '';
-  };
+  el.querySelector('.detail-home').onclick = () => hideDetailOverlay();
   for (const b of el.querySelectorAll('.variant')) {
     b.onclick = () => openRecipe(b.dataset.id);
   }
-  el.hidden = false;
-  document.body.style.overflow = 'hidden';
+  showDetailOverlay();
 }
 
 // Foto-Bereich der Detailansicht: ein Foto, oder Wisch-Galerie mit Punkten
@@ -577,10 +597,7 @@ function renderDetail(id, opts = {}) {
       ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
-  el.querySelector('.detail-home').onclick = () => {
-    el.hidden = true;
-    document.body.style.overflow = '';
-  };
+  el.querySelector('.detail-home').onclick = () => hideDetailOverlay();
   const rnd = el.querySelector('.detail-random');
   if (rnd) {
     rnd.onclick = () => {
@@ -594,14 +611,12 @@ function renderDetail(id, opts = {}) {
   }
   wirePhotoDots(el);
   if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
-  el.hidden = false;
-  document.body.style.overflow = 'hidden';
+  showDetailOverlay();
 }
 
 // Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
 function hideDetail() {
-  $('#detail').hidden = true;
-  document.body.style.overflow = '';
+  hideDetailOverlay();
 }
 
 // Schließen läuft IMMER über die History (history.back), damit der Verlauf
@@ -619,6 +634,7 @@ window.addEventListener('popstate', e => {
   if (s.view === 'group') renderGroup(s.group);
   else if (s.view === 'recipe') renderDetail(s.id, { random: s.random });
   else if (s.view === 'weekplan') renderWeekplan();
+  else if (s.view === 'backlog') renderBacklog();
   else if (s.view === 'tinder') renderTinder();
   else if (s.view === 'tinder-result' || s.view === 'tinder-result-recipe') renderTinderResult(s.ids || []);
   else hideDetail();
@@ -646,6 +662,8 @@ function openWeekplan() {
 
 const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
 const WEEKPLAN_UPDATED_KEY = 'rezeptbuch-weekplan-updated';
+const BACKLOG_KEY = 'rezeptbuch-backlog';
+const BACKLOG_UPDATED_KEY = 'rezeptbuch-backlog-updated';
 
 // "off" ist eine Liste ausgeblendeter Wochentage (z. B. "diese Woche kochen
 // wir montags nicht") — wird wie ein normaler Tages-Eintrag mitgespeichert.
@@ -691,9 +709,15 @@ function saveWeekplanFor(key, days) {
   persistWeekplans(weeks);
 }
 
-// Bequemer Wrapper: speichert in die gerade angezeigte Woche
-function saveWeekplan(days) {
+// Bequemer Wrapper: speichert in die gerade angezeigte Woche und versucht
+// sofort, den Stand zu GitHub hochzuladen.
+async function saveWeekplan(days) {
   saveWeekplanFor(weekplanViewKey, days);
+  try {
+    await uploadWeekplan(true);
+  } catch (e) {
+    console.log('Wochenplan-Upload fehlgeschlagen:', e);
+  }
 }
 
 /* Wochenplan-Sync über GitHub (data/weekplan.json):
@@ -738,9 +762,9 @@ async function syncWeekplanFromRemote() {
 }
 
 // Lädt ALLE lokalen Wochen zu GitHub hoch, damit andere Geräte sie sehen
-async function uploadWeekplan() {
+async function uploadWeekplan(silent = false) {
   if (typeof ghToken !== 'function' || !ghToken()) {
-    toast('💾 Nur lokal gespeichert (kein Token auf diesem Gerät)');
+    if (!silent) toast('💾 Nur lokal gespeichert (kein Token auf diesem Gerät)');
     return;
   }
   const payload = { updated: new Date().toISOString(), weeks: getAllWeekplans() };
@@ -749,7 +773,7 @@ async function uploadWeekplan() {
   await ghPut('data/weekplan.json', b64utf8(JSON.stringify(payload, null, 2)),
     'Wochenplan aktualisiert (aus der App)', sha);
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, payload.updated);
-  toast('✅ Wochenplan gespeichert & geteilt');
+  if (!silent) toast('✅ Wochenplan gespeichert & geteilt');
 }
 
 // HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept).
@@ -905,7 +929,10 @@ function renderWeekplan(skipSync = false) {
       <div class="weekplan-container">
         ${daysHTML}
       </div>
-      ${readonly ? '' : '<button class="weekplan-save-btn">💾 Speichern & teilen</button>'}
+      <div class="weekplan-actions">
+        <button class="weekplan-backlog-btn">📝 Backlog</button>
+        ${readonly ? '' : '<button class="weekplan-save-btn">🔄 Synchronisieren</button>'}
+      </div>
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -915,9 +942,13 @@ function renderWeekplan(skipSync = false) {
     navBtn.onclick = () => {
       weekplanViewDate = new Date(weekplanViewDate);
       weekplanViewDate.setDate(weekplanViewDate.getDate() + 7 * Number(navBtn.dataset.dir));
-      renderWeekplan(true);
+      renderWeekplan();
     };
   }
+
+  el.querySelector('.weekplan-backlog-btn')?.addEventListener('click', () => {
+    openBacklog();
+  });
 
   // Tag ausblenden/einblenden: nur den Toggle-Zustand speichern, Rest bleibt erhalten
   for (const toggleBtn of el.querySelectorAll('.weekplan-day-toggle')) {
@@ -1025,20 +1056,18 @@ function renderWeekplan(skipSync = false) {
     // Rauszoomen nach dem Tippen übernimmt der globale focusout-Handler
   }
 
-  // Save Button: lokal speichern UND alle Wochen zu GitHub hochladen (fehlt in vergangenen Wochen)
+  // Synchronisieren-Button: aktuelle Wochenplan-Daten sofort hochladen
   const saveBtn = el.querySelector('.weekplan-save-btn');
   if (saveBtn) saveBtn.onclick = async () => {
-    saveWeekplan(weekplan);
     try {
       await uploadWeekplan();
     } catch (e) {
       console.log('Wochenplan-Upload fehlgeschlagen:', e);
-      toast('⚠️ Lokal gespeichert, Teilen fehlgeschlagen (offline?)');
+      toast('⚠️ Synchronisierung fehlgeschlagen (offline?)');
     }
   };
 
-  el.hidden = false;
-  document.body.style.overflow = 'hidden';
+  showDetailOverlay();
 
   // Im Hintergrund: neuesten Stand vom anderen Gerät holen und anzeigen
   if (!skipSync) {
@@ -1047,6 +1076,200 @@ function renderWeekplan(skipSync = false) {
       if (changed && !el.hidden && el.querySelector('.weekplan-container')) {
         toast('🔄 Wochenplan vom anderen Gerät übernommen');
         renderWeekplan(true);
+      }
+    });
+  }
+}
+
+function getBacklogEntries() {
+  try {
+    const raw = localStorage.getItem(BACKLOG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function persistBacklog(entries) {
+  localStorage.setItem(BACKLOG_KEY, JSON.stringify(entries));
+  localStorage.setItem(BACKLOG_UPDATED_KEY, new Date().toISOString());
+}
+
+function displayEntryName(entry) {
+  if (entry.startsWith('TEXT:')) return entry.substring(5);
+  const recipe = data.recipes.find(r => r.id === entry);
+  return recipe ? titleWithEmoji(recipe) : '';
+}
+
+function backlogTagHTML(entry, displayName, readonly = false) {
+  const isRecipe = !entry.startsWith('TEXT:');
+  return `<span class="weekplan-tag" data-entry="${esc(entry)}">` +
+    `<span class="weekplan-tag-text${isRecipe ? ' clickable' : ''}">${esc(displayName)}</span>` +
+    (readonly ? '' : `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" aria-label="Entfernen">✕</button>`) +
+    `</span>`;
+}
+
+async function fetchRemoteBacklog() {
+  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
+    try {
+      const info = await ghGet('data/backlog.json');
+      return JSON.parse(utf8b64(info.content));
+    } catch (e) { /* Datei existiert evtl. noch nicht */ }
+  }
+  try {
+    const res = await fetch('data/backlog.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) return await res.json();
+  } catch (e) { /* offline */ }
+  return null;
+}
+
+async function syncBacklogFromRemote() {
+  const remote = await fetchRemoteBacklog();
+  if (!remote || !Array.isArray(remote.entries)) return false;
+  const localUpdated = new Date(localStorage.getItem(BACKLOG_UPDATED_KEY)).getTime() || 0;
+  const remoteUpdated = new Date(remote.updated).getTime() || 0;
+  if (remoteUpdated > localUpdated) {
+    persistBacklog(remote.entries);
+    return true;
+  }
+  return false;
+}
+
+async function uploadBacklog(entries = getBacklogEntries(), silent = false) {
+  if (typeof ghToken !== 'function' || !ghToken()) {
+    persistBacklog(entries);
+    return;
+  }
+  const payload = { updated: new Date().toISOString(), entries };
+  let sha;
+  try { sha = (await ghGet('data/backlog.json')).sha; } catch (e) { /* erste Übertragung */ }
+  await ghPut('data/backlog.json', b64utf8(JSON.stringify(payload, null, 2)),
+    'Backlog aktualisiert (aus der App)', sha);
+  localStorage.setItem(BACKLOG_UPDATED_KEY, payload.updated);
+}
+
+function openBacklog() {
+  renderBacklog();
+  history.pushState({ view: 'backlog' }, '');
+}
+
+function renderBacklog(skipSync = false) {
+  const el = $('#detail');
+  const entries = getBacklogEntries();
+  const listHTML = entries.map(entry => {
+    const displayName = displayEntryName(entry);
+    return displayName ? backlogTagHTML(entry, displayName) : '';
+  }).filter(Boolean).join('');
+
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="detail-body group-body">
+      <h2>📝 Rezept-Backlog</h2>
+      <div class="detail-meta">Hier sammelst du Gerichte, die du später kochen willst.</div>
+      <div class="weekplan-autocomplete">
+        <div class="weekplan-selected">${listHTML || '<div class="weekplan-off-hint">Noch keine Einträge</div>'}</div>
+        <div class="weekplan-input-row">
+          <input type="text" class="weekplan-search" placeholder="Rezept oder Notiz hinzufügen …" autocomplete="off">
+          <button class="weekplan-add-btn" title="Hinzufügen">+</button>
+        </div>
+        <div class="weekplan-suggestions" hidden></div>
+      </div>
+      <div class="weekplan-actions" style="margin-top: 16px;">
+        <button class="weekplan-save-btn">🔄 Synchronisieren</button>
+      </div>
+    </div>`;
+
+  const selectedDiv = el.querySelector('.weekplan-selected');
+  const searchInput = el.querySelector('.weekplan-search');
+  const addBtn = el.querySelector('.weekplan-add-btn');
+  const suggestionsDiv = el.querySelector('.weekplan-suggestions');
+
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
+
+  for (const removeBtn of el.querySelectorAll('.weekplan-tag-remove')) {
+    removeBtn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const entry = removeBtn.dataset.entry;
+      const next = getBacklogEntries().filter(x => x !== entry);
+      persistBacklog(next);
+      try { await uploadBacklog(next); } catch (e) { console.log('Backlog-Upload fehlgeschlagen:', e); }
+      renderBacklog();
+    };
+  }
+
+  for (const textEl of el.querySelectorAll('.weekplan-tag-text.clickable')) {
+    const entry = textEl.closest('.weekplan-tag')?.dataset.entry;
+    textEl.onclick = () => {
+      if (entry && data.recipes.some(r => r.id === entry)) openRecipe(entry);
+    };
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (!query) {
+      suggestionsDiv.hidden = true;
+      return;
+    }
+    const matches = data.recipes.filter(r => {
+      const title = titleWithEmoji(r).toLowerCase();
+      const category = Array.isArray(r.category) ? r.category.join(' ').toLowerCase() : (r.category || '').toLowerCase();
+      return title.includes(query) || category.includes(query);
+    }).slice(0, 8);
+
+    if (!matches.length) {
+      suggestionsDiv.hidden = true;
+      return;
+    }
+    suggestionsDiv.innerHTML = matches.map(r =>
+      `<div class="weekplan-suggestion" data-id="${esc(r.id)}">${emojiFor(r)} ${esc(r.title)}</div>`
+    ).join('');
+    suggestionsDiv.hidden = false;
+
+    for (const suggEl of suggestionsDiv.querySelectorAll('.weekplan-suggestion')) {
+      suggEl.onclick = async () => {
+        const entry = suggEl.dataset.id;
+        const next = [...getBacklogEntries(), entry];
+        persistBacklog(next);
+        try { await uploadBacklog(next); } catch (e) { console.log('Backlog-Upload fehlgeschlagen:', e); }
+        renderBacklog();
+      };
+    }
+  });
+
+  addBtn.onclick = async () => {
+    const text = searchInput.value.trim();
+    if (!text) return;
+    const entry = 'TEXT:' + text;
+    const next = [...getBacklogEntries(), entry];
+    persistBacklog(next);
+    try { await uploadBacklog(next); } catch (e) { console.log('Backlog-Upload fehlgeschlagen:', e); }
+    renderBacklog();
+  };
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!suggestionsDiv.hidden && suggestionsDiv.children.length > 0) {
+        suggestionsDiv.children[0].click();
+      } else {
+        addBtn.click();
+      }
+    }
+  });
+
+  el.querySelector('.weekplan-save-btn').onclick = async () => {
+    try { await uploadBacklog(getBacklogEntries()); } catch (e) { console.log('Backlog-Upload fehlgeschlagen:', e); }
+  };
+
+  showDetailOverlay();
+
+  if (!skipSync) {
+    syncBacklogFromRemote().then(changed => {
+      if (changed && !el.hidden && el.querySelector('.weekplan-search')) {
+        renderBacklog(true);
       }
     });
   }
@@ -1078,6 +1301,16 @@ function tinderCardHTML(r, cls) {
   </div>`;
 }
 
+function tinderPlaceholderHTML(cls = 'behind') {
+  return `<div class="t-card ${cls} placeholder-card">
+    <div class="t-placeholder-emoji">🍽️</div>
+    <div class="t-info">
+      <div class="t-title">Food Match</div>
+      <div class="t-meta">Die nächste Karte erscheint erst, wenn diese Entscheidung gefallen ist.</div>
+    </div>
+  </div>`;
+}
+
 function renderTinderCard() {
   if (tinder.likes.length >= 3 || !tinder.deck.length) {
     return showTinderResult(tinder.likes.map(r => r.id));
@@ -1089,7 +1322,7 @@ function renderTinderCard() {
     <div class="tinder">
       <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
-        ${next ? tinderCardHTML(next, 'behind') : ''}
+        ${tinderPlaceholderHTML('behind')}
         ${tinderCardHTML(top, 'top')}
       </div>
       <div class="tinder-buttons">
@@ -1103,6 +1336,14 @@ function renderTinderCard() {
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   const card = el.querySelector('.t-card.top');
   attachSwipe(card, dir => swipeTinder(dir));
+  const buttons = el.querySelectorAll('.tinder-buttons button');
+  buttons.forEach(btn => {
+    const clearPress = () => btn.classList.remove('is-pressed');
+    btn.addEventListener('pointerdown', () => btn.classList.add('is-pressed'));
+    btn.addEventListener('pointerup', clearPress);
+    btn.addEventListener('pointerleave', clearPress);
+    btn.addEventListener('pointercancel', clearPress);
+  });
   el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
   el.querySelector('.t-like').onclick = () => flyOut(card, 1);
   el.querySelector('.t-superlike').onclick = () => superlike(top);
@@ -1120,7 +1361,7 @@ function superlike(recipe) {
   const el = $('#detail');
   const overlay = document.createElement('div');
   overlay.className = 'superlike-overlay';
-  overlay.innerHTML = '<div class="superlike-text">SUPERLIKE ⭐</div>';
+  overlay.innerHTML = '<div class="superlike-glow"></div><div class="superlike-text">SUPERLIKE ⭐</div>';
   el.appendChild(overlay);
 
   setTimeout(() => {
@@ -1145,18 +1386,20 @@ function flyOut(card, dir) {
 
   // Verzögerte Animation für Karte
   setTimeout(() => {
-    card.style.transition = 'transform 1.0s ease, opacity 1.0s ease';
+    card.style.transition = 'transform 0.7s cubic-bezier(0.3, 0.8, 0.4, 1), opacity 0.7s ease';
     card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
     card.style.opacity = '0';
-  }, 400);
+  }, 350);
 
-  setTimeout(() => swipeTinder(dir), 1400);
+  setTimeout(() => swipeTinder(dir), 1200);
 }
 
 function attachSwipe(card, onSwipe) {
   let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
   const badgeLike = card.querySelector('.t-badge.like');
   const badgeNope = card.querySelector('.t-badge.nope');
+  const likeText = card.querySelector('.t-card-badge-text.like-text');
+  const nopeText = card.querySelector('.t-card-badge-text.nope-text');
   const img = card.querySelector('img');
 
   card.addEventListener('pointerdown', e => {
@@ -1171,18 +1414,25 @@ function attachSwipe(card, onSwipe) {
     if (!dragging || done) return;
     dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 12}deg)`;
+    card.style.transform = `translate(${dx}px, ${dy * 0.25}px) rotate(${dx / 14}deg)`;
     // Stempel wächst und wird kräftiger, je weiter man zieht (wie bei Tinder)
-    const p = Math.min(1, Math.abs(dx) / 100);
-    const scale = 0.6 + 0.55 * p;
+    const p = Math.min(1, Math.abs(dx) / 95);
+    const scale = 0.74 + 0.26 * p;
+    const visible = 0.14 + 0.86 * p;
     if (dx > 0) {
-      badgeLike.style.opacity = p;
+      badgeLike.style.opacity = visible;
       badgeLike.style.transform = `rotate(-14deg) scale(${scale})`;
       badgeNope.style.opacity = 0;
+      likeText.style.opacity = visible;
+      likeText.style.transform = `translate(-50%, -50%) rotate(-14deg) scale(${scale})`;
+      nopeText.style.opacity = 0;
     } else {
-      badgeNope.style.opacity = p;
+      badgeNope.style.opacity = visible;
       badgeNope.style.transform = `rotate(14deg) scale(${scale})`;
       badgeLike.style.opacity = 0;
+      nopeText.style.opacity = visible;
+      nopeText.style.transform = `translate(-50%, -50%) rotate(14deg) scale(${scale})`;
+      likeText.style.opacity = 0;
     }
     // Foto wird je weiter raus gezogen dunkler (ausgrauen)
     if (img) {
@@ -1194,14 +1444,18 @@ function attachSwipe(card, onSwipe) {
   const end = () => {
     if (!dragging || done) return;
     dragging = false;
-    if (Math.abs(dx) > 90) {
+    if (Math.abs(dx) > 80) {
       done = true;
       flyOut(card, dx > 0 ? 1 : -1);
     } else {
-      card.style.transition = 'transform 0.25s ease';
+      card.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)';
       card.style.transform = '';
       badgeLike.style.opacity = 0;
       badgeNope.style.opacity = 0;
+      likeText.style.opacity = 0;
+      nopeText.style.opacity = 0;
+      likeText.style.transform = '';
+      nopeText.style.transform = '';
       // Foto zurück auf normal
       if (img) {
         img.style.filter = 'brightness(1)';
@@ -1849,14 +2103,27 @@ function clearWeekplanUpdateDot() {
 //  - auf der Rezeptübersicht: Einstellungen öffnen ("nach vorne")
 let swipeStart = null;
 let swipeStartY = 0;
-let swipeMode = null; // 'back' | 'settings'
+let swipeMode = null; // 'back' | 'settings' | 'right-settings'
 const swipeTarget = () => $('#detail').hidden ? $('#editor') : $('#detail');
+const isMainMenuVisible = () => $('#detail').hidden && $('#editor').hidden;
+const resetSwipeState = () => {
+  swipeStart = null;
+  swipeMode = null;
+};
 
 document.addEventListener('pointerdown', (e) => {
-  if (e.clientX >= 50) return;
+  const nearLeftEdge = e.clientX <= 24;
+  const nearRightEdge = e.clientX >= window.innerWidth - 24;
+  if (nearRightEdge && isMainMenuVisible()) {
+    swipeStart = e.clientX;
+    swipeStartY = e.clientY;
+    swipeMode = 'right-settings';
+    return;
+  }
+  if (!nearLeftEdge) return;
   swipeStart = e.clientX;
   swipeStartY = e.clientY;
-  swipeMode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
+  swipeMode = isMainMenuVisible() ? 'settings' : 'back';
 }, false);
 
 document.addEventListener('pointermove', (e) => {
@@ -1867,10 +2134,20 @@ document.addEventListener('pointermove', (e) => {
   // Übersicht: Wisch nach rechts öffnet die Einstellungen
   if (swipeMode === 'settings') {
     if (swipeDistance > 80 && dy < 60) {
-      swipeStart = null; swipeMode = null;
+      resetSwipeState();
       openSettings();
     } else if (swipeDistance < -10 || dy > 80) {
-      swipeStart = null; swipeMode = null; // vertikales Scrollen / falsche Richtung
+      resetSwipeState();
+    }
+    return;
+  }
+
+  if (swipeMode === 'right-settings') {
+    if (swipeDistance < -80 && dy < 70) {
+      resetSwipeState();
+      openSettings();
+    } else if (swipeDistance > 10 || dy > 80) {
+      resetSwipeState();
     }
     return;
   }
@@ -1880,7 +2157,7 @@ document.addEventListener('pointermove', (e) => {
 
   // Nur swipen, wenn der Zurück-Button sichtbar ist (aber nicht auf Tinder-Seite)
   if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) {
-    swipeStart = null;
+    resetSwipeState();
     return;
   }
 
@@ -1894,7 +2171,7 @@ document.addEventListener('pointermove', (e) => {
   // (closeOverlay → history.back), damit man auf der richtigen Übersicht landet.
   // #editor (Einstellungen/Editor) hat keinen History-State → direkt verstecken.
   if (swipeDistance > 100 && e.clientX < 200) {
-    swipeStart = null;
+    resetSwipeState();
     target.style.transform = '';
     target.style.opacity = '';
     if (target.id === 'detail') closeOverlay();
@@ -1908,6 +2185,5 @@ document.addEventListener('pointerup', () => {
     target.style.transform = '';
     target.style.opacity = '';
   }
-  swipeStart = null;
-  swipeMode = null;
+  resetSwipeState();
 }, false);
