@@ -578,40 +578,44 @@ function wirePhotoDots(el) {
 }
 
 function renderDetail(id, opts = {}) {
-  const r = data.recipes.find(x => x.id === id);
-  if (!r) return;
-  const el = $('#detail');
-  const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join(' · ');
-  el.innerHTML = `
-    <button class="detail-close" aria-label="Zurück">←</button>
-    <button class="detail-home" aria-label="Startseite">🏠</button>
-    ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
-    ${detailPhotosHTML(r)}
-    <div class="detail-body">
-      <h2>${titleWithEmoji(r)}</h2>
-      ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
-      ${(r.ingredients || []).length ? `<h3>Zutaten</h3>
-        <ul>${r.ingredients.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
-      ${(r.steps || []).length ? `<h3>Zubereitung</h3>
-        <ol>${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join('')}</ol>` : ''}
-      ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
-    </div>`;
-  el.querySelector('.detail-close').onclick = () => closeOverlay();
-  el.querySelector('.detail-home').onclick = () => hideDetailOverlay();
-  const rnd = el.querySelector('.detail-random');
-  if (rnd) {
-    rnd.onclick = () => {
-      const list = filtered().filter(x => x.id !== id);
-      if (!list.length) return toast('Mehr gibt es nicht 🤷');
-      const next = list[Math.floor(Math.random() * list.length)];
-      renderDetail(next.id, { random: true });
-      // ersetzt den Verlaufseintrag: einmal zurück führt immer zur Übersicht
-      history.replaceState({ view: 'recipe', id: next.id, random: true }, '');
-    };
+  try {
+    const r = data.recipes.find(x => x.id === id);
+    if (!r) return;
+    const el = $('#detail');
+    const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join(' · ');
+    el.innerHTML = `
+      <button class="detail-close" aria-label="Zurück">←</button>
+      <button class="detail-home" aria-label="Startseite">🏠</button>
+      ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
+      ${detailPhotosHTML(r)}
+      <div class="detail-body">
+        <h2>${titleWithEmoji(r)}</h2>
+        ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
+        ${(r.ingredients || []).length ? `<h3>Zutaten</h3>
+          <ul>${r.ingredients.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+        ${(r.steps || []).length ? `<h3>Zubereitung</h3>
+          <ol>${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join('')}</ol>` : ''}
+        ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
+      </div>`;
+    el.querySelector('.detail-close').onclick = () => closeOverlay();
+    el.querySelector('.detail-home').onclick = () => hideDetailOverlay();
+    const rnd = el.querySelector('.detail-random');
+    if (rnd) {
+      rnd.onclick = () => {
+        const list = filtered().filter(x => x.id !== id);
+        if (!list.length) return toast('Mehr gibt es nicht 🤷');
+        const next = list[Math.floor(Math.random() * list.length)];
+        renderDetail(next.id, { random: true });
+        // ersetzt den Verlaufseintrag: einmal zurück führt immer zur Übersicht
+        history.replaceState({ view: 'recipe', id: next.id, random: true }, '');
+      };
+    }
+    wirePhotoDots(el);
+    if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
+    showDetailOverlay();
+  } catch (err) {
+    console.error('🔴 renderDetail Error:', err);
   }
-  wirePhotoDots(el);
-  if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
-  showDetailOverlay();
 }
 
 // Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
@@ -1333,22 +1337,30 @@ function renderTinderCard() {
       <div class="tinder-hint">Wischen oder tippen: links = nö, Mitte = superlike, rechts = will ich!</div>
     </div>`;
 
-  el.querySelector('.detail-close').onclick = () => closeOverlay();
-  const card = el.querySelector('.t-card.top');
-  attachSwipe(card, dir => swipeTinder(dir));
-  const buttons = el.querySelectorAll('.tinder-buttons button');
-  buttons.forEach(btn => {
-    const clearPress = () => btn.classList.remove('is-pressed');
-    btn.addEventListener('pointerdown', () => btn.classList.add('is-pressed'));
-    btn.addEventListener('pointerup', clearPress);
-    btn.addEventListener('pointerleave', clearPress);
-    btn.addEventListener('pointercancel', clearPress);
-  });
-  el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
-  el.querySelector('.t-like').onclick = () => flyOut(card, 1);
-  el.querySelector('.t-superlike').onclick = () => superlike(top);
-  el.hidden = false;
-  document.body.style.overflow = 'hidden';
+  try {
+    el.querySelector('.detail-close').onclick = () => closeOverlay();
+    const card = el.querySelector('.t-card.top');
+    if (!card) {
+      console.error('🔴 Tinder Card nicht gefunden! el:', el);
+      return;
+    }
+    attachSwipe(card, dir => swipeTinder(dir));
+    const buttons = el.querySelectorAll('.tinder-buttons button');
+    buttons.forEach(btn => {
+      const clearPress = () => btn.classList.remove('is-pressed');
+      btn.addEventListener('pointerdown', () => btn.classList.add('is-pressed'));
+      btn.addEventListener('pointerup', clearPress);
+      btn.addEventListener('pointerleave', clearPress);
+      btn.addEventListener('pointercancel', clearPress);
+    });
+    el.querySelector('.t-nope').onclick = () => flyOut(card, -1);
+    el.querySelector('.t-like').onclick = () => flyOut(card, 1);
+    el.querySelector('.t-superlike').onclick = () => superlike(top);
+    el.hidden = false;
+    document.body.style.overflow = 'hidden';
+  } catch (err) {
+    console.error('🔴 renderTinderCard Error:', err);
+  }
 }
 
 function swipeTinder(dir) {
@@ -2049,6 +2061,17 @@ async function checkAppUpdateAvailable() {
 }
 
 /* ---------- App-Start ---------- */
+
+// Globaler Error-Handler für unbehandelte JavaScript-Fehler
+window.addEventListener('error', (e) => {
+  console.error('🔴 UNBEHANDELTER FEHLER:', e.error || e.message);
+  console.error('Stack:', e.error?.stack || 'keine Stack-Info');
+  // Verhindere dass die App komplett crasht, aber log den Fehler
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('🔴 UNBEHANDELTE PROMISE-REJECTION:', e.reason);
+});
 
 // Lokale Daten sofort anzeigen — kein automatischer Reload mehr
 renderModeUI();
