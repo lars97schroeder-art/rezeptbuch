@@ -1941,14 +1941,17 @@ html.color-rainbow .t-card.foodmatch {
   align-items: start;
   transition: opacity 0.15s;
 }
-.weekplan-day.day-off .weekplan-day-inner { opacity: 0.5; align-items: center; }
+.weekplan-day.day-off .weekplan-day-inner { opacity: 0.5; }
 
 /* Einzelner Tag schon vorbei (innerhalb einer sonst noch bearbeitbaren
    Woche): Rezepte bleiben lesbar, nur etwas gedimmt — Hinzufügen und der
    Ausblenden-Knopf entfallen bereits über das Template */
 .weekplan-day.past-day .weekplan-day-inner { opacity: 0.6; }
 
-/* Ausblenden-Knopf oben rechts an der Tages-Karte (wie die Neu/Update-Badges) */
+/* Ausblenden-Knopf oben rechts an der Tages-Karte (wie die Neu/Update-Badges).
+   Minus (Tag aktiv, Klick blendet aus) ist kräftig/farbig — lädt zum
+   Ausblenden ein. Plus (Tag schon ausgeblendet) ist bewusst unauffällig/
+   dezent, damit es sich in den gedimmten Zustand einfügt. */
 .weekplan-day-toggle {
   position: absolute;
   top: 8px;
@@ -1958,8 +1961,8 @@ html.color-rainbow .t-card.foodmatch {
   height: 24px;
   border-radius: 999px;
   border: none;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   font-size: 16px;
   font-weight: 800;
   line-height: 1;
@@ -1970,8 +1973,8 @@ html.color-rainbow .t-card.foodmatch {
   -webkit-tap-highlight-color: transparent;
 }
 .weekplan-day.day-off .weekplan-day-toggle {
-  background: var(--accent);
-  color: #fff;
+  background: var(--border);
+  color: var(--muted);
 }
 
 /* Wochentag als Abschnitts-Überschrift — bewusst anders als die Rezept-Chips */

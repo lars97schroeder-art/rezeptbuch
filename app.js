@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T16:52:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T17:12:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -918,45 +918,41 @@ function renderWeekplan(skipSync = false) {
     const noEdit = readonly || isPastDay;
     let tagsHTML = '';
 
-    // Ausgeblendete Tage zeigen weder Einträge noch das Eingabefeld — die
-    // Einträge bleiben aber in weekplan[day.key] unangetastet gespeichert und
-    // erscheinen beim Wiedereinblenden unverändert erneut.
-    if (!isOff) {
-      for (const entry of entries) {
-        let displayName = '';
-        if (entry.startsWith('TEXT:')) {
-          displayName = entry.substring(5);
-        } else {
-          const recipe = data.recipes.find(r => r.id === entry);
-          displayName = recipe ? titleWithEmoji(recipe) : '';
-        }
+    // Ausgeblendete Tage zeigen ihre Einträge weiterhin (nur schreibgeschützt,
+    // ohne X zum Entfernen) — nur das Eingabefeld entfällt. So bleibt sichtbar,
+    // was für den Tag geplant war, ohne dass man es aus Versehen bearbeitet.
+    for (const entry of entries) {
+      let displayName = '';
+      if (entry.startsWith('TEXT:')) {
+        displayName = entry.substring(5);
+      } else {
+        const recipe = data.recipes.find(r => r.id === entry);
+        displayName = recipe ? titleWithEmoji(recipe) : '';
+      }
 
-        if (displayName) {
-          tagsHTML += weekplanTagHTML(entry, displayName, day.key, noEdit);
-        }
+      if (displayName) {
+        tagsHTML += weekplanTagHTML(entry, displayName, day.key, noEdit || isOff);
       }
     }
 
     // Reihenfolge: erst die Einträge, darunter das Eingabefeld (entfällt in
-    // vergangenen Wochen UND bei bereits gelaufenen Einzeltagen — nur
-    // ansehen). Der Umschalt-Knopf selbst bleibt oben rechts an der Karte
-    // immer voll sichtbar (eigener Layer, nicht gedimmt).
+    // vergangenen Wochen, bei bereits gelaufenen Einzeltagen UND bei
+    // ausgeblendeten Tagen — nur ansehen). Der Umschalt-Knopf selbst bleibt
+    // oben rechts an der Karte immer voll sichtbar (eigener Layer, nicht gedimmt).
     daysHTML += `
       <div class="weekplan-day${isOff ? ' day-off' : ''}${isPastDay ? ' past-day' : ''}" data-day="${day.key}">
         ${noEdit ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
         <div class="weekplan-day-inner">
           <label class="weekplan-label">${day.label}</label>
-          ${isOff
-            ? ''
-            : `<div class="weekplan-autocomplete" data-day="${day.key}">
-                <div class="weekplan-selected">${tagsHTML}</div>
-                ${noEdit ? '' : `
-                <div class="weekplan-input-row">
-                  <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
-                  <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
-                </div>
-                <div class="weekplan-suggestions" hidden></div>`}
-              </div>`}
+          <div class="weekplan-autocomplete" data-day="${day.key}">
+            <div class="weekplan-selected">${tagsHTML}</div>
+            ${(noEdit || isOff) ? '' : `
+            <div class="weekplan-input-row">
+              <input type="text" class="weekplan-search" placeholder="Rezept hinzufügen …" autocomplete="off">
+              <button class="weekplan-add-btn" title="Freitext hinzufügen">+</button>
+            </div>
+            <div class="weekplan-suggestions" hidden></div>`}
+          </div>
         </div>
       </div>`;
   }
