@@ -850,38 +850,6 @@ html.color-rainbow .tinder::before {
   margin-top: 4px;
 }
 
-.t-badge {
-  /* kleine weiße Ja/Nein-Boxen oben an der Karte */
-  display: block;
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  transform: none;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.6px;
-  opacity: 0;
-  border: 2px solid rgba(0,0,0,0.06);
-  background: #ffffff;
-  color: var(--text);
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.t-badge.like {
-  color: #2f9e44;
-  border-color: #2f9e44;
-}
-
-.t-badge.nope {
-  color: #c0392b;
-  border-color: rgba(192,57,43,0.08);
-  right: 12px;
-  left: auto;
-}
-
 .tinder-buttons {
   display: flex;
   justify-content: center;

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T16:18:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T16:24:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1071,12 +1071,8 @@ function tinderCardHTML(r, cls) {
       <div class="t-title">${titleWithEmoji(r)}</div>
       <div class="t-meta">${esc([categoryLabel(r), displayDuration(r.time)].filter(Boolean).join(' · '))}</div>
     </div>
-    <div class="t-badge like">WILL ICH 😍</div>
-    <div class="t-badge nope">NÖ 🙅</div>
     <div class="t-card-badge-text like-text">WILL ICH 😍</div>
     <div class="t-card-badge-text nope-text">NÖ 🙅</div>
-    <div class="t-badge like">WILL ICH</div>
-    <div class="t-badge nope">NÖ</div>
   </div>`;
 }
 
@@ -1144,16 +1140,12 @@ function superlike(recipe) {
 }
 
 function flyOut(card, dir) {
-  // Text einblenden
-  const textBadge = card.querySelector(dir > 0 ? '.like-text' : '.nope-text');
-  if (textBadge) {
-    textBadge.style.opacity = '1';
+  // Passenden Stempel groß mittig einblenden, dann Karte rausfliegen lassen
+  const badge = card.querySelector(dir > 0 ? '.like-text' : '.nope-text');
+  if (badge) {
+    badge.style.opacity = 1;
+    badge.style.transform = `translate(-50%, -50%) rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
   }
-
-  // Passenden Stempel groß einblenden, dann Karte rausfliegen lassen
-  const badge = card.querySelector(dir > 0 ? '.t-badge.like' : '.t-badge.nope');
-  badge.style.opacity = 1;
-  badge.style.transform = `rotate(${dir > 0 ? -14 : 14}deg) scale(1.15)`;
 
   // Verzögerte Animation für Karte
   setTimeout(() => {
@@ -1168,14 +1160,14 @@ function flyOut(card, dir) {
 function attachSwipe(card, onSwipe) {
   if (!card) return; // Sicherheit: Card existiert nicht
   let startX = 0, startY = 0, dx = 0, dragging = false, done = false;
-  const badgeLike = card.querySelector('.t-badge.like');
-  const badgeNope = card.querySelector('.t-badge.nope');
-  const likeText = card.querySelector('.t-card-badge-text.like-text');
-  const nopeText = card.querySelector('.t-card-badge-text.nope-text');
+  // Nur noch die mittige Box — die kleine Ecken-Box wurde entfernt, ihr
+  // drag-abhängiges Ein-/Ausblenden läuft jetzt direkt auf der mittigen Box.
+  const badgeLike = card.querySelector('.t-card-badge-text.like-text');
+  const badgeNope = card.querySelector('.t-card-badge-text.nope-text');
   const img = card.querySelector('img');
 
   // Fehlerschutz: wenn kritische Elemente nicht existieren, nicht weitermachen
-  if (!badgeLike || !badgeNope || !likeText || !nopeText) {
+  if (!badgeLike || !badgeNope) {
     console.warn('[SW] attachSwipe: fehlende kritische Elemente, Swipe deaktiviert');
     return;
   }
@@ -1202,13 +1194,15 @@ function attachSwipe(card, onSwipe) {
 
     const p = Math.min(1, Math.abs(dx) / 100);
     const scale = 0.6 + 0.55 * p;
+    // translate(-50%,-50%) muss erhalten bleiben, sonst springt die Box aus
+    // der Bildmitte (die Basis-Zentrierung kommt sonst aus dem Stylesheet)
     if (dx > 0) {
       badgeLike.style.opacity = p;
-      badgeLike.style.transform = `rotate(-14deg) scale(${scale})`;
+      badgeLike.style.transform = `translate(-50%, -50%) rotate(-14deg) scale(${scale})`;
       badgeNope.style.opacity = 0;
     } else {
       badgeNope.style.opacity = p;
-      badgeNope.style.transform = `rotate(14deg) scale(${scale})`;
+      badgeNope.style.transform = `translate(-50%, -50%) rotate(14deg) scale(${scale})`;
       badgeLike.style.opacity = 0;
     }
     if (img) {
@@ -1227,7 +1221,9 @@ function attachSwipe(card, onSwipe) {
       card.style.transition = 'transform 0.25s ease';
       card.style.transform = '';
       badgeLike.style.opacity = 0;
+      badgeLike.style.transform = 'translate(-50%, -50%)';
       badgeNope.style.opacity = 0;
+      badgeNope.style.transform = 'translate(-50%, -50%)';
       if (img) {
         img.style.filter = 'brightness(1)';
       }
