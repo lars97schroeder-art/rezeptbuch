@@ -1,24 +1,26 @@
 {
-  "updated": "2026-07-08T17:21:58.454Z",
+  "updated": "2026-07-10T08:33:25.841Z",
   "weeks": {
     "2026-W28": {
       "mo": [
         "TEXT:Ich hab dich lieb"
       ],
-      "di": [
-        "TEXT:Ich hab dich auch lieb!!!"
+      "di": [],
+      "mi": [],
+      "do": [
+        "TEXT:Bei Alex",
+        "TEXT:Kuscheln",
+        "TEXT:Dean and david"
       ],
-      "mi": [
-        "backcamembert-mit-salat"
-      ],
-      "do": [],
       "fr": [
-        "TEXT:Dean & david ? 😂🫶🏼"
+        "TEXT:TBD"
       ],
       "sa": [
-        "TEXT:Hier haben wir das Sofa, da braucht’s was auf der Couch ;)"
+        "TEXT:Dinner mit Helmut und Nathalie 🙌🏻"
       ],
-      "so": [],
+      "so": [
+        "TEXT:Iwas Comfort Food"
+      ],
       "off": []
     },
     "2026-W32": {
