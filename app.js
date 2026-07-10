@@ -886,7 +886,7 @@ function renderWeekplan(skipSync = false) {
         }
 
         if (displayName) {
-          tagsHTML += weekplanTagHTML(entry, displayName, day.key, readonly);
+          tagsHTML += weekplanTagHTML(entry, displayName, day.key, noEdit);
         }
       }
     }
