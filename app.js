@@ -1180,20 +1180,28 @@ function attachSwipe(card, onSwipe) {
     return;
   }
 
-  card.addEventListener('pointerdown', e => {
-    dragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    card.style.transition = 'none';
-    try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
-  });
+  card.style.touchAction = 'none';
 
-  card.addEventListener('pointermove', e => {
+  const getPoint = e => (e.touches && e.touches[0]) ? e.touches[0] : e;
+  const onDown = e => {
+    const point = getPoint(e);
+    dragging = true;
+    startX = point.clientX;
+    startY = point.clientY;
+    card.style.transition = 'none';
+    if (e.pointerId != null) {
+      try { card.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+    }
+  };
+
+  const onMove = e => {
     if (!dragging || done) return;
-    dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const point = getPoint(e);
+    dx = point.clientX - startX;
+    const dy = point.clientY - startY;
     card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 12}deg)`;
-    // Stempel wächst und wird kräftiger, je weiter man zieht (wie bei Tinder)
+    e.preventDefault();
+
     const p = Math.min(1, Math.abs(dx) / 100);
     const scale = 0.6 + 0.55 * p;
     if (dx > 0) {
@@ -1205,12 +1213,11 @@ function attachSwipe(card, onSwipe) {
       badgeNope.style.transform = `rotate(14deg) scale(${scale})`;
       badgeLike.style.opacity = 0;
     }
-    // Foto wird je weiter raus gezogen dunkler (ausgrauen)
     if (img) {
       const fadeStrength = Math.min(0.5, Math.abs(dx) / 200);
       img.style.filter = `brightness(${1 - fadeStrength * 0.7})`;
     }
-  });
+  };
 
   const end = () => {
     if (!dragging || done) return;
@@ -1223,15 +1230,22 @@ function attachSwipe(card, onSwipe) {
       card.style.transform = '';
       badgeLike.style.opacity = 0;
       badgeNope.style.opacity = 0;
-      // Foto zurück auf normal
       if (img) {
         img.style.filter = 'brightness(1)';
       }
     }
     dx = 0;
   };
+
+  card.addEventListener('pointerdown', onDown);
+  card.addEventListener('pointermove', onMove);
   card.addEventListener('pointerup', end);
   card.addEventListener('pointercancel', end);
+  card.addEventListener('lostpointercapture', end);
+  card.addEventListener('touchstart', onDown, { passive: false });
+  card.addEventListener('touchmove', onMove, { passive: false });
+  card.addEventListener('touchend', end);
+  card.addEventListener('touchcancel', end);
 }
 
 function showTinderResult(ids) {
