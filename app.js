@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-08T19:41:00+02:00';
+const APP_BUILD_TIME = '2026-07-10T10:43:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1840,25 +1840,9 @@ function clearWeekplanUpdateDot() {
   $('#btn-weekplan').classList.remove('has-update-dot');
 }
 
-// Nach dem Tippen in ein Textfeld auf iOS wieder rauszoomen, damit man
-// das ganze Bild sieht. Kurzzeitig maximum-scale=1 erzwingt das Zurückzoomen,
-// danach wird Pinch-Zoom wieder erlaubt.
-const VIEWPORT_BASE = 'width=device-width, initial-scale=1, viewport-fit=cover';
-function resetZoom() {
-  const vp = document.querySelector('meta[name="viewport"]');
-  if (!vp) return;
-  vp.setAttribute('content', VIEWPORT_BASE + ', maximum-scale=1');
-  setTimeout(() => vp.setAttribute('content', VIEWPORT_BASE), 350);
-}
-document.addEventListener('focusout', e => {
-  if (e.target && e.target.matches && e.target.matches('input, textarea, select')) {
-    // erst wenn kein anderes Feld direkt den Fokus übernimmt
-    setTimeout(() => {
-      const a = document.activeElement;
-      if (!a || !a.matches || !a.matches('input, textarea, select')) resetZoom();
-    }, 50);
-  }
-});
+// Zoomen beim Tippen in Textfelder ist jetzt dauerhaft über den Viewport-Meta-Tag
+// gesperrt (maximum-scale=1, user-scalable=no in index.html) — kein
+// nachträgliches Zurücksetzen mehr nötig.
 
 // Wisch-Gesten vom linken Rand nach rechts:
 //  - in einer Ansicht (#detail/#editor): zurück

@@ -245,7 +245,8 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   width: 100%;
   padding: clamp(8px, 2vw, 10px) clamp(10px, 2vw, 14px) clamp(8px, 2vw, 10px);
   padding-right: clamp(36px, 8vw, 40px);
-  font-size: clamp(14px, 3vw, 16px);
+  /* fest 16px, nicht kleiner: iOS würde sonst beim Fokussieren reinzoomen */
+  font-size: 16px;
   border: 1px solid var(--border);
   border-radius: clamp(10px, 2vw, 12px);
   background: var(--card);
