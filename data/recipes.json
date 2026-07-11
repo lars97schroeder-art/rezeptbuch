@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-11T08:00:40.127Z",
+  "updated": "2026-07-11T08:01:46.381Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1101,13 +1101,15 @@
         "100 Gramm dunkle Schoko"
       ],
       "steps": [
-        "Alles mischen",
+        "Alles mischen (außer Schoki)",
         "35 Minuten bei 160 grad Ober- Unterhitze Rösten",
-        "!! Alle 10 min oder nach 15 min wenden"
+        "!! 1 bis 2 Mal wenden",
+        "Auskühlen lassen",
+        "Schokolade klein hacken und dazu geben"
       ],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
       "bereich": "fruehstueck",
-      "updated": "2026-07-11T08:00:40.126Z"
+      "updated": "2026-07-11T08:01:46.381Z"
     },
     {
       "id": "bananenbrot",
