@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-10T17:12:00+02:00';
+const APP_BUILD_TIME = '2026-07-11T13:52:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -101,18 +101,46 @@ function saveLocal() {
   }
 }
 
-// Frische Rezepte holen: mit Token direkt über die GitHub-API (sofort aktuell),
-// sonst über GitHub Pages (kann nach einem Save ein paar Minuten hinterherhängen)
-async function fetchRemoteRecipes() {
+/* Gemeinsame Basis für alle data/*.json-Dateien (Rezepte, Wochenplan,
+   Rezept-Notizen): mit Token direkt über die GitHub-API (sofort aktuell),
+   sonst über GitHub Pages (Fallback, kann nach einem Save ein paar Minuten
+   hinterherhängen). Wurde vorher für jede Datei einzeln dupliziert. */
+async function fetchRemoteJSON(path) {
   if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
     try {
-      const info = await ghGet('data/recipes.json');
+      const info = await ghGet(path);
       return JSON.parse(utf8b64(info.content));
     } catch (e) { /* API nicht erreichbar → Pages-Fallback */ }
   }
-  const res = await fetch('data/recipes.json?t=' + Date.now(), { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) return await res.json();
+  } catch (e) { /* offline */ }
+  return null;
+}
+
+// Schreibt eine JSON-Datei ins Repo (legt sie neu an oder überschreibt sie)
+async function pushRemoteJSON(path, payload, message) {
+  if (typeof ghToken !== 'function' || !ghToken()) return false;
+  let sha;
+  try { sha = (await ghGet(path)).sha; } catch (e) { /* erste Übertragung */ }
+  await ghPut(path, b64utf8(JSON.stringify(payload, null, 2)), message, sha);
+  return true;
+}
+
+// true, wenn remote.updated (ISO) neuer ist als der lokal gespeicherte Wert
+function isRemoteNewer(remote, localUpdatedKey) {
+  if (!remote || !remote.updated) return false;
+  const localUpdated = new Date(localStorage.getItem(localUpdatedKey)).getTime() || 0;
+  const remoteUpdated = new Date(remote.updated).getTime() || 0;
+  return remoteUpdated > localUpdated;
+}
+
+// Frische Rezepte holen (Sync-Logik pro Rezept läuft separat in
+// checkAndUpdateIfNeeded, da hier einzelne Rezepte verglichen werden müssen,
+// nicht nur "ist die ganze Datei neuer")
+async function fetchRemoteRecipes() {
+  return fetchRemoteJSON('data/recipes.json');
 }
 
 // Auto-Check: Prüfe ob neue Rezepte vom Server verfügbar sind
@@ -564,8 +592,11 @@ function renderDetail(id, opts = {}) {
   const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join(' · ');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
-    <button class="detail-home" aria-label="Startseite">🏠</button>
-    ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
+    <div class="detail-actions-right">
+      <button class="detail-share" aria-label="Rezept teilen">📤</button>
+      ${opts.random ? '<button class="detail-random" aria-label="Nochmal würfeln">🎲</button>' : ''}
+      <button class="detail-home" aria-label="Startseite">🏠</button>
+    </div>
     ${detailPhotosHTML(r)}
     <div class="detail-body">
       <h2>${titleWithEmoji(r)}</h2>
@@ -581,6 +612,7 @@ function renderDetail(id, opts = {}) {
     el.hidden = true;
     document.body.style.overflow = '';
   };
+  el.querySelector('.detail-share').onclick = () => shareRecipeAsImage(r);
   const rnd = el.querySelector('.detail-random');
   if (rnd) {
     rnd.onclick = () => {
@@ -596,6 +628,168 @@ function renderDetail(id, opts = {}) {
   if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
   el.hidden = false;
   document.body.style.overflow = 'hidden';
+}
+
+/* ---------- Rezept als Bild teilen (One-Pager) ---------- */
+
+// Zeilenumbruch für Canvas-Text: bricht bei Wortgrenzen um auf maxWidth
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (line && ctx.measureText(test).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function loadImageEl(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+// Zeichnet ein Bild zugeschnitten (object-fit: cover) in ein Rechteck
+function drawImageCover(ctx, img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale, sh = h / scale;
+  const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// Erstellt ein Poster-Bild des Rezepts (Foto, Titel, Zutaten, Zubereitung,
+// Wasserzeichen) und öffnet damit den nativen Teilen-Dialog des Handys.
+async function shareRecipeAsImage(r) {
+  toast('📤 Erstelle Bild …');
+  try {
+    const W = 900;
+    const MARGIN = 56;
+    const CONTENT_W = W - MARGIN * 2;
+    const MAX_H = 3000; // großzügig bemessen, wird am Ende zugeschnitten
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = MAX_H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#fff8f0';
+    ctx.fillRect(0, 0, W, MAX_H);
+
+    let y = 0;
+    const BANNER_H = 520;
+    const imgs = imagesOf(r);
+    if (imgs.length) {
+      try {
+        const img = await loadImageEl(imgs[0]);
+        drawImageCover(ctx, img, 0, 0, W, BANNER_H);
+        y = BANNER_H;
+      } catch (e) { /* Bild nicht ladbar — ohne Banner weiter */ }
+    }
+    if (!y) {
+      const emojiBannerH = 300;
+      ctx.fillStyle = '#ffe3d1';
+      ctx.fillRect(0, 0, W, emojiBannerH);
+      ctx.font = '150px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emojiFor(r), W / 2, emojiBannerH / 2);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      y = emojiBannerH;
+    }
+
+    y += 56;
+    ctx.fillStyle = '#33251c';
+    ctx.font = '900 46px -apple-system, BlinkMacSystemFont, sans-serif';
+    const titleText = r.title + (r.emoji ? ' ' + r.emoji : '');
+    for (const line of wrapCanvasText(ctx, titleText, CONTENT_W)) { y += 52; ctx.fillText(line, MARGIN, y); }
+
+    const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join('   ·   ');
+    if (meta) {
+      y += 42;
+      ctx.font = '500 26px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#8a7566';
+      ctx.fillText(meta, MARGIN, y);
+    }
+
+    y += 30;
+    ctx.strokeStyle = '#f0e2d6';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(MARGIN, y); ctx.lineTo(W - MARGIN, y); ctx.stroke();
+
+    if ((r.ingredients || []).length) {
+      y += 50;
+      ctx.font = '800 30px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#e8590c';
+      ctx.fillText('Zutaten', MARGIN, y);
+      ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#33251c';
+      for (const ing of r.ingredients) {
+        for (const line of wrapCanvasText(ctx, '•  ' + ing, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
+      }
+    }
+
+    if ((r.steps || []).length) {
+      y += 50;
+      ctx.font = '800 30px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#e8590c';
+      ctx.fillText('Zubereitung', MARGIN, y);
+      ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#33251c';
+      r.steps.forEach((step, i) => {
+        for (const line of wrapCanvasText(ctx, `${i + 1}.  ${step}`, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
+        y += 10;
+      });
+    }
+
+    if (r.notes) {
+      y += 40;
+      ctx.font = 'italic 500 26px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#8a7566';
+      for (const line of wrapCanvasText(ctx, '💡 ' + r.notes, CONTENT_W)) { y += 36; ctx.fillText(line, MARGIN, y); }
+    }
+
+    // Wasserzeichen
+    y += 64;
+    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#c4a98d';
+    ctx.textAlign = 'right';
+    ctx.fillText('🍽️ Made by Schrödamskis Schlemmerliste', W - MARGIN, y);
+
+    // Auf die tatsächlich genutzte Höhe zuschneiden
+    const finalH = Math.min(MAX_H, Math.ceil(y + 40));
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = W;
+    finalCanvas.height = finalH;
+    finalCanvas.getContext('2d').drawImage(canvas, 0, 0, W, finalH, 0, 0, W, finalH);
+
+    finalCanvas.toBlob(async (blob) => {
+      if (!blob) return toast('❌ Bild konnte nicht erstellt werden');
+      const file = new File([blob], r.id + '.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: r.title });
+        } catch (e) { /* Nutzer hat den Teilen-Dialog abgebrochen */ }
+      } else {
+        // Fallback (z. B. Desktop ohne Web-Share-API): Bild in neuem Tab öffnen
+        window.open(URL.createObjectURL(blob), '_blank');
+        toast('📥 Bild geöffnet — zum Teilen speichern');
+      }
+    }, 'image/png');
+  } catch (e) {
+    console.error('Teilen fehlgeschlagen:', e);
+    toast('❌ Teilen fehlgeschlagen');
+  }
 }
 
 // Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
@@ -698,21 +892,8 @@ function saveWeekplan(days) {
 
 /* Wochenplan-Sync über GitHub (data/weekplan.json):
    Speichern lädt alle Wochen hoch, beim Öffnen wird der neueste Stand geholt.
-   Neuester ISO-Timestamp gewinnt (ganze Datei). */
-
-async function fetchRemoteWeekplan() {
-  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
-    try {
-      const info = await ghGet('data/weekplan.json');
-      return JSON.parse(utf8b64(info.content));
-    } catch (e) { /* Datei existiert evtl. noch nicht */ }
-  }
-  try {
-    const res = await fetch('data/weekplan.json?t=' + Date.now(), { cache: 'no-store' });
-    if (res.ok) return await res.json();
-  } catch (e) { /* offline */ }
-  return null;
-}
+   Neuester ISO-Timestamp gewinnt (ganze Datei). Nutzt fetchRemoteJSON /
+   pushRemoteJSON / isRemoteNewer — die gemeinsame Basis mit den Rezept-Notizen. */
 
 // Remote-Struktur → Wochen-Map (migriert altes { days }-Format in die aktuelle Woche)
 function remoteToWeeks(remote) {
@@ -724,17 +905,12 @@ function remoteToWeeks(remote) {
 
 // Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
 async function syncWeekplanFromRemote() {
-  const remote = await fetchRemoteWeekplan();
+  const remote = await fetchRemoteJSON('data/weekplan.json');
   const weeks = remoteToWeeks(remote);
-  if (!weeks) return false;
-  const localUpdated = new Date(localStorage.getItem(WEEKPLAN_UPDATED_KEY)).getTime() || 0;
-  const remoteUpdated = new Date(remote.updated).getTime() || 0;
-  if (remoteUpdated > localUpdated) {
-    localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
-    localStorage.setItem(WEEKPLAN_UPDATED_KEY, remote.updated);
-    return true;
-  }
-  return false;
+  if (!weeks || !isRemoteNewer(remote, WEEKPLAN_UPDATED_KEY)) return false;
+  localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
+  localStorage.setItem(WEEKPLAN_UPDATED_KEY, remote.updated);
+  return true;
 }
 
 // Lädt ALLE lokalen Wochen zu GitHub hoch, damit andere Geräte sie sehen
@@ -744,10 +920,7 @@ async function uploadWeekplan() {
     return;
   }
   const payload = { updated: new Date().toISOString(), weeks: getAllWeekplans() };
-  let sha;
-  try { sha = (await ghGet('data/weekplan.json')).sha; } catch (e) { /* erste Übertragung */ }
-  await ghPut('data/weekplan.json', b64utf8(JSON.stringify(payload, null, 2)),
-    'Wochenplan aktualisiert (aus der App)', sha);
+  await pushRemoteJSON('data/weekplan.json', payload, 'Wochenplan aktualisiert (aus der App)');
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, payload.updated);
   toast('✅ Wochenplan gespeichert & geteilt');
 }
@@ -769,42 +942,20 @@ function saveBacklogLocal(text) {
   localStorage.setItem(BACKLOG_UPDATED_KEY, new Date().toISOString());
 }
 
-async function fetchRemoteBacklog() {
-  if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
-    try {
-      const info = await ghGet('data/backlog.json');
-      return JSON.parse(utf8b64(info.content));
-    } catch (e) { /* Datei existiert evtl. noch nicht */ }
-  }
-  try {
-    const res = await fetch('data/backlog.json?t=' + Date.now(), { cache: 'no-store' });
-    if (res.ok) return await res.json();
-  } catch (e) { /* offline */ }
-  return null;
-}
-
 // Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
 async function syncBacklogFromRemote() {
-  const remote = await fetchRemoteBacklog();
-  if (!remote || typeof remote.text !== 'string') return false;
-  const localUpdated = new Date(localStorage.getItem(BACKLOG_UPDATED_KEY)).getTime() || 0;
-  const remoteUpdated = new Date(remote.updated).getTime() || 0;
-  if (remoteUpdated > localUpdated) {
-    localStorage.setItem(BACKLOG_KEY, remote.text);
-    localStorage.setItem(BACKLOG_UPDATED_KEY, remote.updated);
-    return true;
-  }
-  return false;
+  const remote = await fetchRemoteJSON('data/backlog.json');
+  if (!remote || typeof remote.text !== 'string' || !isRemoteNewer(remote, BACKLOG_UPDATED_KEY)) return false;
+  localStorage.setItem(BACKLOG_KEY, remote.text);
+  localStorage.setItem(BACKLOG_UPDATED_KEY, remote.updated);
+  return true;
 }
 
 // Lädt den lokalen Text zu GitHub hoch, damit andere Geräte ihn sehen
 async function uploadBacklog(text) {
   if (typeof ghToken !== 'function' || !ghToken()) return;
   const payload = { updated: new Date().toISOString(), text };
-  let sha;
-  try { sha = (await ghGet('data/backlog.json')).sha; } catch (e) { /* erste Übertragung */ }
-  await ghPut('data/backlog.json', b64utf8(JSON.stringify(payload, null, 2)),
-    'Notizen aktualisiert (aus der App)', sha);
+  await pushRemoteJSON('data/backlog.json', payload, 'Notizen aktualisiert (aus der App)');
   localStorage.setItem(BACKLOG_UPDATED_KEY, payload.updated);
 }
 
