@@ -232,9 +232,6 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   margin-left: auto;
 }
 
-#btn-update.spinning { animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
 .search-wrapper {
   position: relative;
   display: flex;
@@ -1133,9 +1130,11 @@ html.color-rainbow .t-card.foodmatch {
 .slot-machine {
   margin: 32px 0;
   border-radius: 20px;
-  background: linear-gradient(135deg, var(--accent) 0%, #ff9500 100%);
+  /* var(--accent-soft) statt fest verdrahtetem Orange — folgt jetzt auch
+     beim Blau-/Rainbow-Farbschema mit, vorher blieb das immer orange */
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
   padding: 20px;
-  box-shadow: 0 10px 30px rgba(232, 89, 12, 0.3), inset 0 0 0 3px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px var(--accent-soft), inset 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 /* Sichtfenster der Walze: zeigt genau eine Zelle (Höhe == SLOT_CELL_H in app.js) */
@@ -1656,9 +1655,11 @@ html.color-rainbow .t-card.foodmatch {
 
 .add-card .photo.placeholder {
   font-size: 64px;
-  color: #fff;
+  color: var(--accent);
   font-weight: 300;
-  background: #4caf50 !important;
+  /* var(--accent-soft) statt festem Grün — folgt jetzt wie die normalen
+     Rezeptkarten-Platzhalter dem Farbschema, statt immer grün zu bleiben */
+  background: var(--accent-soft);
 }
 
 /* ---------- Toast ---------- */
@@ -2291,7 +2292,7 @@ html.color-rainbow .t-card.foodmatch {
 .token-share-input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #d0c5b9;
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg);
   color: var(--text);
@@ -2304,19 +2305,19 @@ html.color-rainbow .t-card.foodmatch {
 .token-share-copy {
   width: 100%;
   padding: 12px;
-  background: #e8590c;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: filter 0.2s;
   margin-bottom: 12px;
 }
 
 .token-share-copy:hover {
-  background: #d04708;
+  filter: brightness(0.88);
 }
 
 .token-share-hint {
@@ -2348,7 +2349,9 @@ html.color-rainbow .t-card.foodmatch {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  /* var(--border) statt #ccc — der An-Zustand nutzt schon var(--accent),
+     im Dunkelmodus wirkte ein festes Hellgrau im Aus-Zustand unpassend hell */
+  background-color: var(--border);
   transition: 0.3s;
   border-radius: 28px;
 }

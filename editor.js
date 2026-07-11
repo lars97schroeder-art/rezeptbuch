@@ -139,7 +139,7 @@ function renderEdPhotos() {
 
 function openEditor(id) {
   // Blockiere Bearbeitung im Offline-Modus
-  if (localStorage.getItem('rezeptbuch-offline-mode') === 'true') {
+  if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') {
     toast('🔒 Im Offline-Modus: Bearbeiten nicht möglich');
     return;
   }
@@ -568,10 +568,7 @@ function openGroupSelector(allGroups) {
 }
 
 window.editorGridCard = () => {
-  const token = ghToken();
-  const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
-  const offline = localStorage.getItem('rezeptbuch-offline-mode') === 'true';
-  if (!token || !editEnabled || offline) return null;
+  if (!isEditModeEnabled()) return null;
   const card = document.createElement('article');
   card.className = 'card add-card';
 
@@ -595,10 +592,7 @@ window.editorGridCard = () => {
 
 // Wird von renderDetail() aufgerufen: ✏️-Knopf in der Rezept-Ansicht
 window.editorEnhanceDetail = (el, id) => {
-  const token = ghToken();
-  const editEnabled = localStorage.getItem('rezeptbuch-edit-enabled') !== 'false';
-  const offline = localStorage.getItem('rezeptbuch-offline-mode') === 'true';
-  if (!token || !editEnabled || offline) return;
+  if (!isEditModeEnabled()) return;
   const b = document.createElement('button');
   b.className = 'detail-edit';
   b.textContent = '✏️';

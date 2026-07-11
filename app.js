@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-11T13:58:00+02:00';
+const APP_BUILD_TIME = '2026-07-11T14:12:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1441,7 +1441,7 @@ function attachSwipe(card, onSwipe) {
 
   // Fehlerschutz: wenn kritische Elemente nicht existieren, nicht weitermachen
   if (!badgeLike || !badgeNope || !badgeLikeInner || !badgeNopeInner) {
-    console.warn('[SW] attachSwipe: fehlende kritische Elemente, Swipe deaktiviert');
+    console.warn('attachSwipe: fehlende kritische Elemente, Swipe deaktiviert');
     return;
   }
 
