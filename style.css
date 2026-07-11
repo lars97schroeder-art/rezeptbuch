@@ -483,8 +483,21 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   background: var(--accent-soft);
 }
 
+/* Auf breiten Bildschirmen (Desktop/Laptop) nicht über die Textbreite von
+   .detail-body hinaus strecken — auf dem Handy hat das keinen Effekt, da
+   die Bildschirmbreite ohnehin schon unter 700px liegt. Trifft sowohl das
+   einzelne Foto als auch den Platzhalter (beide direkte Kinder von #detail). */
+#detail > .detail-photo {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
 /* Wisch-Galerie bei mehreren Fotos */
-.detail-photos-wrap { position: relative; }
+.detail-photos-wrap {
+  position: relative;
+  max-width: 700px;
+  margin: 0 auto;
+}
 
 .detail-photos {
   display: flex;
