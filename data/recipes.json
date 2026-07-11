@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-08T23:03:17.809Z",
+  "updated": "2026-07-11T08:01:46.381Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -540,26 +540,51 @@
     {
       "id": "wuerstelgulasch",
       "title": "Würstelgulasch",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌭",
       "image": "data/images/wuerstelgulasch-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/wuerstelgulasch-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Kartoffeln",
+        "Leberkäse oder Wienerli",
+        "Möhren",
+        "Sellerie",
+        "Zwiebeln"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "updated": "2026-07-10T15:50:03.835Z"
     },
     {
       "id": "koettbullar",
       "title": "Köttbullar",
-      "category": "Zünftig",
+      "category": [
+        "Zünftig"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🇸🇪",
       "image": "data/images/koettbullar-1783240941.jpg",
-      "ingredients": [],
+      "images": [
+        "data/images/koettbullar-1783240941.jpg"
+      ],
+      "ingredients": [
+        "Ikea Köttbullar",
+        "Rahmsauce",
+        "Kartoffelpüree",
+        "Preiselbeeren (viel)"
+      ],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "bereich": "kochen",
+      "updated": "2026-07-10T15:49:15.792Z"
     },
     {
       "id": "sellerieschnitzel",
@@ -1075,9 +1100,16 @@
         "100g Öl",
         "100 Gramm dunkle Schoko"
       ],
-      "steps": [],
+      "steps": [
+        "Alles mischen (außer Schoki)",
+        "35 Minuten bei 160 grad Ober- Unterhitze Rösten",
+        "!! 1 bis 2 Mal wenden",
+        "Auskühlen lassen",
+        "Schokolade klein hacken und dazu geben"
+      ],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "updated": "2026-07-11T08:01:46.381Z"
     },
     {
       "id": "bananenbrot",
@@ -1383,6 +1415,42 @@
       "bereich": "kochen",
       "created": "2026-07-08T07:52:18.006Z",
       "updated": "2026-07-08T07:52:18.006Z"
+    },
+    {
+      "id": "tomate-mozzarella",
+      "title": "Tomate - Mozzarella",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-10T18:28:22.088Z",
+      "updated": "2026-07-10T18:28:22.088Z"
+    },
+    {
+      "id": "gurke-tomate-feta-salat",
+      "title": "Gurke Tomate Feta Salat",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-10T18:29:07.773Z",
+      "updated": "2026-07-10T18:29:07.773Z"
     }
   ]
 }
