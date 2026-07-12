@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-11T08:01:46.381Z",
+  "updated": "2026-07-12T07:11:40.963Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1284,6 +1284,25 @@
       "bereich": "kochen",
       "created": "2026-07-08T07:40:28.257Z",
       "updated": "2026-07-08T07:58:27.604Z"
+    },
+    {
+      "id": "pfannkuchen-mit-spinat-und-tomatensauce",
+      "title": "Pfannkuchen mit Spinat und Tomatensauce",
+      "category": [
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "group": "Pfannkuchen",
+      "created": "2026-07-12T07:11:40.962Z",
+      "updated": "2026-07-12T07:11:40.962Z"
     },
     {
       "id": "chicken-wings-2",
