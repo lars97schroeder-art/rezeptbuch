@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-12T07:12:44.115Z",
+  "updated": "2026-07-12T07:15:56.866Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1158,7 +1158,7 @@
         "Süßes"
       ],
       "time": "30 min",
-      "servings": "ca. 8 Stück",
+      "servings": "2 Stück",
       "emoji": "",
       "image": "data/images/pfannkuchen-1783326269-0.jpg",
       "images": [
@@ -1166,24 +1166,23 @@
         "data/images/pfannkuchen-1783326269-1.jpg"
       ],
       "ingredients": [
-        "250 g Mehl",
-        "500 ml Milch",
-        "3 Eier",
+        "1 Ei",
         "1 Prise Salz",
-        "1 EL Zucker",
-        "Butter zum Braten"
+        "140 ml Milch (oder Wasser)",
+        "80 Gramm Mehl",
+        "Apfelscheiben"
       ],
       "steps": [
-        "Alle Zutaten zu einem glatten Teig verrühren.",
-        "Teig 15 Minuten quellen lassen.",
-        "Butter in der Pfanne erhitzen, dünn Teig hineingeben.",
-        "Von beiden Seiten goldbraun backen.",
-        "Mit Apfelmus, Zimtzucker oder Nutella servieren."
+        "Alle Zutaten zu einem glatten Teig verrühren",
+        "Pfanne vorheizen",
+        "Eine Kelle Teig rein, direkt apfelscheiben drauf",
+        "Von beiden Seiten goldbraun backen",
+        "Am Ende ne Flocke Butter rein fürs finish 😋"
       ],
-      "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen.",
+      "notes": "",
       "bereich": "kochen",
       "group": "Pfannkuchen",
-      "updated": "2026-07-12T07:12:44.115Z"
+      "updated": "2026-07-12T07:15:56.866Z"
     },
     {
       "id": "milchreis",
