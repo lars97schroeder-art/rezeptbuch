@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-12T07:11:40.963Z",
+  "updated": "2026-07-12T07:12:05.441Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1282,8 +1282,9 @@
       "steps": [],
       "notes": "Süß oder salzig  😋😋😋",
       "bereich": "kochen",
+      "group": "Pfannkuchen",
       "created": "2026-07-08T07:40:28.257Z",
-      "updated": "2026-07-08T07:58:27.604Z"
+      "updated": "2026-07-12T07:12:05.441Z"
     },
     {
       "id": "pfannkuchen-mit-spinat-und-tomatensauce",
