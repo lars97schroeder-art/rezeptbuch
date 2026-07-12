@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-12T07:12:05.441Z",
+  "updated": "2026-07-12T07:12:44.115Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1154,8 +1154,10 @@
     {
       "id": "pfannkuchen",
       "title": "Lars Apfelpfannekuchen 🐭",
-      "category": "Süßes",
-      "time": "30 Min.",
+      "category": [
+        "Süßes"
+      ],
+      "time": "30 min",
       "servings": "ca. 8 Stück",
       "emoji": "",
       "image": "data/images/pfannkuchen-1783326269-0.jpg",
@@ -1179,7 +1181,9 @@
         "Mit Apfelmus, Zimtzucker oder Nutella servieren."
       ],
       "notes": "Der Teig sollte dünnflüssig sein – notfalls etwas Milch nachgießen.",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "group": "Pfannkuchen",
+      "updated": "2026-07-12T07:12:44.115Z"
     },
     {
       "id": "milchreis",
