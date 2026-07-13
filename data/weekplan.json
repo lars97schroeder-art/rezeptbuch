@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-13T16:57:09.812Z",
+  "updated": "2026-07-13T16:58:18.103Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -104,21 +104,21 @@
         "pizzaaaaa"
       ],
       "fr": [
-        "burger"
+        "kokosmilch-gemuese-mit-sojasosse"
       ],
       "sa": [
         "TEXT:Einsiedeln"
       ],
       "so": [
-        "kokosmilch-gemuese-mit-sojasosse"
+        "brokkoli-pasta"
       ],
       "off": [
         "mo",
         "di",
         "mi",
         "do",
-        "fr",
-        "sa"
+        "sa",
+        "fr"
       ]
     },
     "2026-W30": {
