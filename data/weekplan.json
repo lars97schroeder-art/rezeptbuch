@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-15T14:22:49.103Z",
+  "updated": "2026-07-15T14:23:16.979Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -109,7 +109,7 @@
         "maultaschen-pfanne"
       ],
       "sa": [
-        "TEXT:Einsiedeln"
+        "TEXT:Sushi in Einsiedeln"
       ],
       "so": [
         "brokkoli-pasta"
@@ -117,7 +117,6 @@
       "off": [
         "mo",
         "di",
-        "sa",
         "mi"
       ]
     },
