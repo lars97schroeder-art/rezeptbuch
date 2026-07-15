@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-15T14:23:16.979Z",
+  "updated": "2026-07-15T14:23:43.380Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -117,11 +117,17 @@
       "off": [
         "mo",
         "di",
-        "mi"
+        "mi",
+        "do",
+        "fr",
+        "sa",
+        "so"
       ]
     },
     "2026-W30": {
-      "mo": [],
+      "mo": [
+        "kokosmilch-gemuese-mit-sojasosse"
+      ],
       "di": [
         "TEXT:Antonia in Luzern"
       ],
