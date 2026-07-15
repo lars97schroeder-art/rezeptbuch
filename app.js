@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-11T14:12:00+02:00';
+const APP_BUILD_TIME = '2026-07-15T16:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1116,6 +1116,7 @@ function renderWeekplan(skipSync = false) {
         <div class="weekplan-weektitle">
           <div class="weekplan-kw">📅 KW ${isoKalenderwoche(weekplanViewDate)}${istAktuelleWoche ? ' <span class="weekplan-now">jetzt</span>' : ''}</div>
           <div class="weekplan-range">${rangeText}</div>
+          ${istAktuelleWoche ? '' : '<button class="weekplan-today-btn">Zur aktuellen Woche</button>'}
         </div>
         <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
@@ -1145,6 +1146,15 @@ function renderWeekplan(skipSync = false) {
     navBtn.onclick = () => {
       weekplanViewDate = new Date(weekplanViewDate);
       weekplanViewDate.setDate(weekplanViewDate.getDate() + 7 * Number(navBtn.dataset.dir));
+      renderWeekplan(true);
+    };
+  }
+
+  // Zurück zur aktuellen Woche springen (Button erscheint nur, wenn man weg ist)
+  const todayBtn = el.querySelector('.weekplan-today-btn');
+  if (todayBtn) {
+    todayBtn.onclick = () => {
+      weekplanViewDate = new Date();
       renderWeekplan(true);
     };
   }
