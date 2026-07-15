@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-12T07:15:56.866Z",
+  "updated": "2026-07-15T14:49:09.028Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1415,6 +1415,24 @@
       "steps": [],
       "notes": "Aka Annika’s Geburtstagskuchen ♥️",
       "bereich": "backen"
+    },
+    {
+      "id": "zitronentarte",
+      "title": "Zitronentarte",
+      "category": [
+        "Kuchen"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "@Annika die muss natürlich hier mit rein ;)",
+      "bereich": "backen",
+      "created": "2026-07-15T14:49:09.021Z",
+      "updated": "2026-07-15T14:49:09.024Z"
     },
     {
       "id": "griechischer-salat",
