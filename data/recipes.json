@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-16T17:10:11.485Z",
+  "updated": "2026-07-16T17:18:36.135Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1501,6 +1501,32 @@
       "bereich": "kochen",
       "created": "2026-07-10T18:29:07.773Z",
       "updated": "2026-07-10T18:29:07.773Z"
+    },
+    {
+      "id": "gurkensalat",
+      "title": "Gurkensalat",
+      "category": [
+        "Salat"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [
+        "1 Gurke",
+        "1 El Kräuterfrischkäse",
+        "Schuss Rapsöl",
+        "Schuss Balsamico",
+        "Salatkräuter getrocknet",
+        "Dill",
+        "Schuss Wasser"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-16T17:18:36.134Z",
+      "updated": "2026-07-16T17:18:36.134Z"
     }
   ]
 }
