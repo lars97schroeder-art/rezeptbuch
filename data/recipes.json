@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-16T17:18:36.135Z",
+  "updated": "2026-07-16T17:24:26.476Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -141,9 +141,11 @@
     },
     {
       "id": "spaghetti-carbonara",
-      "title": "Spaghetti Carbonara",
-      "category": "Pasta & Gnocchi",
-      "time": "25 Min.",
+      "title": "Carbonara",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
+      "time": "25 min",
       "servings": "2 Portionen",
       "emoji": "",
       "image": "data/images/spaghetti-carbonara-1783240941.jpg",
@@ -168,7 +170,8 @@
         "Pfanne vom Herd nehmen, Ei-Käse-Mischung unterrühren (ggf. mit Nudelwasser), cremig rühren"
       ],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-16T17:24:26.475Z"
     },
     {
       "id": "schinkennudeln",
