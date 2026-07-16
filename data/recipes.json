@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-15T14:49:09.028Z",
+  "updated": "2026-07-16T17:10:11.485Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1225,10 +1225,19 @@
       "emoji": "",
       "image": "",
       "images": [],
-      "ingredients": [],
+      "ingredients": [
+        "- Maultaschen",
+        "- Zwiebeln",
+        "- Eier",
+        "- Salz",
+        "- Pfeffer",
+        "- Salatkräuter - Aus dem Glas nicht Päckchen!",
+        "Wenn man mag, Gurkensalat dazu"
+      ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-16T17:10:11.485Z"
     },
     {
       "id": "zucchini-puffer",
