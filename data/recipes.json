@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-16T17:25:10.705Z",
+  "updated": "2026-07-17T17:27:01.786Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1529,6 +1529,22 @@
       "bereich": "kochen",
       "created": "2026-07-16T17:18:36.134Z",
       "updated": "2026-07-16T17:18:36.134Z"
+    },
+    {
+      "id": "gefuellte-zucchini-und-paprika-mit-reis",
+      "title": "Gefüllte Zucchini und Paprika mit Reis",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-17T17:27:01.785Z",
+      "updated": "2026-07-17T17:27:01.785Z"
     }
   ]
 }
