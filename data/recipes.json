@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-17T17:27:01.786Z",
+  "updated": "2026-07-18T16:45:41.979Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1436,14 +1436,18 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "",
-      "images": [],
+      "image": "data/images/zitronentarte-1784393137-0.jpg",
+      "images": [
+        "data/images/zitronentarte-1784393137-0.jpg",
+        "data/images/zitronentarte-1784393137-1.jpg",
+        "data/images/zitronentarte-1784393137-2.jpg"
+      ],
       "ingredients": [],
       "steps": [],
-      "notes": "@Annika die muss natürlich hier mit rein ;)",
+      "notes": "",
       "bereich": "backen",
       "created": "2026-07-15T14:49:09.021Z",
-      "updated": "2026-07-15T14:49:09.024Z"
+      "updated": "2026-07-18T16:45:41.978Z"
     },
     {
       "id": "griechischer-salat",
