@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:40:33.752Z",
+  "updated": "2026-07-19T10:43:57.959Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1580,16 +1580,16 @@
       "time": "",
       "servings": "",
       "emoji": "👩🏼‍🍳🧈",
-      "image": "data/images/hefezopf-mit-quark-1784457480-0.jpg",
+      "image": "data/images/hefezopf-mit-quark-1784457836-0.jpg",
       "images": [
-        "data/images/hefezopf-mit-quark-1784457480-0.jpg"
+        "data/images/hefezopf-mit-quark-1784457836-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:38:01.883Z",
-      "updated": "2026-07-19T10:38:01.883Z"
+      "updated": "2026-07-19T10:43:57.959Z"
     },
     {
       "id": "zwetschgenkuchen-mit-zimtstreusel",
