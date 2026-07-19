@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:47:26.723Z",
+  "updated": "2026-07-19T10:47:41.475Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1616,14 +1616,16 @@
       "time": "",
       "servings": "",
       "emoji": "🥐",
-      "image": "",
-      "images": [],
+      "image": "data/images/hefezopf-1784458060-0.jpg",
+      "images": [
+        "data/images/hefezopf-1784458060-0.jpg"
+      ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
-      "updated": "2026-07-19T10:47:26.722Z"
+      "updated": "2026-07-19T10:47:41.475Z"
     }
   ]
 }
