@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:39:47.881Z",
+  "updated": "2026-07-19T10:40:33.752Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1598,16 +1598,16 @@
       "time": "",
       "servings": "",
       "emoji": "🍰",
-      "image": "data/images/zwetschgenkuchen-mit-zimtstreusel-1784457586-0.jpg",
+      "image": "data/images/zwetschgenkuchen-mit-zimtstreusel-1784457632-0.jpg",
       "images": [
-        "data/images/zwetschgenkuchen-mit-zimtstreusel-1784457586-0.jpg"
+        "data/images/zwetschgenkuchen-mit-zimtstreusel-1784457632-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:39:47.881Z",
-      "updated": "2026-07-19T10:39:47.881Z"
+      "updated": "2026-07-19T10:40:33.752Z"
     }
   ]
 }
