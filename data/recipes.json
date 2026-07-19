@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:43:57.959Z",
+  "updated": "2026-07-19T10:47:26.723Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1608,6 +1608,22 @@
       "bereich": "backen",
       "created": "2026-07-19T10:39:47.881Z",
       "updated": "2026-07-19T10:40:33.752Z"
+    },
+    {
+      "id": "hefezopf",
+      "title": "Hefezopf",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🥐",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "backen",
+      "created": "2026-07-19T10:47:26.722Z",
+      "updated": "2026-07-19T10:47:26.722Z"
     }
   ]
 }
