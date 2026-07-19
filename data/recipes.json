@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:47:41.475Z",
+  "updated": "2026-07-19T18:42:52.992Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1626,6 +1626,24 @@
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
       "updated": "2026-07-19T10:47:41.475Z"
+    },
+    {
+      "id": "szegediner-gulasch",
+      "title": "Szegediner Gulasch",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/szegediner-gulasch-1784486570-0.jpg",
+      "images": [
+        "data/images/szegediner-gulasch-1784486570-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-19T18:42:52.991Z",
+      "updated": "2026-07-19T18:42:52.991Z"
     }
   ]
 }
