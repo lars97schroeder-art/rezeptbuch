@@ -7,6 +7,9 @@
 const GH_REPO = 'lars97schroeder-art/rezeptbuch';
 const TOKEN_KEY = 'rezeptbuch-token';
 
+// Cloudflare-Worker, der Rezeptfotos per KI ausliest (siehe recipe-scan-worker/)
+const SCAN_WORKER_URL = 'https://rezeptbuch-scan.<DEIN-SUBDOMAIN>.workers.dev';
+
 const ghToken = () => localStorage.getItem(TOKEN_KEY) || '';
 
 window.clearToken = () => {
@@ -103,6 +106,40 @@ function resizePhoto(file) {
   });
 }
 
+// Foto per KI (Cloudflare-Worker + Claude) auslesen und Editor-Felder befüllen
+async function scanRecipePhoto(file) {
+  let dataUrl;
+  try { dataUrl = await resizePhoto(file); }
+  catch (err) { return toast('Foto-Fehler: ' + err.message); }
+
+  toast('🤖 Rezept wird ausgelesen …');
+  try {
+    const res = await fetch(SCAN_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl.split(',')[1], mediaType: 'image/jpeg' }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
+    const parsed = await res.json();
+
+    if (parsed.title) $('#ed-title').value = parsed.title;
+    if (parsed.servings) $('#ed-servings').value = parsed.servings;
+    if (parsed.emoji) $('#ed-emoji').value = parsed.emoji;
+    if (Array.isArray(parsed.ingredients)) $('#ed-ingredients').value = parsed.ingredients.join('\n');
+    if (Array.isArray(parsed.steps)) $('#ed-steps').value = parsed.steps.join('\n');
+    if (parsed.time) {
+      const m = parseTimeMinutes(parsed.time);
+      if (m != null) $('#ed-time').value = minutesToHHMM(m);
+    }
+
+    edNeu.push(dataUrl);
+    renderEdPhotos();
+    toast('✓ Rezept ausgelesen — bitte kurz prüfen');
+  } catch (err) {
+    toast('Auslesen fehlgeschlagen: ' + err.message);
+  }
+}
+
 /* ---------- Editor-Oberfläche ---------- */
 
 const edEl = () => $('#editor');
@@ -159,6 +196,11 @@ function openEditor(id) {
   <button class="detail-close ed-close" aria-label="Zurück">←</button>
   <div class="ed-body">
     <h2>${r ? 'Rezept bearbeiten' : 'Neues Rezept'}</h2>
+    ${r ? '' : `
+    <div class="ed-scan-box">
+      <button type="button" class="ed-scan-btn">📷 Rezept aus Foto auslesen (KI)</button>
+      <input type="file" id="ed-scan-input" accept="image/*" hidden>
+    </div>`}
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
     <div class="ed-row">
@@ -216,6 +258,17 @@ function openEditor(id) {
 
   renderEdPhotos();
   el.querySelector('.ed-close').onclick = closeEditor;
+
+  const scanBtn = el.querySelector('.ed-scan-btn');
+  if (scanBtn) {
+    const scanInput = el.querySelector('#ed-scan-input');
+    scanBtn.onclick = () => scanInput.click();
+    scanInput.onchange = async e => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (file) await scanRecipePhoto(file);
+    };
+  }
 
   $('#ed-photo-input').onchange = async e => {
     for (const file of e.target.files) {

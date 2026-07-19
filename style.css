@@ -1429,6 +1429,21 @@ html.color-rainbow .t-card.foodmatch {
 
 .ed-text { font-size: 15px; line-height: 1.5; color: var(--muted); }
 
+.ed-scan-box { margin-bottom: 16px; }
+.ed-scan-btn {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ed-scan-btn:active { transform: scale(0.98); }
+
 .ed-field label {
   display: block;
   font-size: 13px;
