@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:02:05.953Z",
+  "updated": "2026-07-19T10:38:01.884Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1572,6 +1572,24 @@
       "bereich": "kochen",
       "created": "2026-07-19T10:02:05.952Z",
       "updated": "2026-07-19T10:02:05.952Z"
+    },
+    {
+      "id": "hefezopf-mit-quark",
+      "title": "Hefezopf mit Quark",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "👩🏼‍🍳🧈",
+      "image": "data/images/hefezopf-mit-quark-1784457480-0.jpg",
+      "images": [
+        "data/images/hefezopf-mit-quark-1784457480-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "backen",
+      "created": "2026-07-19T10:38:01.883Z",
+      "updated": "2026-07-19T10:38:01.883Z"
     }
   ]
 }
