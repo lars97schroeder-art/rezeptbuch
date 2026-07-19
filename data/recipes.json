@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-18T16:45:41.979Z",
+  "updated": "2026-07-19T10:02:05.953Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1549,6 +1549,29 @@
       "bereich": "kochen",
       "created": "2026-07-17T17:27:01.785Z",
       "updated": "2026-07-17T17:27:01.785Z"
+    },
+    {
+      "id": "wrap-burger-grill-sosse",
+      "title": "Wrap / Burger / Grill Soße",
+      "category": [
+        "Soße"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🌮",
+      "image": "data/images/wrap-burger-grill-sosse-1784455323-0.jpg",
+      "images": [
+        "data/images/wrap-burger-grill-sosse-1784455323-0.jpg",
+        "data/images/wrap-burger-grill-sosse-1784455323-1.jpg"
+      ],
+      "ingredients": [
+        "Wie im Bild aber mit Jogurt"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-19T10:02:05.952Z",
+      "updated": "2026-07-19T10:02:05.952Z"
     }
   ]
 }
