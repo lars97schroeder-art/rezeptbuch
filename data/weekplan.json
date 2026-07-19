@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-15T14:25:04.835Z",
+  "updated": "2026-07-16T17:24:09.289Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -110,12 +110,10 @@
         "TEXT:Lars lonely Pasta... :("
       ],
       "do": [
-        "pizzaaaaa",
         "maultaschen-pfanne"
       ],
       "fr": [
-        "pizzaaaaa",
-        "maultaschen-pfanne"
+        "pizzaaaaa"
       ],
       "sa": [
         "TEXT:Sushi in Einsiedeln"
@@ -127,10 +125,10 @@
         "mo",
         "di",
         "mi",
-        "do",
-        "fr",
         "sa",
-        "so"
+        "so",
+        "do",
+        "fr"
       ]
     },
     "2026-W30": {
