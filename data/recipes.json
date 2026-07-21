@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T20:37:21.174Z",
+  "updated": "2026-07-21T17:34:15.890Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -355,7 +355,9 @@
     {
       "id": "kokosmilch-gemuese-mit-sojasosse",
       "title": "Kokosmilch-Gemüse mit Sojasoße",
-      "category": "Asia",
+      "category": [
+        "Asia"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥥",
@@ -364,10 +366,17 @@
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-1.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "Gemüse nach Wahl",
+        "Knoblauch",
+        "Kokosmilch",
+        "Sojasauce",
+        "Udon Nudeln oder Reis"
+      ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-21T17:34:15.889Z"
     },
     {
       "id": "asia-snoodles-pfanne",
