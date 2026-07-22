@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-22T19:18:15.348Z",
+  "updated": "2026-07-22T19:21:54.972Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -815,10 +815,17 @@
         "data/images/zwiebelkuchen-1784747893-0.jpg"
       ],
       "ingredients": [],
-      "steps": [],
+      "steps": [
+        "Backofen 160grad umluft",
+        "Teig 5 min vorbacken",
+        "Dann Schlotze drauf",
+        "20 min mit backpapier Deckel",
+        "20 min ohne backen",
+        "Genießen"
+      ],
       "notes": "1.5 mal das Rezept mit dem besten zwiebelkuchen",
       "bereich": "kochen",
-      "updated": "2026-07-22T19:18:15.348Z"
+      "updated": "2026-07-22T19:21:54.971Z"
     },
     {
       "id": "shakshuka",
