@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-21T17:38:12.354Z",
+  "updated": "2026-07-22T11:07:27.727Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -143,7 +143,8 @@
         "TEXT:Antonia in Luzern"
       ],
       "do": [
-        "TEXT:Antonia in Luzern"
+        "TEXT:Antonia in Luzern",
+        "nasty-gnocchi"
       ],
       "fr": [
         "TEXT:Antonia in Luzern"
@@ -152,7 +153,8 @@
       "so": [],
       "off": [
         "mo",
-        "di"
+        "di",
+        "do"
       ]
     },
     "2026-W34": {
