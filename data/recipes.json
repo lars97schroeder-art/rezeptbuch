@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-21T17:34:15.890Z",
+  "updated": "2026-07-22T19:13:45.268Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -815,8 +815,9 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
-      "bereich": "kochen"
+      "notes": "1.5 mal das Rezept mit dem besten zwiebelkuchen",
+      "bereich": "kochen",
+      "updated": "2026-07-22T19:13:45.268Z"
     },
     {
       "id": "shakshuka",
