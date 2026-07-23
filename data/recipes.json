@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-23T18:37:44.330Z",
+  "updated": "2026-07-23T19:12:14.342Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -288,19 +288,21 @@
     {
       "id": "nasty-gnocchi",
       "title": "Nasty Gnocchi",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "😈",
       "image": "data/images/nasty-gnocchi-1783327760-0.jpg",
       "images": [
-        "data/images/nasty-gnocchi-1783327760-0.jpg",
-        "data/images/nasty-gnocchi-1783327760-1.jpg"
+        "data/images/nasty-gnocchi-1783327760-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-23T19:12:14.341Z"
     },
     {
       "id": "gnocchi-mit-cashew-pesto",
