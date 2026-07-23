@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-23T19:12:14.342Z",
+  "updated": "2026-07-23T19:26:51.887Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -298,11 +298,23 @@
       "images": [
         "data/images/nasty-gnocchi-1783327760-0.jpg"
       ],
-      "ingredients": [],
-      "steps": [],
+      "ingredients": [
+        "Hackfleisch",
+        "Spinat",
+        "Gnocchi",
+        "Frischkäse"
+      ],
+      "steps": [
+        "Hackfleisch anbraten mit BISSCHEN Salz Pfeffer und gemüsebrühe",
+        "Spinat erhitzen",
+        "Gnocchi kochen/ braten",
+        "Frischkäse mit nem Schuss Wasser und Rinderbrühe vermengen. Nicht mit der rinderbrühe geizen! Darf beim abschmecken wirklich deftig würzig sein",
+        "Schichten: Gnocchi, Spinat, Hack, frischkäse",
+        "Im Backofen bei 200 grad (ca 8 min.) hier auch mit der grillfunktion arbeiten und schauen dass es leicht braun wird aber nicht verbrennt!"
+      ],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-23T19:12:14.341Z"
+      "updated": "2026-07-23T19:26:51.887Z"
     },
     {
       "id": "gnocchi-mit-cashew-pesto",
