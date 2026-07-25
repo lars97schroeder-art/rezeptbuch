@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-25T11:46:30.648Z",
+  "updated": "2026-07-25T20:21:20.158Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1350,6 +1350,35 @@
       "group": "Pfannkuchen",
       "created": "2026-07-12T07:11:40.962Z",
       "updated": "2026-07-12T07:11:40.962Z"
+    },
+    {
+      "id": "roesti",
+      "title": "Rösti",
+      "category": [
+        "Ofen & Pfanne",
+        "Comfort food"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/roesti-1785010876-0.jpg",
+      "images": [
+        "data/images/roesti-1785010876-0.jpg",
+        "data/images/roesti-1785010876-1.jpg"
+      ],
+      "ingredients": [
+        "Rösti Mischung",
+        "Spiegelei",
+        "Speck",
+        "Karamellisierte Zwiebeln"
+      ],
+      "steps": [
+        "Braucht’s hier ne Anleitung haha ?"
+      ],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-25T20:21:20.157Z",
+      "updated": "2026-07-25T20:21:20.157Z"
     },
     {
       "id": "chicken-wings-2",
