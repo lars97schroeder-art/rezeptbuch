@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-23T19:26:51.887Z",
+  "updated": "2026-07-25T11:46:30.648Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1680,7 +1680,9 @@
     {
       "id": "gemuese-lasagne",
       "title": "Gemüse Lasagne",
-      "category": [],
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🍝",
@@ -1693,7 +1695,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-23T18:37:44.330Z",
-      "updated": "2026-07-23T18:37:44.330Z"
+      "updated": "2026-07-25T11:46:30.648Z"
     }
   ]
 }
