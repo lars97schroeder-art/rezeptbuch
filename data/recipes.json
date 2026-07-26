@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:00:31.897Z",
+  "updated": "2026-07-26T10:00:43.200Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1688,13 +1688,13 @@
         "60g weiche Margarine",
         "375g",
         "1 Prise Salz",
-        "1 Prise Zucker"
+        "1 Ei"
       ],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
-      "updated": "2026-07-26T10:00:31.896Z"
+      "updated": "2026-07-26T10:00:43.200Z"
     },
     {
       "id": "szegediner-gulasch",
