@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:05:29.735Z",
+  "updated": "2026-07-26T10:05:51.146Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -821,7 +821,7 @@
         "Ofen & Pfanne"
       ],
       "time": "",
-      "servings": "",
+      "servings": "28cm Springform, x1.5 für Blech",
       "emoji": "🧅",
       "image": "data/images/zwiebelkuchen-1783372436-0.jpg",
       "images": [
@@ -829,7 +829,7 @@
         "data/images/zwiebelkuchen-1784747893-0.jpg"
       ],
       "ingredients": [
-        "FÜR DEN HEFETEIG (28cm Springform, x1.5 für Blech)",
+        "FÜR DEN HEFETEIG",
         "250g Mehl (Type 405)",
         "1/2 Päckchen Trockenhefe",
         "50ml lauwarmes Wasser",
@@ -858,7 +858,7 @@
       ],
       "notes": "1.5 mal das Rezept mit dem besten zwiebelkuchen",
       "bereich": "kochen",
-      "updated": "2026-07-26T10:05:29.734Z"
+      "updated": "2026-07-26T10:05:51.146Z"
     },
     {
       "id": "shakshuka",
