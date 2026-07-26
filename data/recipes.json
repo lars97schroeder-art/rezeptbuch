@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T09:58:28.867Z",
+  "updated": "2026-07-26T09:58:47.353Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1682,13 +1682,14 @@
         "data/images/hefezopf-1784458060-0.jpg"
       ],
       "ingredients": [
-        "1 Päckchen Trockenhefe"
+        "1 Päckchen Trockenhefe",
+        "180 ml lauwarme Hafermilch"
       ],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
-      "updated": "2026-07-26T09:58:28.867Z"
+      "updated": "2026-07-26T09:58:47.353Z"
     },
     {
       "id": "szegediner-gulasch",
