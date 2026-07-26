@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:08:43.304Z",
+  "updated": "2026-07-26T10:08:49.716Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -823,9 +823,8 @@
       "time": "",
       "servings": "28cm Springform, x1.5 für Blech",
       "emoji": "🧅",
-      "image": "data/images/zwiebelkuchen-1783372436-0.jpg",
+      "image": "data/images/zwiebelkuchen-1784747893-0.jpg",
       "images": [
-        "data/images/zwiebelkuchen-1783372436-0.jpg",
         "data/images/zwiebelkuchen-1784747893-0.jpg"
       ],
       "ingredients": [
@@ -858,7 +857,7 @@
       ],
       "notes": "Gurkensalat eignet sich als Beilage 😋",
       "bereich": "kochen",
-      "updated": "2026-07-26T10:08:43.304Z"
+      "updated": "2026-07-26T10:08:49.716Z"
     },
     {
       "id": "shakshuka",
