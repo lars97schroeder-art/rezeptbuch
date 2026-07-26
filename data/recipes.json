@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T09:59:59.924Z",
+  "updated": "2026-07-26T10:00:31.897Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1685,13 +1685,16 @@
         "1 Päckchen Trockenhefe",
         "180 ml lauwarme Hafermilch",
         "50g Zucker",
-        "60g weiche Margarine"
+        "60g weiche Margarine",
+        "375g",
+        "1 Prise Salz",
+        "1 Prise Zucker"
       ],
       "steps": [],
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
-      "updated": "2026-07-26T09:59:59.924Z"
+      "updated": "2026-07-26T10:00:31.896Z"
     },
     {
       "id": "szegediner-gulasch",
