@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:06:15.855Z",
+  "updated": "2026-07-26T10:06:50.184Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -852,13 +852,13 @@
         "Backofen 160grad umluft",
         "Teig 5 min vorbacken",
         "Dann Schlotze drauf",
-        "20 min mit backpapier Deckel",
+        "20 min mit Backpapier Deckel",
         "20 min ohne backen",
         "Genießen"
       ],
-      "notes": "1.5 mal das Rezept mit dem besten zwiebelkuchen",
+      "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-26T10:06:15.855Z"
+      "updated": "2026-07-26T10:06:50.184Z"
     },
     {
       "id": "shakshuka",
