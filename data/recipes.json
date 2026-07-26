@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:06:50.184Z",
+  "updated": "2026-07-26T10:07:42.062Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1380,9 +1380,8 @@
       "time": "",
       "servings": "",
       "emoji": "",
-      "image": "data/images/roesti-1785010876-0.jpg",
+      "image": "data/images/roesti-1785010876-1.jpg",
       "images": [
-        "data/images/roesti-1785010876-0.jpg",
         "data/images/roesti-1785010876-1.jpg"
       ],
       "ingredients": [
@@ -1397,7 +1396,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-25T20:21:20.157Z",
-      "updated": "2026-07-25T20:21:20.157Z"
+      "updated": "2026-07-26T10:07:42.061Z"
     },
     {
       "id": "chicken-wings-2",
