@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T09:58:47.353Z",
+  "updated": "2026-07-26T09:59:12.583Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1672,7 +1672,7 @@
     },
     {
       "id": "hefezopf",
-      "title": "Hefezopf",
+      "title": "Hefezopf Vegan 🌱",
       "category": [],
       "time": "",
       "servings": "",
@@ -1689,7 +1689,7 @@
       "notes": "",
       "bereich": "backen",
       "created": "2026-07-19T10:47:26.722Z",
-      "updated": "2026-07-26T09:58:47.353Z"
+      "updated": "2026-07-26T09:59:12.583Z"
     },
     {
       "id": "szegediner-gulasch",
