@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-26T10:08:49.716Z",
+  "updated": "2026-07-27T09:46:56.740Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1750,6 +1750,24 @@
       "bereich": "kochen",
       "created": "2026-07-23T18:37:44.330Z",
       "updated": "2026-07-25T11:46:30.648Z"
+    },
+    {
+      "id": "annika-s-high-protein-pumper-cheesecake",
+      "title": "Annika’s High Protein Pumper Cheesecake",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🍰",
+      "image": "data/images/annika-s-high-protein-pumper-cheesecake-1785145614-0.jpg",
+      "images": [
+        "data/images/annika-s-high-protein-pumper-cheesecake-1785145614-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "Kuchen schaut einen ein bisschen an wie Rocky 🥺🥺🫶🏼",
+      "bereich": "backen",
+      "created": "2026-07-27T09:46:56.740Z",
+      "updated": "2026-07-27T09:46:56.740Z"
     }
   ]
 }
