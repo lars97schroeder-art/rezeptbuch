@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-28T06:15:42.107Z",
+  "updated": "2026-07-28T06:16:14.383Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1763,12 +1763,18 @@
         "data/images/annika-s-high-protein-pumper-cheesecake-1785145614-0.jpg",
         "data/images/annika-s-high-protein-pumper-cheesecake-1785219340-0.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "Mürbeteig",
+        "Skyr",
+        "Frischkäse",
+        "Beeren",
+        "Streusel 🥰🥰"
+      ],
       "steps": [],
       "notes": "Kuchen schaut einen ein bisschen an wie Rocky 🥺🥺🫶🏼",
       "bereich": "backen",
       "created": "2026-07-27T09:46:56.740Z",
-      "updated": "2026-07-28T06:15:42.106Z"
+      "updated": "2026-07-28T06:16:14.382Z"
     }
   ]
 }
