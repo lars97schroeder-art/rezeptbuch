@@ -53,13 +53,19 @@ export default {
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    const { image, mediaType, url } = body;
-    if (!image && !url) {
+    // "images" (mehrere Fotos, z.B. mehrseitiges Rezept) oder das ältere
+    // einzelne "image" — beide werden unterstützt
+    const { image, mediaType, images, url } = body;
+    const imageList = Array.isArray(images) && images.length
+      ? images
+      : (image ? [{ data: image, mediaType: mediaType || 'image/jpeg' }] : []);
+
+    if (!imageList.length && !url) {
       return new Response(JSON.stringify({ error: 'Kein Foto und kein Link übergeben' }),
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    const anthropicBody = image
+    const anthropicBody = imageList.length
       ? {
           model: 'claude-opus-4-8',
           max_tokens: 2048,
@@ -67,16 +73,19 @@ export default {
           messages: [{
             role: 'user',
             content: [
-              {
+              ...imageList.map(img => ({
                 type: 'image',
-                source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image },
-              },
+                source: { type: 'base64', media_type: img.mediaType || 'image/jpeg', data: img.data },
+              })),
               {
                 type: 'text',
-                text: 'Lies dieses abfotografierte Rezept aus und gib Titel, Zutaten (eine pro Zeile, ' +
-                  'mit Menge falls angegeben), Zubereitungsschritte (ein Schritt pro Zeile), Portionen ' +
-                  'und Zubereitungszeit (falls erkennbar, sonst leer lassen) auf Deutsch zurück. ' +
-                  'Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
+                text: (imageList.length > 1
+                  ? `Das sind ${imageList.length} Fotos EINES zusammenhängenden Rezepts (z.B. mehrere Seiten ` +
+                    'oder Ausschnitte). Kombiniere den Inhalt aller Fotos zu einem Rezept und gib '
+                  : 'Lies dieses abfotografierte Rezept aus und gib ') +
+                  'Titel, Zutaten (eine pro Zeile, mit Menge falls angegeben), Zubereitungsschritte ' +
+                  '(ein Schritt pro Zeile), Portionen und Zubereitungszeit (falls erkennbar, sonst leer ' +
+                  'lassen) auf Deutsch zurück. Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
               },
             ],
           }],

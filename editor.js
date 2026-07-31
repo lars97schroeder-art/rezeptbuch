@@ -119,23 +119,27 @@ function applyScanResult(parsed) {
   }
 }
 
-// Foto per KI (Cloudflare-Worker + Claude) auslesen und Editor-Felder befüllen
-async function scanRecipePhoto(file) {
-  let dataUrl;
-  try { dataUrl = await resizePhoto(file); }
+// Ein oder mehrere Fotos (z.B. mehrseitiges Rezept) per KI auslesen und
+// Editor-Felder befüllen — alle Fotos gehen als ein zusammenhängendes
+// Rezept an Claude, nicht einzeln nacheinander
+async function scanRecipePhotos(files) {
+  let dataUrls;
+  try { dataUrls = await Promise.all(files.map(resizePhoto)); }
   catch (err) { return toast('Foto-Fehler: ' + err.message); }
 
-  toast('🤖 Rezept wird ausgelesen …');
+  toast(dataUrls.length > 1 ? `🤖 ${dataUrls.length} Fotos werden ausgelesen …` : '🤖 Rezept wird ausgelesen …');
   try {
     const res = await fetch(SCAN_WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: dataUrl.split(',')[1], mediaType: 'image/jpeg' }),
+      body: JSON.stringify({
+        images: dataUrls.map(d => ({ data: d.split(',')[1], mediaType: 'image/jpeg' })),
+      }),
     });
     if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
     applyScanResult(await res.json());
 
-    edNeu.push(dataUrl);
+    edNeu.push(...dataUrls);
     renderEdPhotos();
     toast('✓ Rezept ausgelesen — bitte kurz prüfen');
   } catch (err) {
@@ -217,14 +221,17 @@ function openEditor(id) {
   <div class="ed-body">
     <h2>${r ? 'Rezept bearbeiten' : 'Neues Rezept'}</h2>
     ${r ? '' : `
-    <div class="ed-scan-box">
-      <button type="button" class="ed-scan-btn">📷 Rezept aus Foto auslesen (KI)</button>
-      <input type="file" id="ed-scan-input" accept="image/*" hidden>
-      <button type="button" class="ed-scan-link-btn">🔗 Rezept von Link auslesen (KI)</button>
-      <div class="ed-scan-link-row" hidden>
-        <input type="url" id="ed-scan-link-input" placeholder="https://...">
-        <button type="button" class="ed-scan-link-go">Los</button>
+    <div class="ai-scan-box">
+      <div class="ai-scan-label">🤖 Rezept per KI erfassen</div>
+      <div class="ai-scan-buttons">
+        <button type="button" class="ed-scan-btn">📷 Foto</button>
+        <button type="button" class="ed-scan-link-btn">🔗 Link</button>
       </div>
+      <input type="file" id="ed-scan-input" accept="image/*" multiple hidden>
+    </div>
+    <div class="ed-scan-link-row" hidden>
+      <input type="url" id="ed-scan-link-input" placeholder="https://...">
+      <button type="button" class="ed-scan-link-go">Los</button>
     </div>`}
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
@@ -289,9 +296,9 @@ function openEditor(id) {
     const scanInput = el.querySelector('#ed-scan-input');
     scanBtn.onclick = () => scanInput.click();
     scanInput.onchange = async e => {
-      const file = e.target.files[0];
+      const files = [...e.target.files];
       e.target.value = '';
-      if (file) await scanRecipePhoto(file);
+      if (files.length) await scanRecipePhotos(files);
     };
   }
 
@@ -681,32 +688,6 @@ window.editorGridCard = () => {
   card.appendChild(infoDiv);
   card.onclick = () => openEditor(null);
   return card;
-};
-
-// Wird von render() aufgerufen: KI-Bereich oben in der Rezeptübersicht
-// (Foto/Link) — öffnet den Editor für ein neues Rezept und springt direkt
-// in den jeweiligen Scan-Schritt, statt die Logik doppelt zu bauen.
-window.editorAiBox = () => {
-  if (!isEditModeEnabled()) return null;
-  const box = document.createElement('div');
-  box.className = 'ai-scan-box';
-  box.innerHTML = `
-    <div class="ai-scan-label">🤖 Rezept per KI erfassen</div>
-    <div class="ai-scan-buttons">
-      <button type="button" class="ai-scan-photo-btn">📷 Foto</button>
-      <button type="button" class="ai-scan-link-btn">🔗 Link</button>
-    </div>`;
-  box.querySelector('.ai-scan-photo-btn').onclick = () => {
-    openEditor(null);
-    $('#ed-scan-input')?.click();
-  };
-  box.querySelector('.ai-scan-link-btn').onclick = () => {
-    openEditor(null);
-    const row = $('.ed-scan-link-row');
-    if (row) row.hidden = false;
-    $('#ed-scan-link-input')?.focus();
-  };
-  return box;
 };
 
 // Wird von renderDetail() aufgerufen: ✏️-Knopf in der Rezept-Ansicht

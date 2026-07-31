@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-08-01T10:30:00+02:00';
+const APP_BUILD_TIME = '2026-08-01T12:15:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -401,16 +401,6 @@ function groupedList() {
 }
 
 function render() {
-  // KI-Bereich (Foto/Link) — nur sichtbar, wenn Bearbeiten aktiviert ist
-  const aiSlot = $('#ai-scan-slot');
-  if (aiSlot) {
-    aiSlot.innerHTML = '';
-    if (window.editorAiBox) {
-      const box = window.editorAiBox();
-      if (box) aiSlot.appendChild(box);
-    }
-  }
-
   // Kategorie-Chips
   const chips = $('#chips');
   chips.innerHTML = '';
@@ -459,7 +449,7 @@ function render() {
       const info = document.createElement('div');
       info.className = 'info';
       info.innerHTML = `<div class="title">${esc(item.group)}</div>
-        <div class="meta">${item.members.length} Varianten ›</div>`;
+        <div class="meta">${item.members.length} ${item.members.length === 1 ? 'Variante' : 'Varianten'} ›</div>`;
       card.appendChild(info);
       card.onclick = () => openGroup(item.group);
     } else {
@@ -534,7 +524,7 @@ function renderGroup(name) {
     <button class="detail-home" aria-label="Startseite">🏠</button>
     <div class="detail-body group-body">
       <h2>${esc(name)}</h2>
-      <div class="detail-meta">${members.length} Varianten – such dir eine aus</div>
+      <div class="detail-meta">${members.length} ${members.length === 1 ? 'Variante' : 'Varianten'} – such dir eine aus</div>
       <div class="variant-list">
         ${members.map(m => `
           <button class="variant" data-id="${esc(m.id)}">
