@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-28T06:16:14.383Z",
+  "updated": "2026-07-31T22:53:40.732Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1775,6 +1775,53 @@
       "bereich": "backen",
       "created": "2026-07-27T09:46:56.740Z",
       "updated": "2026-07-28T06:16:14.382Z"
+    },
+    {
+      "id": "pasta-alla-zozzona",
+      "title": "Pasta alla Zozzona",
+      "category": [
+        "Comfort food",
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🍝",
+      "image": "",
+      "images": [],
+      "ingredients": [
+        "300 g Salsiccia",
+        "200 g Guanciale",
+        "½ rote Zwiebel",
+        "350 g passierte Tomaten",
+        "ca. 200 ml Wasser",
+        "2 Eigelb",
+        "80 g Pecorino Romano",
+        "etwas Pfeffer",
+        "etwas Salz",
+        "Pasta nach Wahl",
+        "etwas Pastawasser",
+        "Pecorino zum Servieren"
+      ],
+      "steps": [
+        "Den Guanciale in einer Pfanne knusprig anbraten",
+        "Die Salsiccia aus der Haut lösen, zum Guanciale geben und alles zusammen gut anbraten",
+        "Anschließend das Fleisch aus der Pfanne nehmen",
+        "Im gleichen Fett die halbe rote Zwiebel goldbraun anbraten",
+        "Das Fleisch wieder dazugeben und kurz mitbraten",
+        "Die passierten Tomaten und ca. 200 ml Wasser hinzufügen",
+        "Etwas salzen – aber nicht zu viel, da der Pecorino bereits ordentlich Salz mitbringt",
+        "Die Sauce etwa 45 Minuten köcheln lassen.",
+        "Kurz bevor die Sauce fertig ist, die Pasta kochen",
+        "Währenddessen die Creme vorbereiten: 2 Eigelb mit 80 g Pecorino Romano und etwas Pfeffer verrühren",
+        "Falls die Carbo-Crema zu dick ist, etwas leicht abgekühltes Nudelwasser unterrühren",
+        "Die Pasta kurz vor al dente direkt zur Sauce geben und dort mit etwas Pastawasser fertig garen",
+        "Zum Schluss die Hitze ganz niedrig stellen, die Eigelb-Pecorino-Creme unterrühren und bei sehr schwacher Hitze vorsichtig weiter erhitzen. Ganz wichtig: nicht zu heiß werden lassen, sonst habt ihr am Ende Rührei!",
+        "Mit Pecorino servieren."
+      ],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-31T22:53:40.731Z",
+      "updated": "2026-07-31T22:53:40.731Z"
     }
   ]
 }
