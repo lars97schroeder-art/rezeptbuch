@@ -371,6 +371,35 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   background: var(--border);
 }
 
+.ai-scan-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px) 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+.ai-scan-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.ai-scan-buttons { display: flex; gap: 8px; flex: 0 0 auto; }
+.ai-scan-buttons button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ai-scan-buttons button:active { transform: scale(0.95); }
+
 #grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 35vw, 160px), 1fr));

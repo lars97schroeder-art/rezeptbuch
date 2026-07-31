@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-19T11:20:00+02:00';
+const APP_BUILD_TIME = '2026-08-01T10:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -401,6 +401,16 @@ function groupedList() {
 }
 
 function render() {
+  // KI-Bereich (Foto/Link) — nur sichtbar, wenn Bearbeiten aktiviert ist
+  const aiSlot = $('#ai-scan-slot');
+  if (aiSlot) {
+    aiSlot.innerHTML = '';
+    if (window.editorAiBox) {
+      const box = window.editorAiBox();
+      if (box) aiSlot.appendChild(box);
+    }
+  }
+
   // Kategorie-Chips
   const chips = $('#chips');
   chips.innerHTML = '';

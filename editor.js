@@ -683,6 +683,32 @@ window.editorGridCard = () => {
   return card;
 };
 
+// Wird von render() aufgerufen: KI-Bereich oben in der Rezeptübersicht
+// (Foto/Link) — öffnet den Editor für ein neues Rezept und springt direkt
+// in den jeweiligen Scan-Schritt, statt die Logik doppelt zu bauen.
+window.editorAiBox = () => {
+  if (!isEditModeEnabled()) return null;
+  const box = document.createElement('div');
+  box.className = 'ai-scan-box';
+  box.innerHTML = `
+    <div class="ai-scan-label">🤖 Rezept per KI erfassen</div>
+    <div class="ai-scan-buttons">
+      <button type="button" class="ai-scan-photo-btn">📷 Foto</button>
+      <button type="button" class="ai-scan-link-btn">🔗 Link</button>
+    </div>`;
+  box.querySelector('.ai-scan-photo-btn').onclick = () => {
+    openEditor(null);
+    $('#ed-scan-input')?.click();
+  };
+  box.querySelector('.ai-scan-link-btn').onclick = () => {
+    openEditor(null);
+    const row = $('.ed-scan-link-row');
+    if (row) row.hidden = false;
+    $('#ed-scan-link-input')?.focus();
+  };
+  return box;
+};
+
 // Wird von renderDetail() aufgerufen: ✏️-Knopf in der Rezept-Ansicht
 window.editorEnhanceDetail = (el, id) => {
   if (!isEditModeEnabled()) return;
