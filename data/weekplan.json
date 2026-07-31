@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-16T17:24:09.289Z",
+  "updated": "2026-07-22T14:47:20.495Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -88,9 +88,7 @@
       "mi": [],
       "do": [],
       "fr": [],
-      "sa": [
-        "TEXT:Lars in Kölle"
-      ],
+      "sa": [],
       "so": [
         "TEXT:Lars in Kölle"
       ],
@@ -136,23 +134,25 @@
         "kokosmilch-gemuese-mit-sojasosse"
       ],
       "di": [
-        "TEXT:Antonia in Luzern"
+        "TEXT:Antonia in Luzern",
+        "kokosmilch-gemuese-mit-sojasosse"
       ],
       "mi": [
         "TEXT:Antonia in Luzern"
       ],
       "do": [
-        "TEXT:Antonia in Luzern"
+        "TEXT:Antonia in Luzern",
+        "nasty-gnocchi"
       ],
       "fr": [
         "TEXT:Antonia in Luzern"
       ],
-      "sa": [
-        "TEXT:Antonia in Luzern"
-      ],
+      "sa": [],
       "so": [],
       "off": [
-        "mo"
+        "mo",
+        "di",
+        "do"
       ]
     },
     "2026-W34": {

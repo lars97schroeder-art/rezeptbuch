@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-19T10:43:57.959Z",
+  "updated": "2026-07-28T06:16:14.383Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -288,19 +288,33 @@
     {
       "id": "nasty-gnocchi",
       "title": "Nasty Gnocchi",
-      "category": "Pasta & Gnocchi",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
       "time": "",
       "servings": "",
       "emoji": "😈",
       "image": "data/images/nasty-gnocchi-1783327760-0.jpg",
       "images": [
-        "data/images/nasty-gnocchi-1783327760-0.jpg",
-        "data/images/nasty-gnocchi-1783327760-1.jpg"
+        "data/images/nasty-gnocchi-1783327760-0.jpg"
       ],
-      "ingredients": [],
-      "steps": [],
+      "ingredients": [
+        "Hackfleisch",
+        "Spinat",
+        "Gnocchi",
+        "Frischkäse"
+      ],
+      "steps": [
+        "Hackfleisch anbraten mit BISSCHEN Salz Pfeffer und gemüsebrühe",
+        "Spinat erhitzen",
+        "Gnocchi kochen/ braten",
+        "Frischkäse mit nem Schuss Wasser und Rinderbrühe vermengen. Nicht mit der rinderbrühe geizen! Darf beim abschmecken wirklich deftig würzig sein",
+        "Schichten: Gnocchi, Spinat, Hack, frischkäse",
+        "Im Backofen bei 200 grad (ca 8 min.) hier auch mit der grillfunktion arbeiten und schauen dass es leicht braun wird aber nicht verbrennt!"
+      ],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-23T19:26:51.887Z"
     },
     {
       "id": "gnocchi-mit-cashew-pesto",
@@ -355,7 +369,9 @@
     {
       "id": "kokosmilch-gemuese-mit-sojasosse",
       "title": "Kokosmilch-Gemüse mit Sojasoße",
-      "category": "Asia",
+      "category": [
+        "Asia"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🥥",
@@ -364,10 +380,17 @@
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-0.jpg",
         "data/images/kokosmilch-gemuese-mit-sojasosse-1783327937-1.jpg"
       ],
-      "ingredients": [],
+      "ingredients": [
+        "Gemüse nach Wahl",
+        "Knoblauch",
+        "Kokosmilch",
+        "Sojasauce",
+        "Udon Nudeln oder Reis"
+      ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-07-21T17:34:15.889Z"
     },
     {
       "id": "asia-snoodles-pfanne",
@@ -798,16 +821,43 @@
         "Ofen & Pfanne"
       ],
       "time": "",
-      "servings": "",
+      "servings": "28cm Springform, x1.5 für Blech",
       "emoji": "🧅",
-      "image": "data/images/zwiebelkuchen-1783372436-0.jpg",
+      "image": "data/images/zwiebelkuchen-1784747893-0.jpg",
       "images": [
-        "data/images/zwiebelkuchen-1783372436-0.jpg"
+        "data/images/zwiebelkuchen-1784747893-0.jpg"
       ],
-      "ingredients": [],
-      "steps": [],
-      "notes": "",
-      "bereich": "kochen"
+      "ingredients": [
+        "FÜR DEN HEFETEIG",
+        "250g Mehl (Type 405)",
+        "1/2 Päckchen Trockenhefe",
+        "50ml lauwarmes Wasser",
+        "100ml Milch",
+        "¼ TL Zucker",
+        "2 EL Olivenöl",
+        "1 TL Salz",
+        "FÜR DIE FÜLLUNG",
+        "1 kg Zwiebel",
+        "2 EL Pflanzenöl",
+        "125g Speckwürfel",
+        "200g Schmand",
+        "2 Eier (Größe M)",
+        "100g Reibekäse",
+        "etwas Salz",
+        "1 Prise schwarzer Pfeffer",
+        "etwas Paprikapulver (edelsüß)"
+      ],
+      "steps": [
+        "Backofen 160grad umluft",
+        "Teig 5 min vorbacken",
+        "Dann Schlotze drauf",
+        "20 min mit Backpapier Deckel",
+        "20 min ohne backen",
+        "Genießen"
+      ],
+      "notes": "Gurkensalat eignet sich als Beilage 😋",
+      "bereich": "kochen",
+      "updated": "2026-07-26T10:08:49.716Z"
     },
     {
       "id": "shakshuka",
@@ -1320,6 +1370,34 @@
       "updated": "2026-07-12T07:11:40.962Z"
     },
     {
+      "id": "roesti",
+      "title": "Rösti",
+      "category": [
+        "Ofen & Pfanne",
+        "Comfort food"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/roesti-1785010876-1.jpg",
+      "images": [
+        "data/images/roesti-1785010876-1.jpg"
+      ],
+      "ingredients": [
+        "Rösti Mischung",
+        "Spiegelei",
+        "Speck",
+        "Karamellisierte Zwiebeln"
+      ],
+      "steps": [
+        "Braucht’s hier ne Anleitung haha ?"
+      ],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-25T20:21:20.157Z",
+      "updated": "2026-07-26T10:07:42.061Z"
+    },
+    {
       "id": "chicken-wings-2",
       "title": "Chicken Wings",
       "category": [
@@ -1444,10 +1522,10 @@
       ],
       "ingredients": [],
       "steps": [],
-      "notes": "",
+      "notes": "https://thecookingfoodie.com/recipe/lemon-tart-recipe/",
       "bereich": "backen",
       "created": "2026-07-15T14:49:09.021Z",
-      "updated": "2026-07-18T16:45:41.978Z"
+      "updated": "2026-07-19T20:37:21.173Z"
     },
     {
       "id": "griechischer-salat",
@@ -1608,6 +1686,95 @@
       "bereich": "backen",
       "created": "2026-07-19T10:39:47.881Z",
       "updated": "2026-07-19T10:40:33.752Z"
+    },
+    {
+      "id": "hefezopf",
+      "title": "Hefezopf Vegan 🌱",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🥐",
+      "image": "data/images/hefezopf-1784458060-0.jpg",
+      "images": [
+        "data/images/hefezopf-1784458060-0.jpg"
+      ],
+      "ingredients": [
+        "1 Päckchen Trockenhefe",
+        "180 ml lauwarme Hafermilch",
+        "50g Zucker",
+        "60g weiche Margarine",
+        "375g",
+        "1 Prise Salz",
+        "1 Ei"
+      ],
+      "steps": [],
+      "notes": "",
+      "bereich": "backen",
+      "created": "2026-07-19T10:47:26.722Z",
+      "updated": "2026-07-26T10:00:43.200Z"
+    },
+    {
+      "id": "szegediner-gulasch",
+      "title": "Szegediner Gulasch",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/szegediner-gulasch-1784486570-0.jpg",
+      "images": [
+        "data/images/szegediner-gulasch-1784486570-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-19T18:42:52.991Z",
+      "updated": "2026-07-19T18:42:52.991Z"
+    },
+    {
+      "id": "gemuese-lasagne",
+      "title": "Gemüse Lasagne",
+      "category": [
+        "Pasta & Gnocchi"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "🍝",
+      "image": "data/images/gemuese-lasagne-1784831862-0.jpg",
+      "images": [
+        "data/images/gemuese-lasagne-1784831862-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-07-23T18:37:44.330Z",
+      "updated": "2026-07-25T11:46:30.648Z"
+    },
+    {
+      "id": "annika-s-high-protein-pumper-cheesecake",
+      "title": "Annika’s High Protein Pumper Cheesecake",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🍰",
+      "image": "data/images/annika-s-high-protein-pumper-cheesecake-1785145614-0.jpg",
+      "images": [
+        "data/images/annika-s-high-protein-pumper-cheesecake-1785145614-0.jpg",
+        "data/images/annika-s-high-protein-pumper-cheesecake-1785219340-0.jpg"
+      ],
+      "ingredients": [
+        "Mürbeteig",
+        "Skyr",
+        "Frischkäse",
+        "Beeren",
+        "Streusel 🥰🥰"
+      ],
+      "steps": [],
+      "notes": "Kuchen schaut einen ein bisschen an wie Rocky 🥺🥺🫶🏼",
+      "bereich": "backen",
+      "created": "2026-07-27T09:46:56.740Z",
+      "updated": "2026-07-28T06:16:14.382Z"
     }
   ]
 }
