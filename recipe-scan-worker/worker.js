@@ -1,9 +1,9 @@
 'use strict';
 
-// Cloudflare Worker: nimmt ein Rezeptfoto entgegen, lässt Claude den Inhalt
-// auslesen und gibt Titel/Zutaten/Zubereitung als JSON zurück.
-// Der Anthropic-API-Key liegt als Secret (wrangler secret put ANTHROPIC_API_KEY)
-// und wird dem Browser nie sichtbar.
+// Cloudflare Worker: nimmt ein Rezeptfoto ODER einen Rezept-Link entgegen,
+// lässt Claude den Inhalt auslesen und gibt Titel/Zutaten/Zubereitung als
+// JSON zurück. Der Anthropic-API-Key liegt als Secret
+// (wrangler secret put ANTHROPIC_API_KEY) und wird dem Browser nie sichtbar.
 
 const ALLOWED_ORIGINS = [
   'https://lars97schroeder-art.github.io',
@@ -53,11 +53,48 @@ export default {
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    const { image, mediaType } = body;
-    if (!image) {
-      return new Response(JSON.stringify({ error: 'Kein Foto übergeben' }),
+    const { image, mediaType, url } = body;
+    if (!image && !url) {
+      return new Response(JSON.stringify({ error: 'Kein Foto und kein Link übergeben' }),
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
+
+    const anthropicBody = image
+      ? {
+          model: 'claude-opus-4-8',
+          max_tokens: 2048,
+          output_config: { format: { type: 'json_schema', schema: SCHEMA } },
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image },
+              },
+              {
+                type: 'text',
+                text: 'Lies dieses abfotografierte Rezept aus und gib Titel, Zutaten (eine pro Zeile, ' +
+                  'mit Menge falls angegeben), Zubereitungsschritte (ein Schritt pro Zeile), Portionen ' +
+                  'und Zubereitungszeit (falls erkennbar, sonst leer lassen) auf Deutsch zurück. ' +
+                  'Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
+              },
+            ],
+          }],
+        }
+      : {
+          model: 'claude-opus-4-8',
+          max_tokens: 2048,
+          output_config: { format: { type: 'json_schema', schema: SCHEMA } },
+          tools: [{ type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 3 }],
+          messages: [{
+            role: 'user',
+            content: `Ruf diese Seite ab und lies das Rezept aus: ${url}\n\n` +
+              'Gib Titel, Zutaten (eine pro Zeile, mit Menge falls angegeben), ' +
+              'Zubereitungsschritte (ein Schritt pro Zeile), Portionen und Zubereitungszeit ' +
+              '(falls erkennbar, sonst leer lassen) auf Deutsch zurück. ' +
+              'Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
+          }],
+        };
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -66,27 +103,7 @@ export default {
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 2048,
-        output_config: { format: { type: 'json_schema', schema: SCHEMA } },
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image },
-            },
-            {
-              type: 'text',
-              text: 'Lies dieses abfotografierte Rezept aus und gib Titel, Zutaten (eine pro Zeile, ' +
-                'mit Menge falls angegeben), Zubereitungsschritte (ein Schritt pro Zeile), Portionen ' +
-                'und Zubereitungszeit (falls erkennbar, sonst leer lassen) auf Deutsch zurück. ' +
-                'Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
-            },
-          ],
-        }],
-      }),
+      body: JSON.stringify(anthropicBody),
     });
 
     if (!anthropicRes.ok) {
@@ -101,7 +118,15 @@ export default {
         { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    const textBlock = result.content.find(b => b.type === 'text');
+    // Bei Link-Modus kommen vor der finalen JSON-Antwort ggf. weitere
+    // Text-Blöcke (Zwischenkommentare zum web_fetch) — daher den LETZTEN
+    // Text-Block nehmen, nicht den ersten.
+    const textBlocks = result.content.filter(b => b.type === 'text');
+    const textBlock = textBlocks[textBlocks.length - 1];
+    if (!textBlock) {
+      return new Response(JSON.stringify({ error: 'Rezept konnte nicht ausgelesen werden' }),
+        { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
     return new Response(textBlock.text, {
       headers: { ...headers, 'Content-Type': 'application/json' },
     });

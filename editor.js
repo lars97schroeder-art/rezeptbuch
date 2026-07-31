@@ -8,7 +8,7 @@ const GH_REPO = 'lars97schroeder-art/rezeptbuch';
 const TOKEN_KEY = 'rezeptbuch-token';
 
 // Cloudflare-Worker, der Rezeptfotos per KI ausliest (siehe recipe-scan-worker/)
-const SCAN_WORKER_URL = 'https://rezeptbuch-scan.<DEIN-SUBDOMAIN>.workers.dev';
+const SCAN_WORKER_URL = 'https://rezeptbuch-scan.schlemmerliste.workers.dev';
 
 const ghToken = () => localStorage.getItem(TOKEN_KEY) || '';
 
@@ -106,6 +106,19 @@ function resizePhoto(file) {
   });
 }
 
+// Vom Scan-Worker gelieferte Felder in den offenen Editor übernehmen
+function applyScanResult(parsed) {
+  if (parsed.title) $('#ed-title').value = parsed.title;
+  if (parsed.servings) $('#ed-servings').value = parsed.servings;
+  if (parsed.emoji) $('#ed-emoji').value = parsed.emoji;
+  if (Array.isArray(parsed.ingredients)) $('#ed-ingredients').value = parsed.ingredients.join('\n');
+  if (Array.isArray(parsed.steps)) $('#ed-steps').value = parsed.steps.join('\n');
+  if (parsed.time) {
+    const m = parseTimeMinutes(parsed.time);
+    if (m != null) $('#ed-time').value = minutesToHHMM(m);
+  }
+}
+
 // Foto per KI (Cloudflare-Worker + Claude) auslesen und Editor-Felder befüllen
 async function scanRecipePhoto(file) {
   let dataUrl;
@@ -120,20 +133,27 @@ async function scanRecipePhoto(file) {
       body: JSON.stringify({ image: dataUrl.split(',')[1], mediaType: 'image/jpeg' }),
     });
     if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
-    const parsed = await res.json();
-
-    if (parsed.title) $('#ed-title').value = parsed.title;
-    if (parsed.servings) $('#ed-servings').value = parsed.servings;
-    if (parsed.emoji) $('#ed-emoji').value = parsed.emoji;
-    if (Array.isArray(parsed.ingredients)) $('#ed-ingredients').value = parsed.ingredients.join('\n');
-    if (Array.isArray(parsed.steps)) $('#ed-steps').value = parsed.steps.join('\n');
-    if (parsed.time) {
-      const m = parseTimeMinutes(parsed.time);
-      if (m != null) $('#ed-time').value = minutesToHHMM(m);
-    }
+    applyScanResult(await res.json());
 
     edNeu.push(dataUrl);
     renderEdPhotos();
+    toast('✓ Rezept ausgelesen — bitte kurz prüfen');
+  } catch (err) {
+    toast('Auslesen fehlgeschlagen: ' + err.message);
+  }
+}
+
+// Rezept-Link per KI (Cloudflare-Worker + Claude) auslesen und Editor-Felder befüllen
+async function scanRecipeUrl(url) {
+  toast('🤖 Rezept wird von der Seite ausgelesen …');
+  try {
+    const res = await fetch(SCAN_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
+    applyScanResult(await res.json());
     toast('✓ Rezept ausgelesen — bitte kurz prüfen');
   } catch (err) {
     toast('Auslesen fehlgeschlagen: ' + err.message);
@@ -200,6 +220,11 @@ function openEditor(id) {
     <div class="ed-scan-box">
       <button type="button" class="ed-scan-btn">📷 Rezept aus Foto auslesen (KI)</button>
       <input type="file" id="ed-scan-input" accept="image/*" hidden>
+      <button type="button" class="ed-scan-link-btn">🔗 Rezept von Link auslesen (KI)</button>
+      <div class="ed-scan-link-row" hidden>
+        <input type="url" id="ed-scan-link-input" placeholder="https://...">
+        <button type="button" class="ed-scan-link-go">Los</button>
+      </div>
     </div>`}
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
@@ -267,6 +292,21 @@ function openEditor(id) {
       const file = e.target.files[0];
       e.target.value = '';
       if (file) await scanRecipePhoto(file);
+    };
+  }
+
+  const scanLinkBtn = el.querySelector('.ed-scan-link-btn');
+  if (scanLinkBtn) {
+    const linkRow = el.querySelector('.ed-scan-link-row');
+    const linkInput = el.querySelector('#ed-scan-link-input');
+    scanLinkBtn.onclick = () => {
+      linkRow.hidden = false;
+      linkInput.focus();
+    };
+    el.querySelector('.ed-scan-link-go').onclick = async () => {
+      const url = linkInput.value.trim();
+      if (!url) return toast('Bitte einen Link einfügen');
+      await scanRecipeUrl(url);
     };
   }
 

@@ -1382,6 +1382,20 @@ html.color-rainbow .t-card.foodmatch {
 .slot-spin:active { transform: scale(0.98); }
 .slot-spin:disabled { opacity: 0.7; cursor: not-allowed; }
 
+.slot-share {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.slot-share:active { transform: scale(0.98); }
+
 /* ---------- Bearbeiten-Modus ---------- */
 
 #editor {
@@ -1443,6 +1457,42 @@ html.color-rainbow .t-card.foodmatch {
   -webkit-tap-highlight-color: transparent;
 }
 .ed-scan-btn:active { transform: scale(0.98); }
+
+.ed-scan-link-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ed-scan-link-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ed-scan-link-row input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+.ed-scan-link-row button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 .ed-field label {
   display: block;

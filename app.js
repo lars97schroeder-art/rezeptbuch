@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-07-15T17:10:00+02:00';
+const APP_BUILD_TIME = '2026-07-19T11:20:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1573,6 +1573,7 @@ function renderTinderResult(ids) {
 
         <div class="slot-buttons">
           <button class="slot-spin" id="slot-btn" style="display:none;">🎰 LOSCHEN!</button>
+          <button class="slot-share" id="slot-share-btn" style="display:none;">📤 Als Nachricht teilen</button>
           <button class="tinder-again" style="display:none;">🔀 Nochmal mischen</button>
         </div>
       </div>`;
@@ -1623,6 +1624,27 @@ function finishSpin(winners, pick, btn) {
     renderDetail(w.id);
     history.pushState({ view: 'tinder-result-recipe', ids: winners.map(x => x.id), winnerIndex: pick }, '');
   };
+
+  const shareBtn = $('#slot-share-btn');
+  if (shareBtn) {
+    shareBtn.style.display = 'block';
+    shareBtn.onclick = () => shareRecipeAsText(w);
+  }
+}
+
+// Teilt das Ergebnis als kurze Textnachricht (z.B. WhatsApp) statt als Bild
+async function shareRecipeAsText(r) {
+  const text = `Et jibt… ${r.title}${r.emoji ? ' ' + r.emoji : ''} 🍽️`;
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; }
+    catch (e) { return; /* Nutzer hat den Teilen-Dialog abgebrochen */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('📋 In Zwischenablage kopiert');
+  } catch (e) {
+    toast('❌ Teilen nicht möglich');
+  }
 }
 
 // Vertikale Slot-Walze: läuft mehrere Runden durch und stoppt weich exakt
