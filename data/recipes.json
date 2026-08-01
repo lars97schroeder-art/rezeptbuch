@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-01T10:13:11.742Z",
+  "updated": "2026-08-01T10:14:55.826Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1857,6 +1857,44 @@
       "bereich": "backen",
       "created": "2026-08-01T10:13:11.741Z",
       "updated": "2026-08-01T10:13:11.741Z"
+    },
+    {
+      "id": "wrap-sauce",
+      "title": "Wrap Sauce",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🌯",
+      "image": "data/images/wrap-sauce-1785579294-0.jpg",
+      "images": [
+        "data/images/wrap-sauce-1785579294-0.jpg"
+      ],
+      "ingredients": [
+        "500g Magerquark",
+        "Etwas Sonnenblumenöl",
+        "Paprika Gewürz",
+        "Grill mild",
+        "1,5 Zehen Knoblauch",
+        "1 EL Zucker",
+        "Salz",
+        "Pfeffer",
+        "Kräuter (Schnittlauch und Petersilie)",
+        "Salatkräuter nach Bedarf",
+        "Country Potato Gewürz"
+      ],
+      "steps": [
+        "Jogurt in eine Schüssel geben.",
+        "Etwas Sonnenblumenöl hinzufügen und verrühren.",
+        "Mit Paprikagewürz und Grill mild würzen.",
+        "Den Knoblauch fein hacken und unterrühren.",
+        "Zucker, Salz und Pfeffer hinzufügen und abschmecken.",
+        "Die frischen Kräuter (Schnittlauch und Petersilie) fein hacken und untermischen.",
+        "Nach Belieben mit Salatkräuter und Country Potato Gewürz servieren."
+      ],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-08-01T10:14:55.826Z",
+      "updated": "2026-08-01T10:14:55.826Z"
     }
   ]
 }
