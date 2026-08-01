@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-01T10:33:33.324Z",
+  "updated": "2026-08-01T10:34:44.456Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1865,7 +1865,9 @@
     {
       "id": "wrap-sauce",
       "title": "Wrap Sauce",
-      "category": [],
+      "category": [
+        "Saucen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌯",
@@ -1898,7 +1900,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-08-01T10:14:55.826Z",
-      "updated": "2026-08-01T10:14:55.826Z"
+      "updated": "2026-08-01T10:34:44.456Z"
     }
   ]
 }
