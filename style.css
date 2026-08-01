@@ -373,6 +373,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 
 .ai-scan-box {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -399,6 +400,27 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   -webkit-tap-highlight-color: transparent;
 }
 .ai-scan-buttons button:active { transform: scale(0.95); }
+.ai-scan-buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ai-scan-progress {
+  flex: 0 0 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+.ai-scan-progress[hidden] { display: none; }
+.ai-scan-progress-bar {
+  width: 40%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: ai-scan-slide 1.1s ease-in-out infinite;
+}
+@keyframes ai-scan-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
 
 #grid {
   display: grid;
