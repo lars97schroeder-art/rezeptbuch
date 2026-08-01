@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-07-31T22:53:40.732Z",
+  "updated": "2026-08-01T10:13:11.742Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1822,6 +1822,41 @@
       "bereich": "kochen",
       "created": "2026-07-31T22:53:40.731Z",
       "updated": "2026-07-31T22:53:40.731Z"
+    },
+    {
+      "id": "hefezopf-ohne-milch-und-butter",
+      "title": "Hefezopf ohne Milch und Butter",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🍞",
+      "image": "data/images/hefezopf-ohne-milch-und-butter-1785579190-0.jpg",
+      "images": [
+        "data/images/hefezopf-ohne-milch-und-butter-1785579190-0.jpg"
+      ],
+      "ingredients": [
+        "1 Päckchen Trockenhefe",
+        "180 ml lauwarme Hafermilch",
+        "50 g Zucker",
+        "60 g weiche Margarine",
+        "375 g Weizenmehl",
+        "1 Prise Salz",
+        "1 Ei"
+      ],
+      "steps": [
+        "Mehl mit Trockenhefe, Zucker und Salz durchmischen.",
+        "1 Ei einrühren.",
+        "Die weiche Margarine (gebe ich immer in die angewärmte Milch) und die lauwarme Milch unterrühren und den Teig schlagen, bis er glatt ist und glänzt.",
+        "Sollte der Teig noch sehr klebrig sein – noch einen Esslöffel Mehl zufügen.",
+        "Den Teig in der Schüssel mit einem Geschirrtuch abdecken und ca. 60 min gehen lassen – dort, wo es in Deiner Wohnung am wärmsten ist.",
+        "Teig in drei Portionen teilen, daraus jeweils eine lange Rolle rollen und diese dann zu einem Zopf flechten.",
+        "Den Zopf auf Backpapier nochmals ca. 30 min gehen lassen und dann im Backofen bei 180 Grad ca. 30 min backen.",
+        "Guten Appetit!"
+      ],
+      "notes": "",
+      "bereich": "backen",
+      "created": "2026-08-01T10:13:11.741Z",
+      "updated": "2026-08-01T10:13:11.741Z"
     }
   ]
 }
