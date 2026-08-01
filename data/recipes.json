@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-01T10:14:55.826Z",
+  "updated": "2026-08-01T10:33:33.324Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -916,7 +916,11 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "related": [
+        "wrap-sauce"
+      ],
+      "updated": "2026-08-01T10:33:33.322Z"
     },
     {
       "id": "backcamembert-mit-salat",
