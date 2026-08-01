@@ -274,11 +274,14 @@ function openEditor(id) {
         <input id="ed-servings" placeholder="z. B. 2 Portionen" value="${r ? esc(r.servings) : ''}"></div>
     </div>
     <div class="ed-field"><label>Zutaten (eine pro Zeile)</label>
+      <div class="ed-hint">Zeile mit * beginnen für eine Zwischenüberschrift, z. B. „*Teig" oder „*Füllung"</div>
       <textarea id="ed-ingredients" rows="6">${r ? esc((r.ingredients || []).join('\n')) : ''}</textarea></div>
     <div class="ed-field"><label>Zubereitung (ein Schritt pro Zeile)</label>
       <textarea id="ed-steps" rows="7">${r ? esc((r.steps || []).join('\n')) : ''}</textarea></div>
     <div class="ed-field"><label>Notizen</label>
       <input id="ed-notes" value="${r ? esc(r.notes || '') : ''}"></div>
+    <div class="ed-field"><label>Dazu passt auch</label>
+      <div id="ed-related-container" class="ed-related-container"></div></div>
     <div class="ed-field"><label>Fotos</label>
       <div class="ed-photos" id="ed-photos"></div>
       <input type="file" id="ed-photo-input" accept="image/*" multiple></div>
@@ -297,6 +300,11 @@ function openEditor(id) {
   // Gruppen-Auswahl initialisieren
   window.edSelectedGroup = r?.group || '';
   renderGroupsContainer();
+
+  // "Dazu passt auch"-Auswahl initialisieren
+  window.edSelectedRelated = r?.related ? [...r.related] : [];
+  window.edCurrentId = r?.id || null;
+  renderRelatedContainer();
 
   // Bereich gewechselt → Kategorien- und Gruppen-Auswahl auf den neuen Bereich filtern
   $('#ed-bereich').onchange = () => {
@@ -412,6 +420,7 @@ async function saveFromEditor(existingId) {
       bereich: $('#ed-bereich').value,
     };
     if (window.edSelectedGroup) recipe.group = window.edSelectedGroup;
+    if (window.edSelectedRelated && window.edSelectedRelated.length) recipe.related = window.edSelectedRelated;
     // Hinzugefügt-Zeitpunkt: nur bei wirklich neuem Rezept setzen. Bestehende
     // Rezepte ohne created (ältere Bestandsrezepte) bekommen KEIN created,
     // sonst würde ein simples Bearbeiten fälschlich als "Neu" statt "Update"
@@ -677,6 +686,91 @@ function openGroupSelector(allGroups) {
     }
     window.edSelectedGroup = selected;
     renderGroupsContainer();
+    modal.remove();
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+// "Dazu passt auch"-Auswahl UI: verlinkt andere Rezepte (z.B. Wrap ↔ Wrap-Sauce)
+function renderRelatedContainer() {
+  const container = $('#ed-related-container');
+  if (!container) return;
+
+  let html = '<div class="ed-related-chips">';
+  for (const id of window.edSelectedRelated || []) {
+    const rel = data.recipes.find(x => x.id === id);
+    if (!rel) continue;
+    html += `<span class="ed-related-chip">${esc(titleWithEmoji(rel))} <button type="button" class="ed-related-remove" data-id="${esc(id)}">×</button></span>`;
+  }
+  html += `<button type="button" class="ed-related-add" id="ed-related-add-btn">+ Dazu passt auch</button></div>`;
+
+  container.innerHTML = html;
+
+  for (const btn of container.querySelectorAll('.ed-related-remove')) {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      window.edSelectedRelated = window.edSelectedRelated.filter(id => id !== btn.dataset.id);
+      renderRelatedContainer();
+    };
+  }
+
+  container.querySelector('#ed-related-add-btn').onclick = (e) => {
+    e.preventDefault();
+    openRelatedSelector();
+  };
+}
+
+function openRelatedSelector() {
+  const allRecipes = data.recipes
+    .filter(x => x.id !== window.edCurrentId)
+    .sort((a, b) => a.title.localeCompare(b.title, 'de'));
+
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+
+  const optionHTML = list => list.map(rec => {
+    const checked = (window.edSelectedRelated || []).includes(rec.id);
+    return `<label class="ed-cat-option"><input type="checkbox" data-id="${esc(rec.id)}" ${checked ? 'checked' : ''}> ${esc(titleWithEmoji(rec))}</label>`;
+  }).join('');
+
+  modal.innerHTML = `<div class="ed-modal">
+    <h3>Dazu passt auch</h3>
+    <input type="search" id="ed-related-search" placeholder="Rezept suchen …" class="ed-related-search">
+    <div class="ed-cat-list" id="ed-related-list">${optionHTML(allRecipes)}</div>
+    <div class="ed-modal-buttons">
+      <button type="button" class="ed-modal-cancel">Abbrechen</button>
+      <button type="button" class="ed-modal-ok">OK</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  // Ausgewählte Häkchen bleiben beim Filtern erhalten, da wir sie erst
+  // beim OK-Klick aus dem kompletten DOM einsammeln — die Suche entfernt
+  // nur nicht-passende Optionen aus der Anzeige, nicht deren Zustand
+  const listEl = modal.querySelector('#ed-related-list');
+  const checkedIds = new Set((window.edSelectedRelated || []));
+  modal.querySelector('#ed-related-search').oninput = (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    for (const label of listEl.querySelectorAll('.ed-cat-option')) {
+      const cb = label.querySelector('input');
+      if (cb.checked) checkedIds.add(cb.dataset.id); else checkedIds.delete(cb.dataset.id);
+    }
+    const filtered = q ? allRecipes.filter(rec => rec.title.toLowerCase().includes(q)) : allRecipes;
+    listEl.innerHTML = optionHTML(filtered);
+    for (const cb of listEl.querySelectorAll('input')) {
+      if (checkedIds.has(cb.dataset.id)) cb.checked = true;
+    }
+  };
+
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.ed-modal-ok').onclick = () => {
+    for (const label of listEl.querySelectorAll('.ed-cat-option')) {
+      const cb = label.querySelector('input');
+      if (cb.checked) checkedIds.add(cb.dataset.id); else checkedIds.delete(cb.dataset.id);
+    }
+    window.edSelectedRelated = [...checkedIds];
+    renderRelatedContainer();
     modal.remove();
   };
 

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-08-01T13:00:00+02:00';
+const APP_BUILD_TIME = '2026-08-01T14:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -72,6 +72,27 @@ function imagesOf(r) {
 function randomImage(r) {
   const imgs = imagesOf(r);
   return imgs.length ? imgs[Math.floor(Math.random() * imgs.length)] : '';
+}
+
+// Zutaten mit Zwischenüberschriften: eine Zeile, die mit "*" beginnt
+// (z.B. "*Teig"), wird als Oberkategorie gerendert statt als Zutat —
+// praktisch für Rezepte mit mehreren Teilen (Teig + Füllung o.ä.)
+function ingredientsHTML(ingredients) {
+  let html = '';
+  let listOpen = false;
+  for (const raw of ingredients) {
+    const text = String(raw).trim();
+    const heading = text.match(/^\*\s*(.+)/);
+    if (heading) {
+      if (listOpen) { html += '</ul>'; listOpen = false; }
+      html += `<div class="ingredient-heading">${esc(heading[1])}</div>`;
+    } else {
+      if (!listOpen) { html += '<ul>'; listOpen = true; }
+      html += `<li>${esc(text)}</li>`;
+    }
+  }
+  if (listOpen) html += '</ul>';
+  return html;
 }
 
 function esc(s) {
@@ -590,6 +611,8 @@ function renderDetail(id, opts = {}) {
   if (!r) return;
   const el = $('#detail');
   const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join(' · ');
+  // Verlinkte Rezepte ("Dazu passt auch") — nur die, die noch existieren
+  const related = (r.related || []).map(rid => data.recipes.find(x => x.id === rid)).filter(Boolean);
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <div class="detail-actions-right">
@@ -602,11 +625,21 @@ function renderDetail(id, opts = {}) {
       <h2>${titleWithEmoji(r)}</h2>
       ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
       ${(r.ingredients || []).length ? `<h3>Zutaten</h3>
-        <ul>${r.ingredients.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+        ${ingredientsHTML(r.ingredients)}` : ''}
       ${(r.steps || []).length ? `<h3>Zubereitung</h3>
         <ol>${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join('')}</ol>` : ''}
       ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
+      ${related.length ? `<h3>Dazu passt auch</h3>
+        <div class="related-list">
+          ${related.map(rel => `<button class="related-item" data-id="${esc(rel.id)}">
+            ${imagesOf(rel).length ? `<img src="${esc(randomImage(rel))}" alt="">` : `<span class="related-emoji">${emojiFor(rel)}</span>`}
+            <span class="related-text">${titleWithEmoji(rel)}</span>
+          </button>`).join('')}
+        </div>` : ''}
     </div>`;
+  for (const b of el.querySelectorAll('.related-item')) {
+    b.onclick = () => openRecipe(b.dataset.id);
+  }
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.querySelector('.detail-home').onclick = () => {
     el.hidden = true;
@@ -732,10 +765,18 @@ async function shareRecipeAsImage(r) {
       ctx.font = '800 30px -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.fillStyle = '#e8590c';
       ctx.fillText('Zutaten', MARGIN, y);
-      ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#33251c';
       for (const ing of r.ingredients) {
-        for (const line of wrapCanvasText(ctx, '•  ' + ing, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
+        const heading = String(ing).trim().match(/^\*\s*(.+)/);
+        if (heading) {
+          y += 40;
+          ctx.font = '800 24px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.fillStyle = '#e8590c';
+          for (const line of wrapCanvasText(ctx, heading[1].toUpperCase(), CONTENT_W - 10)) { y += 30; ctx.fillText(line, MARGIN + 10, y); }
+        } else {
+          ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.fillStyle = '#33251c';
+          for (const line of wrapCanvasText(ctx, '•  ' + ing, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
+        }
       }
     }
 
@@ -764,10 +805,15 @@ async function shareRecipeAsImage(r) {
     ctx.font = '600 22px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#c4a98d';
     ctx.textAlign = 'right';
-    ctx.fillText('🍽️ Made by Schrödamskis Schlemmerliste', W - MARGIN, y);
+    const watermarkText = '🍽️ Made by Schrödamskis Schlemmerliste';
+    ctx.fillText(watermarkText, W - MARGIN, y);
+    // Emoji-Glyphen können unter die Baseline reichen (z.B. 🍽️) — die
+    // tatsächliche Textbox statt eines festen Puffers zugrunde legen,
+    // sonst wird das Wasserzeichen beim Zuschnitt unten abgeschnitten
+    const watermarkDescent = ctx.measureText(watermarkText).actualBoundingBoxDescent || 0;
 
     // Auf die tatsächlich genutzte Höhe zuschneiden
-    const finalH = Math.min(MAX_H, Math.ceil(y + 40));
+    const finalH = Math.min(MAX_H, Math.ceil(y + watermarkDescent + 24));
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = W;
     finalCanvas.height = finalH;
@@ -1303,7 +1349,10 @@ function renderWeekplan(skipSync = false) {
 }
 
 function renderTinder() {
-  const pool = filtered().slice();
+  // Kategorien, die der Nutzer in den Einstellungen für Tinder ausgeschlossen hat
+  // (z.B. Saucen/Beilagen, die nicht als eigenständiges Hauptgericht getindert werden sollen)
+  const excluded = tinderExcludedCategories();
+  const pool = filtered().filter(r => !recipeCategories(r).some(c => excluded.includes(c)));
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -1721,6 +1770,12 @@ const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
 const THEME_KEY = 'rezeptbuch-theme';
 const COLOR_KEY = 'rezeptbuch-colorscheme';
 const EDIT_ENABLED_KEY = 'rezeptbuch-edit-enabled';
+const TINDER_EXCLUDED_KEY = 'rezeptbuch-tinder-excluded-cats';
+
+function tinderExcludedCategories() {
+  try { return JSON.parse(localStorage.getItem(TINDER_EXCLUDED_KEY) || '[]'); }
+  catch { return []; }
+}
 
 function isEditModeEnabled() {
   // Offline-Modus überlagert den Bearbeitungsmodus, ohne die gemerkte
@@ -1841,6 +1896,12 @@ function openSettings() {
         : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
+    <div class="settings-section">
+      <h3>🔥 Rezept-Tinder</h3>
+      <div class="setting-hint">Kategorien, die beim Tindern nicht als eigene Karte vorkommen sollen (z.B. Saucen, Beilagen)</div>
+      <button class="setting-btn" id="tinder-cats-btn">Kategorien auswählen</button>
+    </div>
+
     <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
     <div class="update-status"></div>
 
@@ -1851,6 +1912,8 @@ function openSettings() {
   </div>`;
 
   el.querySelector('.detail-close').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };
+
+  el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
 
   const editToggle = el.querySelector('#edit-toggle');
   if (editToggle) {
@@ -1978,6 +2041,43 @@ function openSettings() {
       console.log('Update-Check fehlgeschlagen');
     }
   })();
+}
+
+// Auswahl, welche Kategorien beim Rezept-Tinder ausgeschlossen werden sollen
+// (z.B. Saucen/Beilagen, die kein eigenständiges Hauptgericht sind)
+function openTinderCategoryFilter() {
+  const allCats = [...new Set(data.recipes.flatMap(recipeCategories))].sort((a, b) => a.localeCompare(b, 'de'));
+  const excluded = new Set(tinderExcludedCategories());
+
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+  modal.innerHTML = `<div class="ed-modal">
+    <h3>Kategorien für Tinder</h3>
+    <div class="setting-hint" style="margin-bottom: 10px;">Häkchen = wird beim Tindern gezeigt. Ausschalten für Saucen, Beilagen o.ä., die kein eigenes Hauptgericht sind.</div>
+    <div class="ed-cat-list">
+      ${allCats.map(cat => `<label class="ed-cat-option">
+        <input type="checkbox" data-cat="${esc(cat)}" ${excluded.has(cat) ? '' : 'checked'}>
+        ${esc(cat)}
+      </label>`).join('')}
+    </div>
+    <div class="ed-modal-buttons">
+      <button type="button" class="ed-modal-cancel">Abbrechen</button>
+      <button type="button" class="ed-modal-ok">Speichern</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.ed-modal-ok').onclick = () => {
+    const newExcluded = [];
+    for (const input of modal.querySelectorAll('input[type="checkbox"]')) {
+      if (!input.checked) newExcluded.push(input.dataset.cat);
+    }
+    localStorage.setItem(TINDER_EXCLUDED_KEY, JSON.stringify(newExcluded));
+    modal.remove();
+    toast('✓ Gespeichert');
+  };
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 }
 
 $('#btn-settings').onclick = openSettings;
