@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-01T10:34:44.456Z",
+  "updated": "2026-08-03T16:54:01.123Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1901,6 +1901,22 @@
       "bereich": "kochen",
       "created": "2026-08-01T10:14:55.826Z",
       "updated": "2026-08-01T10:34:44.456Z"
+    },
+    {
+      "id": "cannelloni-mit-ricotta-und-spinat",
+      "title": "Cannelloni mit Ricotta und Spinat",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🍝",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-08-03T16:54:01.123Z",
+      "updated": "2026-08-03T16:54:01.123Z"
     }
   ]
 }
