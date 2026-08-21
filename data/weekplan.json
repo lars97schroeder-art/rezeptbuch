@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-21T09:43:05.255Z",
+  "updated": "2026-08-21T09:43:48.586Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -195,14 +195,29 @@
       "off": []
     },
     "2026-W36": {
-      "mo": [],
-      "di": [],
-      "mi": [],
-      "do": [],
-      "fr": [],
-      "sa": [],
+      "mo": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "di": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "mi": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "do": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "fr": [
+        "TEXT:Schröders in Luzern",
+        "TEXT:Hochzeit Helmut & Natalie"
+      ],
+      "sa": [
+        "TEXT:Schröders in Luzern"
+      ],
       "so": [],
-      "off": []
+      "off": [
+        "fr"
+      ]
     }
   }
 }
