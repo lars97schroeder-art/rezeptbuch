@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-22T14:47:20.495Z",
+  "updated": "2026-08-21T09:42:56.314Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -183,9 +183,15 @@
       "di": [],
       "mi": [],
       "do": [],
-      "fr": [],
-      "sa": [],
-      "so": [],
+      "fr": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "sa": [
+        "TEXT:Schröders in Luzern"
+      ],
+      "so": [
+        "TEXT:Schröders in Luzern"
+      ],
       "off": []
     }
   }
