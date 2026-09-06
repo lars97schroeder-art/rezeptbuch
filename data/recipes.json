@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-09-06T10:53:09.410Z",
+  "updated": "2026-09-06T11:42:27.893Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -335,7 +335,7 @@
         "40g getrocknete Tomaten (bisschen von dem Öl darf ruhig mitkommen)",
         "Chiliflocken (optional)",
         "30g Cashewkerne",
-        "60ml Olivenöl (54g)",
+        "60ml Olivenöl (54g) - weniger nehmen!",
         "Salz/ Pfeffer",
         "1 Knoblauchzehe (oder zwei wenn man Bock hat 😉)"
       ],
@@ -347,7 +347,7 @@
       ],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-09-06T10:53:09.410Z"
+      "updated": "2026-09-06T11:42:27.892Z"
     },
     {
       "id": "sommerrollen",
