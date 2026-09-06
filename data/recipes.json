@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-03T16:54:01.123Z",
+  "updated": "2026-09-06T10:44:51.013Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -329,10 +329,25 @@
       "images": [
         "data/images/gnocchi-mit-cashew-pesto-1783375921-0.jpg"
       ],
-      "ingredients": [],
-      "steps": [],
+      "ingredients": [
+        "*Pesto",
+        "20g Parmesan",
+        "40g getrocknete Tomaten (bisschen von dem Öl darf ruhig mitkommen)",
+        "Chiliflocken (optional)",
+        "30g Cashewkerne",
+        "60ml Olivenöl (54g)",
+        "Salz/ Pfeffer",
+        "1 Knoblauchzehe (oder zwei wenn man Bock hat 😉)"
+      ],
+      "steps": [
+        "Zutaten fürs Pesto mit einem Hand Mixer zerkleinern. Nicht zuuuu lange mixen, das darf ruhig noch Strucktur haben.",
+        "Gnochi anbraten",
+        "Nach Wunsch mit Rucola und oder Mozzarella garnieren und servieren",
+        "Enjoyyyy 😋"
+      ],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-09-06T10:44:51.012Z"
     },
     {
       "id": "sommerrollen",
