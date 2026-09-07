@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-08-01T14:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-07T11:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -123,7 +123,7 @@ function saveLocal() {
 }
 
 /* Gemeinsame Basis für alle data/*.json-Dateien (Rezepte, Wochenplan,
-   Rezept-Notizen): mit Token direkt über die GitHub-API (sofort aktuell),
+   Rezept-Backlog): mit Token direkt über die GitHub-API (sofort aktuell),
    sonst über GitHub Pages (Fallback, kann nach einem Save ein paar Minuten
    hinterherhängen). Wurde vorher für jede Datei einzeln dupliziert. */
 async function fetchRemoteJSON(path) {
@@ -840,6 +840,11 @@ async function shareRecipeAsImage(r) {
 
 // Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
 function hideDetail() {
+  // Sicherheitsnetz: falls Wochenplan oder Backlog gerade einen ausstehenden
+  // Upload haben (Debounce-Timer läuft noch), beim Verlassen sofort sichern
+  // statt bis zum Timer-Ablauf zu warten. No-op, wenn nichts aussteht.
+  if (typeof flushWeekplanUpload === 'function') flushWeekplanUpload();
+  if (typeof flushBacklogUpload === 'function') flushBacklogUpload();
   $('#detail').hidden = true;
   document.body.style.overflow = '';
 }
@@ -939,7 +944,7 @@ function saveWeekplan(days) {
 /* Wochenplan-Sync über GitHub (data/weekplan.json):
    Speichern lädt alle Wochen hoch, beim Öffnen wird der neueste Stand geholt.
    Neuester ISO-Timestamp gewinnt (ganze Datei). Nutzt fetchRemoteJSON /
-   pushRemoteJSON / isRemoteNewer — die gemeinsame Basis mit den Rezept-Notizen. */
+   pushRemoteJSON / isRemoteNewer — die gemeinsame Basis mit den Rezept-Backlog. */
 
 // Remote-Struktur → Wochen-Map (migriert altes { days }-Format in die aktuelle Woche)
 function remoteToWeeks(remote) {
@@ -959,64 +964,193 @@ async function syncWeekplanFromRemote() {
   return true;
 }
 
-// Lädt ALLE lokalen Wochen zu GitHub hoch, damit andere Geräte sie sehen
+// Lädt ALLE lokalen Wochen zu GitHub hoch, damit andere Geräte sie sehen.
+// Läuft automatisch im Hintergrund (siehe weekplanUploadDebounced/
+// flushWeekplanUpload) — daher bewusst ohne Toast, wie beim Backlog.
 async function uploadWeekplan() {
-  if (typeof ghToken !== 'function' || !ghToken()) {
-    toast('💾 Nur lokal gespeichert (kein Token auf diesem Gerät)');
-    return;
-  }
+  if (typeof ghToken !== 'function' || !ghToken()) return;
   const payload = { updated: new Date().toISOString(), weeks: getAllWeekplans() };
   await pushRemoteJSON('data/weekplan.json', payload, 'Wochenplan aktualisiert (aus der App)');
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, payload.updated);
-  toast('✅ Wochenplan gespeichert & geteilt');
 }
 
-/* Rezept-Notizen ("Backlog"): einfaches Textfeld unter dem Wochenplan zum
-   Sammeln von Rezepten, die man irgendwann mal kochen will. Nicht an eine
-   Woche gebunden — bleibt beim Wechseln der Wochen unverändert. Sync läuft
-   exakt wie beim Wochenplan: ISO-Timestamp-Vergleich, neuester gewinnt. */
+// Speichert lokal SOFORT (bereits über saveWeekplan geschehen, siehe
+// Aufrufstellen) und lädt 5 Sekunden nach der letzten Änderung hoch.
+// flushWeekplanUpload() erzwingt das sofort (z. B. beim Verlassen der
+// Ansicht), falls gerade noch ein Upload aussteht.
+let weekplanUploadTimer = null;
+let weekplanUploadPending = false;
+function weekplanUploadDebounced() {
+  weekplanUploadPending = true;
+  clearTimeout(weekplanUploadTimer);
+  weekplanUploadTimer = setTimeout(() => {
+    weekplanUploadPending = false;
+    uploadWeekplan();
+  }, 5000);
+}
+function flushWeekplanUpload() {
+  if (!weekplanUploadPending) return;
+  clearTimeout(weekplanUploadTimer);
+  weekplanUploadPending = false;
+  uploadWeekplan();
+}
+
+/* Rezept-Backlog: Liste einzelner Einträge unter dem Wochenplan zum Sammeln
+   von Rezepten, die man irgendwann mal kochen will. Nicht an eine Woche
+   gebunden — bleibt beim Wechseln der Wochen unverändert. Sync läuft exakt
+   wie beim Wochenplan: ISO-Timestamp-Vergleich, neuester gewinnt.
+   Frühere Version speicherte einen einzigen Fließtext (ein Eintrag pro
+   Zeile) — wird beim ersten Lesen automatisch in einzelne Einträge migriert. */
 
 const BACKLOG_KEY = 'rezeptbuch-notes';
 const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
 
-function getBacklogText() {
-  return localStorage.getItem(BACKLOG_KEY) || '';
+function getBacklogItems() {
+  const raw = localStorage.getItem(BACKLOG_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter(x => typeof x === 'string');
+  } catch (e) { /* alter Fließtext, kein JSON — unten migrieren */ }
+  const items = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  saveBacklogItemsLocal(items);
+  return items;
 }
 
-function saveBacklogLocal(text) {
-  localStorage.setItem(BACKLOG_KEY, text);
+function saveBacklogItemsLocal(items) {
+  localStorage.setItem(BACKLOG_KEY, JSON.stringify(items));
   localStorage.setItem(BACKLOG_UPDATED_KEY, new Date().toISOString());
 }
 
-// Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale
+// Holt den Remote-Stand und übernimmt ihn, wenn er neuer ist als der lokale.
+// Akzeptiert sowohl das neue "items"-Array als auch den alten "text"-Fließtext
+// (falls ein anderes Gerät noch die alte App-Version nutzt).
 async function syncBacklogFromRemote() {
   const remote = await fetchRemoteJSON('data/backlog.json');
-  if (!remote || typeof remote.text !== 'string' || !isRemoteNewer(remote, BACKLOG_UPDATED_KEY)) return false;
-  localStorage.setItem(BACKLOG_KEY, remote.text);
+  if (!remote || !isRemoteNewer(remote, BACKLOG_UPDATED_KEY)) return false;
+  const items = Array.isArray(remote.items) ? remote.items.filter(x => typeof x === 'string')
+    : (typeof remote.text === 'string' ? remote.text.split('\n').map(s => s.trim()).filter(Boolean) : null);
+  if (!items) return false;
+  localStorage.setItem(BACKLOG_KEY, JSON.stringify(items));
   localStorage.setItem(BACKLOG_UPDATED_KEY, remote.updated);
   return true;
 }
 
-// Lädt den lokalen Text zu GitHub hoch, damit andere Geräte ihn sehen
-async function uploadBacklog(text) {
+// Lädt die lokale Liste zu GitHub hoch, damit andere Geräte sie sehen.
+// "text" wird als Fließtext-Kopie mitgeschickt, damit ein Gerät mit noch
+// alter App-Version den Stand übergangsweise weiterlesen kann.
+async function uploadBacklog(items) {
   if (typeof ghToken !== 'function' || !ghToken()) return;
-  const payload = { updated: new Date().toISOString(), text };
-  await pushRemoteJSON('data/backlog.json', payload, 'Notizen aktualisiert (aus der App)');
+  const payload = { updated: new Date().toISOString(), items, text: items.join('\n') };
+  await pushRemoteJSON('data/backlog.json', payload, 'Backlog aktualisiert (aus der App)');
   localStorage.setItem(BACKLOG_UPDATED_KEY, payload.updated);
 }
 
-// Speichert lokal SOFORT (kein Datenverlust) und lädt gedrosselt hoch,
-// damit nicht bei jedem Tastendruck ein GitHub-Commit ausgelöst wird
+// Speichert lokal SOFORT (kein Datenverlust) und lädt 5 Sekunden nach der
+// letzten Änderung hoch, damit nicht bei jedem Tastendruck ein
+// GitHub-Commit ausgelöst wird. flushBacklogUpload() erzwingt das sofort
+// (z. B. beim Verlassen der Ansicht), falls gerade noch ein Upload aussteht.
 let backlogUploadTimer = null;
-function saveBacklogDebounced(text) {
-  saveBacklogLocal(text);
+let backlogUploadPending = false;
+function saveBacklogDebounced(items) {
+  saveBacklogItemsLocal(items);
+  backlogUploadPending = true;
   clearTimeout(backlogUploadTimer);
-  backlogUploadTimer = setTimeout(() => uploadBacklog(text), 700);
+  backlogUploadTimer = setTimeout(() => {
+    backlogUploadPending = false;
+    uploadBacklog(items);
+  }, 5000);
 }
-// Sofort hochladen (z. B. beim Verlassen des Feldes) statt auf die Drosselung zu warten
-function flushBacklogUpload(text) {
+function flushBacklogUpload() {
+  if (!backlogUploadPending) return;
   clearTimeout(backlogUploadTimer);
-  uploadBacklog(text);
+  backlogUploadPending = false;
+  uploadBacklog(getBacklogItems());
+}
+
+// HTML für eine Backlog-Zeile: Pfeile links zum Verschieben, Textfeld rechts.
+// Die letzte Zeile ist immer leer (zum Anlegen eines neuen Eintrags) und
+// hat keine funktionalen Pfeile (per CSS ausgeblendet).
+function backlogRowHTML(text, i, isEmpty) {
+  return `<div class="backlog-row${isEmpty ? ' is-empty' : ''}" data-i="${i}">
+    <div class="backlog-move">
+      <button type="button" class="backlog-up" aria-label="Nach oben verschieben">▲</button>
+      <button type="button" class="backlog-down" aria-label="Nach unten verschieben">▼</button>
+    </div>
+    <input type="text" class="backlog-input" value="${esc(text)}" data-i="${i}"${isEmpty ? ' placeholder="Neuer Eintrag …"' : ''}>
+  </div>`;
+}
+
+function backlogListHTML(items) {
+  return items.map((t, i) => backlogRowHTML(t, i, false)).join('')
+    + backlogRowHTML('', items.length, true);
+}
+
+// Verdrahtet die Backlog-Liste per Event-Delegation auf dem Container, damit
+// dynamisch hinzugefügte Zeilen (neuer leerer Eintrag am Ende) nicht einzeln
+// neu verkabelt werden müssen. Gibt ein Controller-Objekt mit refresh()
+// zurück, damit ein Remote-Sync die Liste von außen neu einlesen kann.
+function wireBacklogList(el) {
+  const list = el.querySelector('#backlog-list');
+  if (!list) return null;
+
+  let items = getBacklogItems();
+  const rerender = () => { list.innerHTML = backlogListHTML(items); };
+
+  // Tippen in ein Feld: bestehender Eintrag wird direkt aktualisiert; die
+  // letzte (leere) Zeile wird beim ersten Zeichen zu einem echten Eintrag,
+  // darunter erscheint automatisch eine neue leere Zeile
+  list.addEventListener('input', (e) => {
+    const input = e.target.closest('.backlog-input');
+    if (!input) return;
+    const i = Number(input.dataset.i);
+    if (i < items.length) {
+      items[i] = input.value;
+      saveBacklogDebounced(items);
+    } else {
+      if (!input.value.trim()) return;
+      items.push(input.value);
+      saveBacklogDebounced(items);
+      input.closest('.backlog-row').classList.remove('is-empty');
+      input.removeAttribute('placeholder');
+      input.closest('.backlog-row').insertAdjacentHTML('afterend', backlogRowHTML('', items.length, true));
+    }
+  });
+
+  // Verlässt man ein Feld und es ist leer (aber kein neuer Eintrag mehr),
+  // wird der Eintrag entfernt statt eine leere Zeile mitten in der Liste zu behalten
+  list.addEventListener('focusout', (e) => {
+    const input = e.target.closest('.backlog-input');
+    if (!input) return;
+    const i = Number(input.dataset.i);
+    if (i < items.length && !input.value.trim()) {
+      items.splice(i, 1);
+      saveBacklogDebounced(items);
+      rerender();
+    }
+  });
+
+  // Pfeile: Eintrag mit dem Nachbarn tauschen (letzte leere Zeile ausgenommen)
+  list.addEventListener('click', (e) => {
+    const upBtn = e.target.closest('.backlog-up');
+    const downBtn = e.target.closest('.backlog-down');
+    if (!upBtn && !downBtn) return;
+    const row = e.target.closest('.backlog-row');
+    const i = Number(row.dataset.i);
+    if (i >= items.length) return;
+    const j = upBtn ? i - 1 : i + 1;
+    if (j < 0 || j >= items.length) return;
+    [items[i], items[j]] = [items[j], items[i]];
+    saveBacklogDebounced(items);
+    rerender();
+  });
+
+  return {
+    refresh() {
+      items = getBacklogItems();
+      rerender();
+    },
+  };
 }
 
 // HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept).
@@ -1042,6 +1176,7 @@ function attachTagHandlers(selectedDiv, weekplan) {
       if (idx > -1) {
         weekplan[dayKey].splice(idx, 1);
         saveWeekplan(weekplan);
+        weekplanUploadDebounced();
         removeBtn.closest('.weekplan-tag').remove();
       }
     };
@@ -1169,23 +1304,25 @@ function renderWeekplan(skipSync = false) {
       <div class="weekplan-container">
         ${daysHTML}
       </div>
-      ${readonly ? '' : '<button class="weekplan-save-btn">💾 Speichern & teilen</button>'}
 
       <div class="backlog-divider"></div>
       <div class="backlog-section">
-        <h3 class="backlog-heading">📝 Rezept-Notizen</h3>
+        <h3 class="backlog-heading">📝 Rezept-Backlog</h3>
         <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche</div>
-        <textarea class="backlog-textarea" placeholder="z. B. Kürbisrisotto, Ramen mit Ei, Omas Apfelkuchen …">${esc(getBacklogText())}</textarea>
+        <div class="backlog-list" id="backlog-list">${backlogListHTML(getBacklogItems())}</div>
       </div>
     </div>`;
 
-  el.querySelector('.detail-close').onclick = () => closeOverlay();
+  el.querySelector('.detail-close').onclick = () => {
+    // Wochenplan & Backlog werden automatisch 5s nach der letzten Änderung
+    // hochgeladen — beim Verlassen der Ansicht wird ein noch ausstehender
+    // Upload sofort erzwungen, statt auf den Timer zu warten.
+    flushWeekplanUpload();
+    flushBacklogUpload();
+    closeOverlay();
+  };
 
-  // Rezept-Notizen: sofort lokal speichern, gedrosselt hochladen; beim
-  // Verlassen des Feldes sofort hochladen (kein Datenverlust bei Wochenwechsel)
-  const backlogArea = el.querySelector('.backlog-textarea');
-  backlogArea.addEventListener('input', () => saveBacklogDebounced(backlogArea.value));
-  backlogArea.addEventListener('blur', () => flushBacklogUpload(backlogArea.value));
+  const backlogCtl = wireBacklogList(el);
 
   // Wochen-Navigation: eine Woche zurück/vor, gleiche Ansicht neu zeichnen
   for (const navBtn of el.querySelectorAll('.weekplan-nav')) {
@@ -1213,6 +1350,7 @@ function renderWeekplan(skipSync = false) {
       if (off.has(dayKey)) off.delete(dayKey); else off.add(dayKey);
       weekplan.off = [...off];
       saveWeekplan(weekplan);
+      weekplanUploadDebounced();
       renderWeekplan(true);
     };
   }
@@ -1266,6 +1404,7 @@ function renderWeekplan(skipSync = false) {
           if (!weekplan[dayKey]) weekplan[dayKey] = [];
           weekplan[dayKey].push(recipeId);
           saveWeekplan(weekplan);
+          weekplanUploadDebounced();
 
           // Update UI: neues Tag hinzufügen
           selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(recipeId, titleWithEmoji(recipe), dayKey));
@@ -1287,6 +1426,7 @@ function renderWeekplan(skipSync = false) {
       const entry = 'TEXT:' + text;
       weekplan[dayKey].push(entry);
       saveWeekplan(weekplan);
+      weekplanUploadDebounced();
 
       // Update UI: neues Tag hinzufügen
       selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
@@ -1311,18 +1451,6 @@ function renderWeekplan(skipSync = false) {
     // Rauszoomen nach dem Tippen übernimmt der globale focusout-Handler
   }
 
-  // Save Button: lokal speichern UND alle Wochen zu GitHub hochladen (fehlt in vergangenen Wochen)
-  const saveBtn = el.querySelector('.weekplan-save-btn');
-  if (saveBtn) saveBtn.onclick = async () => {
-    saveWeekplan(weekplan);
-    try {
-      await uploadWeekplan();
-    } catch (e) {
-      console.log('Wochenplan-Upload fehlgeschlagen:', e);
-      toast('⚠️ Lokal gespeichert, Teilen fehlgeschlagen (offline?)');
-    }
-  };
-
   el.hidden = false;
   document.body.style.overflow = 'hidden';
 
@@ -1336,13 +1464,13 @@ function renderWeekplan(skipSync = false) {
         renderWeekplan(true);
       }
     });
-    // Rezept-Notizen unabhängig davon abgleichen (nicht an eine Woche
-    // gebunden) — nur das Textfeld aktualisieren, nicht die ganze Ansicht
-    // neu zeichnen, und nicht während der Nutzer gerade darin tippt.
+    // Backlog unabhängig davon abgleichen (nicht an eine Woche gebunden) —
+    // nur die Liste aktualisieren, nicht die ganze Ansicht neu zeichnen,
+    // und nicht während der Nutzer gerade darin tippt.
     syncBacklogFromRemote().then(changed => {
-      const area = el.querySelector('.backlog-textarea');
-      if (changed && area && document.activeElement !== area) {
-        area.value = getBacklogText();
+      const list = el.querySelector('#backlog-list');
+      if (changed && list && backlogCtl && !list.contains(document.activeElement)) {
+        backlogCtl.refresh();
       }
     });
   }
