@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-08-01T10:14:55.826Z",
+  "updated": "2026-09-06T21:18:24.146Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -329,10 +329,25 @@
       "images": [
         "data/images/gnocchi-mit-cashew-pesto-1783375921-0.jpg"
       ],
-      "ingredients": [],
-      "steps": [],
+      "ingredients": [
+        "*Pesto",
+        "20g Parmesan",
+        "60g getrocknete Tomaten (bisschen von dem Öl darf ruhig mitkommen)",
+        "Chiliflocken (optional)",
+        "30g Cashewkerne",
+        "60ml Olivenöl (54g) - weniger nehmen, eher so 40",
+        "Salz/ Pfeffer",
+        "1 Knoblauchzehe (oder zwei wenn man Bock hat 😉)"
+      ],
+      "steps": [
+        "Zutaten fürs Pesto mit einem Hand Mixer zerkleinern. Nicht zuuuu lange mixen, das darf ruhig noch Strucktur haben.",
+        "Gnochi anbraten",
+        "Nach Wunsch mit Rucola und oder Mozzarella garnieren und servieren",
+        "Enjoyyyy 😋"
+      ],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "updated": "2026-09-06T21:18:24.145Z"
     },
     {
       "id": "sommerrollen",
@@ -916,7 +931,11 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "related": [
+        "wrap-sauce"
+      ],
+      "updated": "2026-08-01T10:33:33.322Z"
     },
     {
       "id": "backcamembert-mit-salat",
@@ -1861,7 +1880,9 @@
     {
       "id": "wrap-sauce",
       "title": "Wrap Sauce",
-      "category": [],
+      "category": [
+        "Saucen"
+      ],
       "time": "",
       "servings": "",
       "emoji": "🌯",
@@ -1894,7 +1915,23 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-08-01T10:14:55.826Z",
-      "updated": "2026-08-01T10:14:55.826Z"
+      "updated": "2026-08-01T10:34:44.456Z"
+    },
+    {
+      "id": "cannelloni-mit-ricotta-und-spinat",
+      "title": "Cannelloni mit Ricotta und Spinat",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🍝",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-08-03T16:54:01.123Z",
+      "updated": "2026-08-03T16:54:01.123Z"
     }
   ]
 }
