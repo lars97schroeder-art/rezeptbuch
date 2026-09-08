@@ -58,6 +58,7 @@ html.color-rainbow .topbar h1 {
 html.color-rainbow .chip.active,
 html.color-rainbow .setting-btn.primary,
 html.color-rainbow .app-update-now,
+html.color-rainbow .weekplan-shortcut,
 html.color-rainbow .weekplan-tag {
   background: linear-gradient(90deg, #e53935, #fb8c00, #43a047, #1e88e5, #8e24aa) !important;
   border-color: transparent !important;
@@ -203,6 +204,29 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   background: #e0342a;
   border: 2px solid var(--bg);
 }
+
+/* Wochenplan-Shortcut: eigene, breite Kachel über dem Suchfeld statt
+   nur ein kleines Icon in der Kopfleiste — sehr oft genutztes Feature */
+.weekplan-shortcut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin: clamp(10px, 2.5vw, 14px) 0;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--accent-soft);
+  -webkit-tap-highlight-color: transparent;
+}
+.weekplan-shortcut:active { transform: scale(0.98); }
 
 .btn-tinder-primary {
   background: var(--accent) !important;
@@ -2379,6 +2403,10 @@ html.color-rainbow .t-card.foodmatch {
   font-size: 13px;
   font-weight: 600;
   max-width: 100%;
+  /* Sonst erkennt v.a. iOS Safari eine Fingerbewegung auf dem Tag als
+     eigene Scroll-Geste, bevor unser Zieh-Handler (zurück ins Backlog)
+     überhaupt zum Zug kommt — gleiches Problem wie beim Edge-Swipe-Guard. */
+  touch-action: none;
 }
 
 .weekplan-tag-text {

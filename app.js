@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T13:45:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T14:20:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1390,6 +1390,7 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
     // Aufruf zusätzlich aufsummieren und Gesten mehrfach auslösen.
     tag.onpointerdown = (e) => {
       if (e.target.closest('.weekplan-tag-remove')) return;
+      e.preventDefault();
       tagDrag = {
         pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false,
         overBacklog: false, lastX: e.clientX, lastY: e.clientY,
