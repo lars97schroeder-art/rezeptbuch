@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T11:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T12:10:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1155,38 +1155,15 @@ function wireBacklogList(el, weekplan) {
   // damit auch der (weiter oben liegende) Wochenplan erreichbar ist.
   let drag = null;
   const AUTOSCROLL_ZONE = 70;
+  const AUTOSCROLL_MAX_SPEED = 18; // px pro Frame, ganz am Bildschirmrand
 
-  list.addEventListener('pointerdown', (e) => {
-    const handle = e.target.closest('.backlog-drag');
-    if (!handle) return;
-    const row = handle.closest('.backlog-row');
-    const i = Number(row.dataset.i);
-    if (i >= items.length) return;
-    e.preventDefault();
-    // Verhindert, dass die globale Zurück-Wisch-Geste (lauscht am linken
-    // Bildschirmrand, wo auch der Drag-Griff sitzt) dieses Event mitbekommt
-    e.stopPropagation();
-    drag = { row, pointerId: e.pointerId, startClientY: e.clientY, overDay: null };
-    row.classList.add('dragging');
-    // Damit elementFromPoint() beim Ziehen NICHT die gezogene Zeile selbst
-    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.) —
-    // Pointer Capture liefert Move/Up-Events trotzdem weiter an die Zeile.
-    row.style.pointerEvents = 'none';
-    try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
-  });
-
-  list.addEventListener('pointermove', (e) => {
-    if (!drag || e.pointerId !== drag.pointerId) return;
-    drag.row.style.transform = `translateY(${e.clientY - drag.startClientY}px)`;
-
-    // Auto-Scroll am Bildschirmrand
-    if (e.clientY < AUTOSCROLL_ZONE) {
-      window.scrollBy(0, -(AUTOSCROLL_ZONE - e.clientY) * 0.4);
-    } else if (e.clientY > window.innerHeight - AUTOSCROLL_ZONE) {
-      window.scrollBy(0, (e.clientY - (window.innerHeight - AUTOSCROLL_ZONE)) * 0.4);
-    }
-
-    const dayEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('.weekplan-day');
+  // Prüft Nachbar-Tausch (Umsortieren) bzw. ob über einem Wochentag gezogen
+  // wird (Drop-Ziel-Hervorhebung). Wird sowohl bei Fingerbewegung als auch
+  // aus der Auto-Scroll-Schleife heraus aufgerufen (siehe unten) — beim
+  // Halten des Fingers am Bildschirmrand ändert sich zwar clientX/clientY
+  // nicht, wohl aber, was durch das Scrollen gerade darunter liegt.
+  function updateDragTargets(clientX, clientY) {
+    const dayEl = document.elementFromPoint(clientX, clientY)?.closest('.weekplan-day');
     if (dayEl !== drag.overDay) {
       drag.overDay?.classList.remove('backlog-drop-target');
       dayEl?.classList.add('backlog-drop-target');
@@ -1200,7 +1177,7 @@ function wireBacklogList(el, weekplan) {
       const sIdx = Number(sib.dataset.i);
       if (sIdx >= items.length) continue; // leere Zeile am Ende bleibt immer unten
       const rect = sib.getBoundingClientRect();
-      if (e.clientY < rect.top || e.clientY > rect.bottom) continue;
+      if (clientY < rect.top || clientY > rect.bottom) continue;
       [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
       if (sIdx < draggedIdx) {
         list.insertBefore(drag.row, sib);
@@ -1213,6 +1190,68 @@ function wireBacklogList(el, weekplan) {
       drag.row.dataset.i = sIdx;
       break;
     }
+  }
+
+  // Scrollt den Bildschirm, wenn y nah am oberen/unteren Rand ist. Gibt
+  // true zurück, wenn tatsächlich gescrollt wurde.
+  function maybeAutoScroll(y) {
+    if (y < AUTOSCROLL_ZONE) {
+      window.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / AUTOSCROLL_ZONE));
+      return true;
+    }
+    if (y > window.innerHeight - AUTOSCROLL_ZONE) {
+      window.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (window.innerHeight - y) / AUTOSCROLL_ZONE));
+      return true;
+    }
+    return false;
+  }
+
+  // Läuft zusätzlich per setInterval weiter, solange gezogen wird — reagiert
+  // dadurch (anders als der pointermove-Handler allein) auch, wenn der
+  // Finger reglos am Bildschirmrand gehalten wird, statt nach der Bewegung
+  // sofort stehen zu bleiben. requestAnimationFrame wurde bewusst NICHT
+  // verwendet, da es in manchen (Hintergrund-/Vorschau-)Kontexten gar nicht
+  // feuert.
+  let autoScrollTimer = null;
+  function autoScrollTick() {
+    if (!drag) {
+      clearInterval(autoScrollTimer);
+      autoScrollTimer = null;
+      return;
+    }
+    if (maybeAutoScroll(drag.lastClientY)) updateDragTargets(drag.lastClientX, drag.lastClientY);
+  }
+
+  list.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.backlog-drag');
+    if (!handle) return;
+    const row = handle.closest('.backlog-row');
+    const i = Number(row.dataset.i);
+    if (i >= items.length) return;
+    e.preventDefault();
+    // Verhindert, dass die globale Zurück-Wisch-Geste (lauscht am linken
+    // Bildschirmrand, wo auch der Drag-Griff sitzt) dieses Event mitbekommt
+    e.stopPropagation();
+    drag = {
+      row, pointerId: e.pointerId, startClientY: e.clientY, overDay: null,
+      lastClientX: e.clientX, lastClientY: e.clientY,
+    };
+    row.classList.add('dragging');
+    // Damit elementFromPoint() beim Ziehen NICHT die gezogene Zeile selbst
+    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.) —
+    // Pointer Capture liefert Move/Up-Events trotzdem weiter an die Zeile.
+    row.style.pointerEvents = 'none';
+    try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+    if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
+  });
+
+  list.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    drag.row.style.transform = `translateY(${e.clientY - drag.startClientY}px)`;
+    drag.lastClientX = e.clientX;
+    drag.lastClientY = e.clientY;
+    maybeAutoScroll(e.clientY); // sofortige Reaktion bei Fingerbewegung, nicht erst beim nächsten Timer-Tick
+    updateDragTargets(e.clientX, e.clientY);
   });
 
   const endDrag = (e) => {
