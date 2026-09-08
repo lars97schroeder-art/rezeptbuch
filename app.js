@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-07T11:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T10:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -456,7 +456,7 @@ function render() {
         lastLetter = letter;
         const divider = document.createElement('div');
         divider.className = 'grid-divider';
-        divider.innerHTML = `<span>${letter}</span>`;
+        divider.textContent = letter;
         grid.appendChild(divider);
       }
     }
@@ -1068,16 +1068,14 @@ function flushBacklogUpload() {
   uploadBacklog(getBacklogItems());
 }
 
-// HTML für eine Backlog-Zeile: Pfeile links zum Verschieben, Textfeld rechts.
-// Die letzte Zeile ist immer leer (zum Anlegen eines neuen Eintrags) und
-// hat keine funktionalen Pfeile (per CSS ausgeblendet).
+// HTML für eine Backlog-Zeile: Griff links zum Verschieben (Finger-Drag),
+// Löschen-Button rechts. Die letzte Zeile ist immer leer (zum Anlegen eines
+// neuen Eintrags) und hat weder Griff noch Löschen-Button.
 function backlogRowHTML(text, i, isEmpty) {
   return `<div class="backlog-row${isEmpty ? ' is-empty' : ''}" data-i="${i}">
-    <div class="backlog-move">
-      <button type="button" class="backlog-up" aria-label="Nach oben verschieben">▲</button>
-      <button type="button" class="backlog-down" aria-label="Nach unten verschieben">▼</button>
-    </div>
+    ${isEmpty ? '<span class="backlog-drag-spacer"></span>' : '<button type="button" class="backlog-drag" aria-label="Verschieben">⠿</button>'}
     <input type="text" class="backlog-input" value="${esc(text)}" data-i="${i}"${isEmpty ? ' placeholder="Neuer Eintrag …"' : ''}>
+    ${isEmpty ? '' : '<button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>'}
   </div>`;
 }
 
@@ -1111,9 +1109,15 @@ function wireBacklogList(el) {
       if (!input.value.trim()) return;
       items.push(input.value);
       saveBacklogDebounced(items);
-      input.closest('.backlog-row').classList.remove('is-empty');
+      const row = input.closest('.backlog-row');
+      row.classList.remove('is-empty');
+      row.querySelector('.backlog-drag-spacer')?.replaceWith(
+        Object.assign(document.createElement('button'), {
+          type: 'button', className: 'backlog-drag', ariaLabel: 'Verschieben', textContent: '⠿',
+        }));
       input.removeAttribute('placeholder');
-      input.closest('.backlog-row').insertAdjacentHTML('afterend', backlogRowHTML('', items.length, true));
+      input.insertAdjacentHTML('afterend', '<button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>');
+      row.insertAdjacentHTML('afterend', backlogRowHTML('', items.length, true));
     }
   });
 
@@ -1130,20 +1134,70 @@ function wireBacklogList(el) {
     }
   });
 
-  // Pfeile: Eintrag mit dem Nachbarn tauschen (letzte leere Zeile ausgenommen)
+  // Löschen-Button: Eintrag sofort entfernen
   list.addEventListener('click', (e) => {
-    const upBtn = e.target.closest('.backlog-up');
-    const downBtn = e.target.closest('.backlog-down');
-    if (!upBtn && !downBtn) return;
-    const row = e.target.closest('.backlog-row');
+    const removeBtn = e.target.closest('.backlog-remove');
+    if (!removeBtn) return;
+    const row = removeBtn.closest('.backlog-row');
     const i = Number(row.dataset.i);
-    if (i >= items.length) return;
-    const j = upBtn ? i - 1 : i + 1;
-    if (j < 0 || j >= items.length) return;
-    [items[i], items[j]] = [items[j], items[i]];
+    items.splice(i, 1);
     saveBacklogDebounced(items);
     rerender();
   });
+
+  // Griff: mit dem Finger nach oben/unten ziehen zum Umsortieren. Die
+  // gezogene Zeile folgt per translateY dem Finger; sobald die Fingerposition
+  // die Mitte einer Nachbarzeile überquert, werden Eintrag UND DOM-Reihenfolge
+  // sofort getauscht (die anderen Zeilen rutschen dadurch von selbst nach) —
+  // startY wird um eine Zeilenhöhe korrigiert, damit die Zeile dabei nicht springt.
+  let drag = null;
+  list.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.backlog-drag');
+    if (!handle) return;
+    const row = handle.closest('.backlog-row');
+    const i = Number(row.dataset.i);
+    if (i >= items.length) return;
+    e.preventDefault();
+    drag = { row, pointerId: e.pointerId, startClientY: e.clientY };
+    row.classList.add('dragging');
+    try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+  });
+
+  list.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    drag.row.style.transform = `translateY(${e.clientY - drag.startClientY}px)`;
+
+    const draggedIdx = Number(drag.row.dataset.i);
+    for (const sib of list.querySelectorAll('.backlog-row')) {
+      if (sib === drag.row) continue;
+      const sIdx = Number(sib.dataset.i);
+      if (sIdx >= items.length) continue; // leere Zeile am Ende bleibt immer unten
+      const rect = sib.getBoundingClientRect();
+      if (e.clientY < rect.top || e.clientY > rect.bottom) continue;
+      [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
+      if (sIdx < draggedIdx) {
+        list.insertBefore(drag.row, sib);
+        drag.startClientY -= rect.height;
+      } else {
+        list.insertBefore(drag.row, sib.nextSibling);
+        drag.startClientY += rect.height;
+      }
+      sib.dataset.i = draggedIdx;
+      drag.row.dataset.i = sIdx;
+      break;
+    }
+  });
+
+  const endDrag = (e) => {
+    if (!drag || (e && e.pointerId !== drag.pointerId)) return;
+    drag.row.classList.remove('dragging');
+    drag.row.style.transform = '';
+    drag = null;
+    saveBacklogDebounced(items);
+    rerender();
+  };
+  list.addEventListener('pointerup', endDrag);
+  list.addEventListener('pointercancel', endDrag);
 
   return {
     refresh() {

@@ -352,22 +352,19 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 .sort-opt:last-child { border-bottom: none; }
 .sort-opt.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
 
-/* Buchstaben-Trenner in der alphabetischen "Alle"-Ansicht */
+/* Buchstaben-Trenner in der alphabetischen "Alle"-Ansicht: eine eigene,
+   kompakte Kachel im Grid statt einer vollen Trennlinie — erzwingt dadurch
+   KEINEN Zeilenumbruch, Rezepte können in derselben Zeile weiterlaufen. */
 .grid-divider {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: clamp(4px, 1.5vw, 8px) 2px 0;
-  color: var(--muted);
-  font-weight: 700;
-  font-size: 1rem;
-}
-.grid-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: clamp(12px, 3vw, 16px);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: clamp(20px, 5vw, 26px);
 }
 
 .ai-scan-box {
@@ -2430,31 +2427,54 @@ html.color-rainbow .t-card.foodmatch {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: var(--bg);
+  position: relative;
 }
 
-.backlog-move {
-  display: flex;
-  flex-direction: column;
+.backlog-row.dragging {
+  z-index: 5;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+}
+
+.backlog-drag,
+.backlog-drag-spacer {
   flex: 0 0 auto;
+  width: 26px;
+  height: 32px;
 }
 
-.backlog-row.is-empty .backlog-move { visibility: hidden; }
-
-.backlog-up,
-.backlog-down {
-  width: 22px;
-  height: 16px;
+.backlog-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 10px;
-  line-height: 1;
+  font-size: 18px;
+  cursor: grab;
+  padding: 0;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.backlog-drag:active { color: var(--accent); cursor: grabbing; }
+
+.backlog-remove {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
   cursor: pointer;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.backlog-up:active,
-.backlog-down:active { color: var(--accent); }
+.backlog-remove:active { color: var(--accent); }
 
 .backlog-input {
   flex: 1;
