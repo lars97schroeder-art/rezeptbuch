@@ -2406,6 +2406,14 @@ html.color-rainbow .t-card.foodmatch {
 }
 .weekplan-tag-remove:hover { background: rgba(255, 255, 255, 0.45); }
 
+/* Während ein Wochenplan-Eintrag zurück ins Backlog gezogen wird */
+.weekplan-tag.tag-dragging {
+  position: relative;
+  z-index: 30;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transition: none;
+}
+
 
 /* Rezept-Notizen unter dem Wochenplan — eigener Bereich, nicht an eine Woche gebunden */
 .backlog-divider {
@@ -2414,7 +2422,14 @@ html.color-rainbow .t-card.foodmatch {
   margin: 28px 0 20px;
 }
 
-.backlog-section { display: flex; flex-direction: column; gap: 4px; }
+.backlog-section { display: flex; flex-direction: column; gap: 4px; transition: background 0.1s, box-shadow 0.1s; }
+
+/* Wird angezeigt, während man einen Wochenplan-Eintrag über das Backlog zieht */
+.backlog-section.backlog-drop-target {
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent);
+  border-radius: 14px;
+}
 
 .backlog-heading {
   font-size: 16px;

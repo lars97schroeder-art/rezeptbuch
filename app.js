@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T12:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T13:45:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1094,6 +1094,19 @@ function wireBacklogList(el, weekplan) {
 
   let items = getBacklogItems();
   const rerender = () => { list.innerHTML = backlogListHTML(items); };
+  const controller = {
+    refresh() {
+      items = getBacklogItems();
+      rerender();
+    },
+    // Fügt einen Eintrag hinzu (z.B. ein aus dem Wochenplan zurückgezogenes
+    // Gericht) und zeichnet die Liste neu
+    addItem(text) {
+      items.push(text);
+      saveBacklogDebounced(items);
+      rerender();
+    },
+  };
 
   // Tippen in ein Feld: bestehender Eintrag wird direkt aktualisiert; die
   // letzte (leere) Zeile wird beim ersten Zeichen zu einem echten Eintrag,
@@ -1156,7 +1169,11 @@ function wireBacklogList(el, weekplan) {
   let drag = null;
   // Oberes/unteres Viertel des Bildschirms statt eines schmalen Rand-Streifens
   // — leichter mit dem Daumen zu treffen, während man einen Eintrag zieht.
-  const autoScrollZone = () => window.innerHeight * 0.25;
+  // WICHTIG: #detail (= el) ist selbst der scrollende Container
+  // (position:fixed + eigenes overflow-y:auto) — window.scrollBy() würde
+  // nur die dahinterliegende, unsichtbare Grundseite verschieben und hatte
+  // deshalb auf dem Handy keinerlei sichtbaren Effekt.
+  const autoScrollZone = () => el.clientHeight * 0.25;
   const AUTOSCROLL_MAX_SPEED = 18; // px pro Frame, ganz am Bildschirmrand
 
   // Prüft Nachbar-Tausch (Umsortieren) bzw. ob über einem Wochentag gezogen
@@ -1199,11 +1216,11 @@ function wireBacklogList(el, weekplan) {
   function maybeAutoScroll(y) {
     const zone = autoScrollZone();
     if (y < zone) {
-      window.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / zone));
+      el.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / zone));
       return true;
     }
-    if (y > window.innerHeight - zone) {
-      window.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (window.innerHeight - y) / zone));
+    if (y > el.clientHeight - zone) {
+      el.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (el.clientHeight - y) / zone));
       return true;
     }
     return false;
@@ -1281,7 +1298,7 @@ function wireBacklogList(el, weekplan) {
       const selectedDiv = overDay.querySelector('.weekplan-selected');
       if (selectedDiv) {
         selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
-        attachTagHandlers(selectedDiv, weekplan);
+        attachTagHandlers(selectedDiv, weekplan, controller);
       }
       toast('📅 Ins Wochenplan verschoben');
       rerender();
@@ -1293,12 +1310,7 @@ function wireBacklogList(el, weekplan) {
   list.addEventListener('pointerup', endDrag);
   list.addEventListener('pointercancel', endDrag);
 
-  return {
-    refresh() {
-      items = getBacklogItems();
-      rerender();
-    },
-  };
+  return controller;
 }
 
 // HTML für einen Wochenplan-Eintrag — Rezepte sind anklickbar (öffnen das Rezept).
@@ -1312,7 +1324,7 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
 }
 
 // Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen öffnet das Rezept
-function attachTagHandlers(selectedDiv, weekplan) {
+function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
   for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
     removeBtn.onclick = (e) => {
       e.preventDefault();
@@ -1329,11 +1341,109 @@ function attachTagHandlers(selectedDiv, weekplan) {
       }
     };
   }
-  for (const textEl of selectedDiv.querySelectorAll('.weekplan-tag-text.clickable')) {
-    const entry = textEl.closest('.weekplan-tag')?.dataset.entry;
-    textEl.onclick = () => {
-      if (entry && data.recipes.some(r => r.id === entry)) openRecipe(entry);
+
+  for (const tag of selectedDiv.querySelectorAll('.weekplan-tag')) {
+    const textEl = tag.querySelector('.weekplan-tag-text.clickable');
+    const entry = tag.dataset.entry;
+    if (textEl) {
+      textEl.onclick = () => {
+        if (tag.dataset.justDragged) { delete tag.dataset.justDragged; return; }
+        if (entry && data.recipes.some(r => r.id === entry)) openRecipe(entry);
+      };
+    }
+
+    // Zurück ins Backlog ziehen — nur möglich, wenn der Eintrag einen
+    // Entfernen-Button hat (also nicht in einer vergangenen Woche oder
+    // einem ausgeblendeten/"ausgegrauten" Tag steht)
+    if (!backlogCtl || !tag.querySelector('.weekplan-tag-remove')) continue;
+
+    // #detail ist der scrollende Container (position:fixed + eigenes
+    // overflow-y:auto) — das Backlog liegt meist erst weiter unten
+    // außerhalb des sichtbaren Bereichs, daher auch hier Auto-Scroll wie
+    // beim umgekehrten Weg (Backlog → Wochenplan).
+    const detailEl = selectedDiv.closest('#detail');
+    const AUTOSCROLL_MAX_SPEED = 18;
+    function maybeAutoScrollTag(y) {
+      if (!detailEl) return false;
+      const zone = detailEl.clientHeight * 0.25;
+      if (y < zone) { detailEl.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / zone)); return true; }
+      if (y > detailEl.clientHeight - zone) { detailEl.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (detailEl.clientHeight - y) / zone)); return true; }
+      return false;
+    }
+    function updateOverBacklog(x, y) {
+      const overBacklog = !!document.elementFromPoint(x, y)?.closest('.backlog-section');
+      if (overBacklog !== tagDrag.overBacklog) {
+        document.querySelector('.backlog-section')?.classList.toggle('backlog-drop-target', overBacklog);
+        tagDrag.overBacklog = overBacklog;
+      }
+    }
+    let tagDrag = null;
+    let tagScrollTimer = null;
+    function tagScrollTick() {
+      if (!tagDrag) { clearInterval(tagScrollTimer); tagScrollTimer = null; return; }
+      if (maybeAutoScrollTag(tagDrag.lastY)) updateOverBacklog(tagDrag.lastX, tagDrag.lastY);
+    }
+
+    // WICHTIG: .onpointerdown = statt addEventListener() — attachTagHandlers()
+    // wird bei jedem neuen Eintrag erneut für ALLE Tags des Tages aufgerufen
+    // (nicht nur den neuen), addEventListener würde sich dadurch bei jedem
+    // Aufruf zusätzlich aufsummieren und Gesten mehrfach auslösen.
+    tag.onpointerdown = (e) => {
+      if (e.target.closest('.weekplan-tag-remove')) return;
+      tagDrag = {
+        pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false,
+        overBacklog: false, lastX: e.clientX, lastY: e.clientY,
+      };
+      try { tag.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
     };
+
+    tag.onpointermove = (e) => {
+      if (!tagDrag || e.pointerId !== tagDrag.pointerId) return;
+      const dx = e.clientX - tagDrag.startX;
+      const dy = e.clientY - tagDrag.startY;
+      // Erst ab einer kleinen Mindestbewegung als Ziehen werten, sonst
+      // würde ein normaler Tap (Rezept öffnen) immer als Drag beginnen
+      if (!tagDrag.moved && Math.hypot(dx, dy) < 10) return;
+      if (!tagDrag.moved) {
+        tagDrag.moved = true;
+        tag.classList.add('tag-dragging');
+        tag.style.pointerEvents = 'none'; // für elementFromPoint darunter
+        if (!tagScrollTimer) tagScrollTimer = setInterval(tagScrollTick, 16);
+      }
+      tag.style.transform = `translate(${dx}px, ${dy}px)`;
+      tagDrag.lastX = e.clientX;
+      tagDrag.lastY = e.clientY;
+      maybeAutoScrollTag(e.clientY); // sofortige Reaktion bei Fingerbewegung
+      updateOverBacklog(e.clientX, e.clientY);
+    };
+
+    const endTagDrag = (e) => {
+      if (!tagDrag || (e && e.pointerId !== tagDrag.pointerId)) return;
+      const { moved, overBacklog } = tagDrag;
+      tag.style.pointerEvents = '';
+      tag.classList.remove('tag-dragging');
+      tag.style.transform = '';
+      document.querySelector('.backlog-section')?.classList.remove('backlog-drop-target');
+      tagDrag = null;
+      if (!moved) return;
+      tag.dataset.justDragged = '1'; // unterdrückt das nachfolgende Klick-Event (Rezept öffnen)
+
+      if (overBacklog) {
+        const dayKey = tag.dataset.day;
+        const text = tag.querySelector('.weekplan-tag-text')?.textContent || '';
+        const idx = (weekplan[dayKey] || []).indexOf(entry);
+        if (idx > -1) {
+          weekplan[dayKey].splice(idx, 1);
+          saveWeekplan(weekplan);
+          weekplanUploadDebounced();
+          tag.remove();
+          backlogCtl.addItem(text);
+          toast('📝 Zurück ins Backlog verschoben');
+        }
+      }
+    };
+    tag.onpointerup = endTagDrag;
+    tag.onpointercancel = endTagDrag;
   }
 }
 
@@ -1509,7 +1619,7 @@ function renderWeekplan(skipSync = false) {
     const selectedDiv = dayEl.querySelector('.weekplan-selected');
     // Tag-Klicks (Rezept öffnen) und X-Entfernen — auch in vergangenen Wochen
     // öffnen Rezept-Klicks das Rezept (nur X/Eingabe entfallen)
-    attachTagHandlers(selectedDiv, weekplan);
+    attachTagHandlers(selectedDiv, weekplan, backlogCtl);
 
     const searchInput = dayEl.querySelector('.weekplan-search');
     if (!searchInput) continue; // Vergangene Woche: kein Eingabefeld
@@ -1559,7 +1669,7 @@ function renderWeekplan(skipSync = false) {
 
           searchInput.value = '';
           suggestionsDiv.hidden = true;
-          attachTagHandlers(selectedDiv, weekplan);
+          attachTagHandlers(selectedDiv, weekplan, backlogCtl);
         };
       }
     });
@@ -1581,7 +1691,7 @@ function renderWeekplan(skipSync = false) {
 
       searchInput.value = '';
       suggestionsDiv.hidden = true;
-      attachTagHandlers(selectedDiv, weekplan);
+      attachTagHandlers(selectedDiv, weekplan, backlogCtl);
     };
 
     // Enter-Key für Autocomplete-Auswahl oder Freitext
