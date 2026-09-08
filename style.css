@@ -209,15 +209,16 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
    nur ein kleines Icon in der Kopfleiste — sehr oft genutztes Feature */
 .weekplan-shortcut {
   position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
   margin: clamp(10px, 2.5vw, 14px) 0;
-  padding: 12px;
+  padding: 16px;
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--accent);
   color: #fff;
   font-size: 15px;
@@ -228,6 +229,25 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 }
 .weekplan-shortcut:active { transform: scale(0.98); }
 
+/* Dezentes Kalender-Symbol im Hintergrund — nur Umriss, stark abgedunkelt/
+   ausgegraut, damit der Text gut lesbar bleibt */
+.weekplan-shortcut-bg {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  width: 100px;
+  height: 100px;
+  transform: translateY(-50%) rotate(-10deg);
+  color: #fff;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.weekplan-shortcut-label {
+  position: relative;
+  z-index: 1;
+}
+
 .btn-tinder-primary {
   background: var(--accent) !important;
   color: #fff !important;
@@ -235,6 +255,15 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   box-shadow: 0 clamp(2px, 0.5vw, 4px) clamp(8px, 2vw, 12px) rgba(232, 89, 12, 0.3) !important;
   width: clamp(40px, 8vw, 44px) !important;
   height: clamp(40px, 8vw, 44px) !important;
+}
+
+/* "Food Match" (Tinder) — jetzt Platz für den Namen, seit der Wochenplan
+   als eigene Kachel über dem Suchfeld sitzt statt in dieser Leiste */
+#btn-tinder {
+  width: auto !important;
+  padding: 0 clamp(12px, 3vw, 16px) !important;
+  border-radius: 999px !important;
+  white-space: nowrap;
 }
 
 /* Menü/Einstellungen als breiterer „Griff" — macht die Wisch-Geste sichtbar */
