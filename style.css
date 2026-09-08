@@ -352,19 +352,22 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 .sort-opt:last-child { border-bottom: none; }
 .sort-opt.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
 
-/* Buchstaben-Trenner in der alphabetischen "Alle"-Ansicht: eine eigene,
-   kompakte Kachel im Grid statt einer vollen Trennlinie — erzwingt dadurch
-   KEINEN Zeilenumbruch, Rezepte können in derselben Zeile weiterlaufen. */
+/* Buchstaben-Trenner in der alphabetischen "Alle"-Ansicht */
 .grid-divider {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  border-radius: clamp(12px, 3vw, 16px);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 800;
-  font-size: clamp(20px, 5vw, 26px);
+  gap: 10px;
+  margin: clamp(4px, 1.5vw, 8px) 2px 0;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.grid-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .ai-scan-box {

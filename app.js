@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T10:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T10:20:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -456,7 +456,7 @@ function render() {
         lastLetter = letter;
         const divider = document.createElement('div');
         divider.className = 'grid-divider';
-        divider.textContent = letter;
+        divider.innerHTML = `<span>${letter}</span>`;
         grid.appendChild(divider);
       }
     }
