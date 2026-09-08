@@ -2194,6 +2194,14 @@ html.color-rainbow .t-card.foodmatch {
   border-radius: 14px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
+  transition: background 0.1s, border-color 0.1s;
+}
+
+/* Wird angezeigt, während man einen Backlog-Eintrag über diesen Tag zieht */
+.weekplan-day.backlog-drop-target {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-width: 2px;
 }
 
 /* Eigene Ebene fürs Grid-Layout — wird beim Ausblenden gedimmt.

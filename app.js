@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T10:50:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T11:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1088,7 +1088,7 @@ function backlogListHTML(items) {
 // dynamisch hinzugefügte Zeilen (neuer leerer Eintrag am Ende) nicht einzeln
 // neu verkabelt werden müssen. Gibt ein Controller-Objekt mit refresh()
 // zurück, damit ein Remote-Sync die Liste von außen neu einlesen kann.
-function wireBacklogList(el) {
+function wireBacklogList(el, weekplan) {
   const list = el.querySelector('#backlog-list');
   if (!list) return null;
 
@@ -1145,12 +1145,17 @@ function wireBacklogList(el) {
     rerender();
   });
 
-  // Griff: mit dem Finger nach oben/unten ziehen zum Umsortieren. Die
+  // Griff: mit dem Finger nach oben/unten ziehen zum Umsortieren — ODER auf
+  // einen Wochentag ziehen, um den Eintrag dort direkt einzuplanen. Die
   // gezogene Zeile folgt per translateY dem Finger; sobald die Fingerposition
   // die Mitte einer Nachbarzeile überquert, werden Eintrag UND DOM-Reihenfolge
   // sofort getauscht (die anderen Zeilen rutschen dadurch von selbst nach) —
-  // startY wird um eine Zeilenhöhe korrigiert, damit die Zeile dabei nicht springt.
+  // startY wird um eine Zeilenhöhe korrigiert, damit die Zeile dabei nicht
+  // springt. Nahe am oberen/unteren Bildschirmrand wird automatisch gescrollt,
+  // damit auch der (weiter oben liegende) Wochenplan erreichbar ist.
   let drag = null;
+  const AUTOSCROLL_ZONE = 70;
+
   list.addEventListener('pointerdown', (e) => {
     const handle = e.target.closest('.backlog-drag');
     if (!handle) return;
@@ -1158,14 +1163,36 @@ function wireBacklogList(el) {
     const i = Number(row.dataset.i);
     if (i >= items.length) return;
     e.preventDefault();
-    drag = { row, pointerId: e.pointerId, startClientY: e.clientY };
+    // Verhindert, dass die globale Zurück-Wisch-Geste (lauscht am linken
+    // Bildschirmrand, wo auch der Drag-Griff sitzt) dieses Event mitbekommt
+    e.stopPropagation();
+    drag = { row, pointerId: e.pointerId, startClientY: e.clientY, overDay: null };
     row.classList.add('dragging');
+    // Damit elementFromPoint() beim Ziehen NICHT die gezogene Zeile selbst
+    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.) —
+    // Pointer Capture liefert Move/Up-Events trotzdem weiter an die Zeile.
+    row.style.pointerEvents = 'none';
     try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
   });
 
   list.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.pointerId) return;
     drag.row.style.transform = `translateY(${e.clientY - drag.startClientY}px)`;
+
+    // Auto-Scroll am Bildschirmrand
+    if (e.clientY < AUTOSCROLL_ZONE) {
+      window.scrollBy(0, -(AUTOSCROLL_ZONE - e.clientY) * 0.4);
+    } else if (e.clientY > window.innerHeight - AUTOSCROLL_ZONE) {
+      window.scrollBy(0, (e.clientY - (window.innerHeight - AUTOSCROLL_ZONE)) * 0.4);
+    }
+
+    const dayEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('.weekplan-day');
+    if (dayEl !== drag.overDay) {
+      drag.overDay?.classList.remove('backlog-drop-target');
+      dayEl?.classList.add('backlog-drop-target');
+      drag.overDay = dayEl || null;
+    }
+    if (drag.overDay) return; // über einem Wochentag: nicht innerhalb der Liste umsortieren
 
     const draggedIdx = Number(drag.row.dataset.i);
     for (const sib of list.querySelectorAll('.backlog-row')) {
@@ -1190,11 +1217,36 @@ function wireBacklogList(el) {
 
   const endDrag = (e) => {
     if (!drag || (e && e.pointerId !== drag.pointerId)) return;
-    drag.row.classList.remove('dragging');
-    drag.row.style.transform = '';
+    const { row, overDay } = drag;
+    row.classList.remove('dragging');
+    row.style.transform = '';
+    row.style.pointerEvents = '';
     drag = null;
-    saveBacklogDebounced(items);
-    rerender();
+
+    if (overDay) {
+      overDay.classList.remove('backlog-drop-target');
+      const dayKey = overDay.dataset.day;
+      const i = Number(row.dataset.i);
+      const text = items[i];
+      items.splice(i, 1);
+      saveBacklogDebounced(items);
+
+      if (!weekplan[dayKey]) weekplan[dayKey] = [];
+      const entry = 'TEXT:' + text;
+      weekplan[dayKey].push(entry);
+      saveWeekplan(weekplan);
+      weekplanUploadDebounced();
+      const selectedDiv = overDay.querySelector('.weekplan-selected');
+      if (selectedDiv) {
+        selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
+        attachTagHandlers(selectedDiv, weekplan);
+      }
+      toast('📅 Ins Wochenplan verschoben');
+      rerender();
+    } else {
+      saveBacklogDebounced(items);
+      rerender();
+    }
   };
   list.addEventListener('pointerup', endDrag);
   list.addEventListener('pointercancel', endDrag);
@@ -1376,7 +1428,7 @@ function renderWeekplan(skipSync = false) {
     closeOverlay();
   };
 
-  const backlogCtl = wireBacklogList(el);
+  const backlogCtl = wireBacklogList(el, weekplan);
 
   // Wochen-Navigation: eine Woche zurück/vor, gleiche Ansicht neu zeichnen
   for (const navBtn of el.querySelectorAll('.weekplan-nav')) {
