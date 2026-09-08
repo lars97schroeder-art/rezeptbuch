@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T12:10:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T12:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1154,7 +1154,9 @@ function wireBacklogList(el, weekplan) {
   // springt. Nahe am oberen/unteren Bildschirmrand wird automatisch gescrollt,
   // damit auch der (weiter oben liegende) Wochenplan erreichbar ist.
   let drag = null;
-  const AUTOSCROLL_ZONE = 70;
+  // Oberes/unteres Viertel des Bildschirms statt eines schmalen Rand-Streifens
+  // — leichter mit dem Daumen zu treffen, während man einen Eintrag zieht.
+  const autoScrollZone = () => window.innerHeight * 0.25;
   const AUTOSCROLL_MAX_SPEED = 18; // px pro Frame, ganz am Bildschirmrand
 
   // Prüft Nachbar-Tausch (Umsortieren) bzw. ob über einem Wochentag gezogen
@@ -1195,12 +1197,13 @@ function wireBacklogList(el, weekplan) {
   // Scrollt den Bildschirm, wenn y nah am oberen/unteren Rand ist. Gibt
   // true zurück, wenn tatsächlich gescrollt wurde.
   function maybeAutoScroll(y) {
-    if (y < AUTOSCROLL_ZONE) {
-      window.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / AUTOSCROLL_ZONE));
+    const zone = autoScrollZone();
+    if (y < zone) {
+      window.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / zone));
       return true;
     }
-    if (y > window.innerHeight - AUTOSCROLL_ZONE) {
-      window.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (window.innerHeight - y) / AUTOSCROLL_ZONE));
+    if (y > window.innerHeight - zone) {
+      window.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (window.innerHeight - y) / zone));
       return true;
     }
     return false;
