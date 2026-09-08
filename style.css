@@ -178,6 +178,7 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
 .actions { gap: clamp(6px, 1.5vw, 12px); }
 
 .actions button {
+  font-family: inherit;
   font-size: clamp(16px, 4vw, 20px);
   width: clamp(40px, 8vw, 44px);
   height: clamp(40px, 8vw, 44px);
@@ -264,6 +265,8 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   padding: 0 clamp(12px, 3vw, 16px) !important;
   border-radius: 999px !important;
   white-space: nowrap;
+  font-size: clamp(13px, 3vw, 15px) !important;
+  font-weight: 700;
 }
 
 /* Menü/Einstellungen als breiterer „Griff" — macht die Wisch-Geste sichtbar */

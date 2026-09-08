@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-08T14:35:00+02:00';
+const APP_BUILD_TIME = '2026-09-08T14:50:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1300,7 +1300,7 @@ function wireBacklogList(el, weekplan) {
         selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
         attachTagHandlers(selectedDiv, weekplan, controller);
       }
-      toast('📅 Ins Wochenplan verschoben');
+      toast('📅 In den Wochenplan verschoben');
       rerender();
     } else {
       saveBacklogDebounced(items);
