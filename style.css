@@ -113,12 +113,37 @@ header {
 
 .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: clamp(8px, 2vw, 10px);
 }
 
-h1 { font-size: clamp(19px, 5vw, 23px); line-height: 1.2; padding-right: clamp(6px, 1.5vw, 8px); }
+/* Titel als zweispaltige "Tabelle" (Text links, Emojis rechts, beide dürfen
+   umbrechen) — per Flexbox statt display:table, damit sich der Titel auch
+   innerhalb der Kopfzeile (neben dem Kochen-Knopf) sauber verkleinert statt
+   die Zeile zu sprengen oder den Nachbarn zu überlappen. */
+h1 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: clamp(14px, 4.2vw, 23px);
+  line-height: 1.2;
+  padding-right: clamp(6px, 1.5vw, 8px);
+}
+.h1-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.h1-emoji {
+  flex: 0 1 auto;
+  white-space: normal;
+}
+
+.actions { flex: 0 0 auto; }
 
 /* Bereichs-Umschalter (Kochen/Backen/Frühstück) — jetzt ein eigener Knopf
    rechts neben dem Titel statt darunter verschachtelt */
