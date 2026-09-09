@@ -118,29 +118,22 @@ header {
   margin-bottom: clamp(8px, 2vw, 10px);
 }
 
-h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6px, 1.5vw, 8px); }
+h1 { font-size: clamp(19px, 5vw, 23px); line-height: 1.2; padding-right: clamp(6px, 1.5vw, 8px); }
 
+/* Bereichs-Umschalter (Kochen/Backen/Frühstück) — jetzt ein eigener Knopf
+   rechts neben dem Titel statt darunter verschachtelt */
 #mode-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-  color: var(--text);
-  font-family: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
-#mode-label {
-  display: inline-block;
-  margin-top: clamp(2px, 0.5vw, 4px);
-  color: var(--accent);
-  font-size: clamp(12px, 2vw, 14px);
+  width: auto !important;
+  padding: 0 clamp(12px, 3vw, 16px) !important;
+  border-radius: 999px !important;
+  white-space: nowrap;
+  font-size: clamp(13px, 3vw, 15px) !important;
   font-weight: 700;
 }
 
 #mode-menu {
   position: absolute;
+  right: clamp(12px, 3vw, 16px);
   z-index: 15;
   margin-top: 6px;
   background: var(--card);
@@ -258,16 +251,6 @@ h1 { font-size: clamp(16px, 4vw, 19px); line-height: 1.2; padding-right: clamp(6
   height: clamp(40px, 8vw, 44px) !important;
 }
 
-/* "Food Match" (Tinder) — jetzt Platz für den Namen, seit der Wochenplan
-   als eigene Kachel über dem Suchfeld sitzt statt in dieser Leiste */
-#btn-tinder {
-  width: auto !important;
-  padding: 0 clamp(12px, 3vw, 16px) !important;
-  border-radius: 999px !important;
-  white-space: nowrap;
-  font-size: clamp(13px, 3vw, 15px) !important;
-  font-weight: 700;
-}
 
 /* Menü/Einstellungen als breiterer „Griff" — macht die Wisch-Geste sichtbar */
 #btn-settings {

@@ -49,12 +49,9 @@ console.log('✅ Version-Check abgeschlossen');
 <div id="edge-swipe-guard" aria-hidden="true"></div>
 <header>
   <div class="topbar">
-    <button id="mode-btn" aria-label="Bereich wechseln">
-      <h1>Schrödamskis Schlemmerliste 👨🏻‍🍳👩🏼‍🍳</h1>
-      <span id="mode-label"></span>
-    </button>
+    <h1>Schrödamskis Schlemmerliste 👨🏻‍🍳👩🏼‍🍳</h1>
     <div class="actions">
-      <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder" class="btn-tinder-primary">🔥 Food Match</button>
+      <button id="mode-btn" aria-label="Bereich wechseln" class="btn-tinder-primary"></button>
       <button id="btn-settings" title="Einstellungen" aria-label="Einstellungen" class="btn-tinder-primary">☰</button>
     </div>
   </div>
@@ -72,6 +69,12 @@ console.log('✅ Version-Check abgeschlossen');
       <circle cx="50" cy="74" r="5" fill="currentColor"/>
     </svg>
     <span class="weekplan-shortcut-label">📅 Wochenplan</span>
+  </button>
+  <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder" class="weekplan-shortcut">
+    <svg class="weekplan-shortcut-bg" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M50 6 C34 26 24 40 24 60 C24 80 36 92 50 92 C64 92 76 80 76 60 C76 48 70 39 63 33 C65 46 58 51 53 47 C56 36 50 20 50 6 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+    <span class="weekplan-shortcut-label">🔥 Food Match</span>
   </button>
   <div class="search-wrapper">
     <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
