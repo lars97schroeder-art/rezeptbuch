@@ -199,8 +199,8 @@ h1 { font-size: clamp(19px, 5vw, 23px); line-height: 1.2; padding-right: clamp(6
   border: 2px solid var(--bg);
 }
 
-/* Wochenplan-Shortcut: eigene, breite Kachel über dem Suchfeld statt
-   nur ein kleines Icon in der Kopfleiste — sehr oft genutztes Feature */
+/* Wochenplan-/Food-Match-Shortcut: schlichte, dezente Kachel statt voller
+   Signalfarbe — soll nicht mit den Kopfleisten-Knöpfen konkurrieren */
 .weekplan-shortcut {
   position: relative;
   overflow: hidden;
@@ -209,31 +209,29 @@ h1 { font-size: clamp(19px, 5vw, 23px); line-height: 1.2; padding-right: clamp(6
   justify-content: center;
   gap: 8px;
   width: 100%;
-  margin: clamp(10px, 2.5vw, 14px) 0;
-  padding: 16px;
-  border: none;
-  border-radius: 16px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 15px;
+  margin: clamp(6px, 1.5vw, 8px) 0;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px var(--accent-soft);
   -webkit-tap-highlight-color: transparent;
 }
 .weekplan-shortcut:active { transform: scale(0.98); }
 
-/* Dezentes Kalender-Symbol im Hintergrund — nur Umriss, stark abgedunkelt/
-   ausgegraut, damit der Text gut lesbar bleibt */
+/* Sehr dezentes Symbol im Hintergrund — nur Umriss, kaum sichtbar */
 .weekplan-shortcut-bg {
   position: absolute;
   top: 50%;
   right: -14px;
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   transform: translateY(-50%) rotate(-10deg);
-  color: #fff;
-  opacity: 0.16;
+  color: var(--accent);
+  opacity: 0.12;
   pointer-events: none;
 }
 
