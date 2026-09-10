@@ -2552,10 +2552,15 @@ html.color-rainbow .t-card.foodmatch {
   position: relative;
 }
 
-.backlog-row.dragging {
-  z-index: 5;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+/* Die gezogene Zeile selbst ist unsichtbar (opacity via JS) — sichtbar ist
+   nur noch der Geist (.backlog-ghost), der frei dem Finger folgt statt nur
+   innerhalb der Liste hoch/runter zu rutschen. */
+.backlog-ghost {
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
+  transform-origin: center;
+  scale: 1.03;
 }
 
 .backlog-drag,

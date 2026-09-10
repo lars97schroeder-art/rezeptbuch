@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-10T09:15:00+02:00';
+const APP_BUILD_TIME = '2026-09-10T10:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1158,14 +1158,16 @@ function wireBacklogList(el, weekplan) {
     rerender();
   });
 
-  // Griff: mit dem Finger nach oben/unten ziehen zum Umsortieren — ODER auf
-  // einen Wochentag ziehen, um den Eintrag dort direkt einzuplanen. Die
-  // gezogene Zeile folgt per translateY dem Finger; sobald die Fingerposition
-  // die Mitte einer Nachbarzeile überquert, werden Eintrag UND DOM-Reihenfolge
-  // sofort getauscht (die anderen Zeilen rutschen dadurch von selbst nach) —
-  // startY wird um eine Zeilenhöhe korrigiert, damit die Zeile dabei nicht
-  // springt. Nahe am oberen/unteren Bildschirmrand wird automatisch gescrollt,
-  // damit auch der (weiter oben liegende) Wochenplan erreichbar ist.
+  // Griff: mit dem Finger ziehen zum Umsortieren — ODER auf einen Wochentag
+  // ziehen, um den Eintrag dort direkt einzuplanen. Die eigentliche Zeile
+  // bleibt (unsichtbar) an ihrem Platz in der Liste, damit die Nachbar-
+  // Tausch-Logik unten weiter normal funktioniert — sichtbar ist stattdessen
+  // ein "Geist": eine position:fixed-Kopie, die exakt an der Fingerposition
+  // hängt (X UND Y), unabhängig davon, wo die Zeile gerade in der Liste
+  // liegt. So fühlt sich die Kachel wirklich "aus dem Raster gelöst" an,
+  // statt nur innerhalb ihrer Spalte hoch/runter zu rutschen. Nahe am
+  // oberen/unteren Bildschirmrand wird automatisch gescrollt, damit auch
+  // der (weiter oben liegende) Wochenplan erreichbar ist.
   let drag = null;
   // Oberes/unteres Viertel des Bildschirms statt eines schmalen Rand-Streifens
   // — leichter mit dem Daumen zu treffen, während man einen Eintrag zieht.
@@ -1190,6 +1192,10 @@ function wireBacklogList(el, weekplan) {
     }
     if (drag.overDay) return; // über einem Wochentag: nicht innerhalb der Liste umsortieren
 
+    // Die gezogene Zeile ist unsichtbar (der "Geist" ist, was man sieht) —
+    // ihre Position in der Liste dient nur noch der Buchhaltung, daher ist
+    // hier (anders als früher) keine Korrektur einer sichtbaren Sprung-
+    // Position mehr nötig.
     const draggedIdx = Number(drag.row.dataset.i);
     for (const sib of list.querySelectorAll('.backlog-row')) {
       if (sib === drag.row) continue;
@@ -1200,10 +1206,8 @@ function wireBacklogList(el, weekplan) {
       [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
       if (sIdx < draggedIdx) {
         list.insertBefore(drag.row, sib);
-        drag.startClientY -= rect.height;
       } else {
         list.insertBefore(drag.row, sib.nextSibling);
-        drag.startClientY += rect.height;
       }
       sib.dataset.i = draggedIdx;
       drag.row.dataset.i = sIdx;
@@ -1252,14 +1256,32 @@ function wireBacklogList(el, weekplan) {
     // Verhindert, dass die globale Zurück-Wisch-Geste (lauscht am linken
     // Bildschirmrand, wo auch der Drag-Griff sitzt) dieses Event mitbekommt
     e.stopPropagation();
+
+    // Geist: sichtbare position:fixed-Kopie der Zeile, exakt an ihrer
+    // aktuellen Bildschirmposition gestartet und danach dem Finger folgend
+    const rect = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true);
+    ghost.classList.add('backlog-ghost');
+    ghost.style.position = 'fixed';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.top = rect.top + 'px';
+    ghost.style.width = rect.width + 'px';
+    ghost.style.height = rect.height + 'px';
+    ghost.style.margin = '0';
+    ghost.style.pointerEvents = 'none';
+    document.body.appendChild(ghost);
+
     drag = {
-      row, pointerId: e.pointerId, startClientY: e.clientY, overDay: null,
-      lastClientX: e.clientX, lastClientY: e.clientY,
+      row, ghost, pointerId: e.pointerId, startClientX: e.clientX, startClientY: e.clientY,
+      overDay: null, lastClientX: e.clientX, lastClientY: e.clientY,
     };
     row.classList.add('dragging');
-    // Damit elementFromPoint() beim Ziehen NICHT die gezogene Zeile selbst
-    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.) —
+    // Original-Zeile bleibt für die Nachbar-Tausch-Logik in der Liste,
+    // wird aber unsichtbar — sichtbar ist nur noch der Geist. pointer-events
+    // aus, damit elementFromPoint() beim Ziehen nicht die Zeile selbst
+    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.);
     // Pointer Capture liefert Move/Up-Events trotzdem weiter an die Zeile.
+    row.style.opacity = '0';
     row.style.pointerEvents = 'none';
     try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
     if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
@@ -1267,7 +1289,7 @@ function wireBacklogList(el, weekplan) {
 
   list.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.pointerId) return;
-    drag.row.style.transform = `translateY(${e.clientY - drag.startClientY}px)`;
+    drag.ghost.style.transform = `translate(${e.clientX - drag.startClientX}px, ${e.clientY - drag.startClientY}px)`;
     drag.lastClientX = e.clientX;
     drag.lastClientY = e.clientY;
     maybeAutoScroll(e.clientY); // sofortige Reaktion bei Fingerbewegung, nicht erst beim nächsten Timer-Tick
@@ -1276,9 +1298,10 @@ function wireBacklogList(el, weekplan) {
 
   const endDrag = (e) => {
     if (!drag || (e && e.pointerId !== drag.pointerId)) return;
-    const { row, overDay } = drag;
+    const { row, ghost, overDay } = drag;
+    ghost.remove();
     row.classList.remove('dragging');
-    row.style.transform = '';
+    row.style.opacity = '';
     row.style.pointerEvents = '';
     drag = null;
 
