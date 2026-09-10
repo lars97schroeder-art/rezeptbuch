@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-10T10:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-10T10:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -36,6 +36,25 @@ function recipeMode(r) {
 }
 
 const $ = s => document.querySelector(s);
+
+// Sperrt/entsperrt native Touch-Gesten (Scrollen etc.) für den GESAMTEN
+// Bildschirm während eines eigenen Drags (Backlog↔Wochenplan). Ohne das
+// kann der Finger, sobald er über ein Element ohne eigenes touch-action:none
+// wandert (z.B. die Backlog-Überschrift), vom Browser als native Scroll-
+// Geste übernommen werden — das unterbricht dann unsere pointermove-Events
+// mittendrin, als würde die gezogene Kachel an einer unsichtbaren Wand
+// hängenbleiben. document.body statt nur des Griffs, damit es wirklich
+// überall auf dem Bildschirm funktioniert, nicht nur direkt am Griff.
+let touchActionLockCount = 0;
+function lockTouchAction() {
+  if (touchActionLockCount++ === 0) document.body.style.touchAction = 'none';
+}
+function unlockTouchAction() {
+  if (--touchActionLockCount <= 0) {
+    touchActionLockCount = 0;
+    document.body.style.touchAction = '';
+  }
+}
 
 // Kategorien immer als Array behandeln: der Editor speichert Arrays, ältere Daten sind Strings
 function recipeCategories(r) {
@@ -1284,6 +1303,7 @@ function wireBacklogList(el, weekplan) {
     row.style.opacity = '0';
     row.style.pointerEvents = 'none';
     try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+    lockTouchAction();
     if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
   });
 
@@ -1299,6 +1319,7 @@ function wireBacklogList(el, weekplan) {
   const endDrag = (e) => {
     if (!drag || (e && e.pointerId !== drag.pointerId)) return;
     const { row, ghost, overDay } = drag;
+    unlockTouchAction();
     ghost.remove();
     row.classList.remove('dragging');
     row.style.opacity = '';
@@ -1432,6 +1453,7 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
         tagDrag.moved = true;
         tag.classList.add('tag-dragging');
         tag.style.pointerEvents = 'none'; // für elementFromPoint darunter
+        lockTouchAction(); // sonst kann eine Zeile ohne eigenes touch-action unterwegs die Geste kapern
         if (!tagScrollTimer) tagScrollTimer = setInterval(tagScrollTick, 16);
       }
       tag.style.transform = `translate(${dx}px, ${dy}px)`;
@@ -1450,6 +1472,7 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
       document.querySelector('.backlog-section')?.classList.remove('backlog-drop-target');
       tagDrag = null;
       if (!moved) return;
+      unlockTouchAction();
       tag.dataset.justDragged = '1'; // unterdrückt das nachfolgende Klick-Event (Rezept öffnen)
 
       if (overBacklog) {
