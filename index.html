@@ -59,26 +59,28 @@ console.log('✅ Version-Check abgeschlossen');
     </div>
   </div>
   <div id="mode-menu" hidden></div>
-  <button id="btn-weekplan" title="Wochenplan" aria-label="Wochenplan" class="weekplan-shortcut">
-    <svg class="weekplan-shortcut-bg" viewBox="0 0 100 100" aria-hidden="true">
-      <rect x="10" y="18" width="80" height="72" rx="10" fill="none" stroke="currentColor" stroke-width="5"/>
-      <line x1="10" y1="38" x2="90" y2="38" stroke="currentColor" stroke-width="5"/>
-      <line x1="28" y1="8" x2="28" y2="26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-      <line x1="72" y1="8" x2="72" y2="26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="28" cy="55" r="5" fill="currentColor"/>
-      <circle cx="50" cy="55" r="5" fill="currentColor"/>
-      <circle cx="72" cy="55" r="5" fill="currentColor"/>
-      <circle cx="28" cy="74" r="5" fill="currentColor"/>
-      <circle cx="50" cy="74" r="5" fill="currentColor"/>
-    </svg>
-    <span class="weekplan-shortcut-label">📅 Wochenplan</span>
-  </button>
-  <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder" class="weekplan-shortcut">
-    <svg class="weekplan-shortcut-bg" viewBox="0 0 100 100" aria-hidden="true">
-      <path d="M50 6 C34 26 24 40 24 60 C24 80 36 92 50 92 C64 92 76 80 76 60 C76 48 70 39 63 33 C65 46 58 51 53 47 C56 36 50 20 50 6 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-    </svg>
-    <span class="weekplan-shortcut-label">🔥 Food Match</span>
-  </button>
+  <div class="shortcuts-row" id="shortcuts-row">
+    <button id="btn-weekplan" title="Wochenplan" aria-label="Wochenplan" class="weekplan-shortcut">
+      <svg class="weekplan-shortcut-bg" viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="10" y="18" width="80" height="72" rx="10" fill="none" stroke="currentColor" stroke-width="5"/>
+        <line x1="10" y1="38" x2="90" y2="38" stroke="currentColor" stroke-width="5"/>
+        <line x1="28" y1="8" x2="28" y2="26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <line x1="72" y1="8" x2="72" y2="26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="28" cy="55" r="5" fill="currentColor"/>
+        <circle cx="50" cy="55" r="5" fill="currentColor"/>
+        <circle cx="72" cy="55" r="5" fill="currentColor"/>
+        <circle cx="28" cy="74" r="5" fill="currentColor"/>
+        <circle cx="50" cy="74" r="5" fill="currentColor"/>
+      </svg>
+      <span class="weekplan-shortcut-label">📅 Wochenplan</span>
+    </button>
+    <button id="btn-tinder" title="Rezept-Tinder" aria-label="Rezept-Tinder" class="weekplan-shortcut">
+      <svg class="weekplan-shortcut-bg" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M50 6 C34 26 24 40 24 60 C24 80 36 92 50 92 C64 92 76 80 76 60 C76 48 70 39 63 33 C65 46 58 51 53 47 C56 36 50 20 50 6 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <span class="weekplan-shortcut-label">🔥 Food Match</span>
+    </button>
+  </div>
   <div class="search-wrapper">
     <input id="search" type="search" placeholder="Rezept oder Zutat suchen …" autocomplete="off">
     <button id="search-clear" class="search-clear" aria-label="Suche löschen" hidden>✕</button>

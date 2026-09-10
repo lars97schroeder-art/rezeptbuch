@@ -224,6 +224,19 @@ h1 {
   border: 2px solid var(--bg);
 }
 
+/* Wochenplan + Food Match: normal untereinander (volle Breite), beim
+   Herunterscrollen (Klasse "compact", per JS gesetzt) nebeneinander in
+   einer Zeile, um Platz zu sparen — die Kopfzeile ist sticky und bleibt
+   sonst dauerhaft mit voller Höhe stehen. */
+.shortcuts-row {
+  display: flex;
+  flex-direction: column;
+}
+.shortcuts-row.compact {
+  flex-direction: row;
+  gap: 8px;
+}
+
 /* Wochenplan-/Food-Match-Shortcut: schlichte, dezente Kachel statt voller
    Signalfarbe — soll nicht mit den Kopfleisten-Knöpfen konkurrieren */
 .weekplan-shortcut {
@@ -244,8 +257,24 @@ h1 {
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: padding 0.15s, font-size 0.15s;
 }
 .weekplan-shortcut:active { transform: scale(0.98); }
+
+.shortcuts-row.compact .weekplan-shortcut {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 4px 0;
+  padding: 9px 6px;
+  font-size: 12px;
+  gap: 4px;
+}
+.shortcuts-row.compact .weekplan-shortcut-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shortcuts-row.compact .weekplan-shortcut-bg { display: none; }
 
 /* Sehr dezentes Symbol im Hintergrund — nur Umriss, kaum sichtbar */
 .weekplan-shortcut-bg {
