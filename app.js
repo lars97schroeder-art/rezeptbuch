@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-10T10:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-12T09:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1212,9 +1212,14 @@ function wireBacklogList(el, weekplan) {
     if (drag.overDay) return; // über einem Wochentag: nicht innerhalb der Liste umsortieren
 
     // Die gezogene Zeile ist unsichtbar (der "Geist" ist, was man sieht) —
-    // ihre Position in der Liste dient nur noch der Buchhaltung, daher ist
-    // hier (anders als früher) keine Korrektur einer sichtbaren Sprung-
-    // Position mehr nötig.
+    // ihre Position in der Liste dient nur noch der Buchhaltung. WICHTIG:
+    // Beim Tausch wird deshalb bewusst NUR die Nachbar-Zeile per
+    // insertBefore verschoben, niemals drag.row selbst — drag.row hält
+    // gerade Pointer Capture, und ein Verschieben des Elements, das
+    // Pointer Capture hält, mitten in der Geste kann auf echten Geräten
+    // die Touch-Erfassung unterbrechen (die Kachel blieb dann irgendwo
+    // "hängen"). Ein reiner Positions-Swap zweier Elemente lässt sich
+    // genauso gut erreichen, indem man nur eines von beiden bewegt.
     const draggedIdx = Number(drag.row.dataset.i);
     for (const sib of list.querySelectorAll('.backlog-row')) {
       if (sib === drag.row) continue;
@@ -1224,9 +1229,11 @@ function wireBacklogList(el, weekplan) {
       if (clientY < rect.top || clientY > rect.bottom) continue;
       [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
       if (sIdx < draggedIdx) {
-        list.insertBefore(drag.row, sib);
+        // sib stand vor drag.row → hinter drag.row schieben
+        list.insertBefore(sib, drag.row.nextSibling);
       } else {
-        list.insertBefore(drag.row, sib.nextSibling);
+        // sib stand nach drag.row → vor drag.row schieben
+        list.insertBefore(sib, drag.row);
       }
       sib.dataset.i = draggedIdx;
       drag.row.dataset.i = sIdx;
