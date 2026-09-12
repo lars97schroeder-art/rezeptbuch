@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-09-12T18:37:49.419Z",
+  "updated": "2026-09-12T18:38:03.305Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -710,13 +710,14 @@
       "emoji": "🥔",
       "image": "data/images/kartoffelsuppe-1789238267-0.jpg",
       "images": [
-        "data/images/kartoffelsuppe-1789238267-0.jpg"
+        "data/images/kartoffelsuppe-1789238267-0.jpg",
+        "data/images/kartoffelsuppe-1789238282-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-09-12T18:37:49.419Z"
+      "updated": "2026-09-12T18:38:03.305Z"
     },
     {
       "id": "linseneintopf",
