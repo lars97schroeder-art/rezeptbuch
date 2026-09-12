@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-09-06T21:18:24.146Z",
+  "updated": "2026-09-10T16:37:53.915Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1932,6 +1932,22 @@
       "bereich": "kochen",
       "created": "2026-08-03T16:54:01.123Z",
       "updated": "2026-08-03T16:54:01.123Z"
+    },
+    {
+      "id": "chilli-con-carne",
+      "title": "Chilli con Carne",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "🫘",
+      "image": "",
+      "images": [],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-09-10T16:37:53.915Z",
+      "updated": "2026-09-10T16:37:53.915Z"
     }
   ]
 }
