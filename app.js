@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T15:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T15:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -462,19 +462,31 @@ function setupScrollLabel() {
       return;
     }
 
-    // Finde den obersten sichtbaren Divider
-    const dividers = grid.querySelectorAll('.grid-divider span');
-    if (!dividers.length) return;
+    // Finde das oberste linke Rezept (erste Zeile, linke Seite)
+    const cards = grid.querySelectorAll('.card');
+    if (!cards.length) return;
 
-    let currentLetter = null;
-    for (const span of dividers) {
-      const rect = span.getBoundingClientRect();
-      if (rect.top < window.innerHeight / 2) {
-        currentLetter = span.textContent;
-      } else {
-        break;
+    let topLeftCard = null;
+    let minY = Infinity;
+    let minX = Infinity;
+
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect();
+      if (rect.top > window.innerHeight) break;
+      if (rect.top < minY) {
+        minY = rect.top;
+        minX = rect.left;
+        topLeftCard = card;
+      } else if (Math.abs(rect.top - minY) < 5 && rect.left < minX) {
+        minX = rect.left;
+        topLeftCard = card;
       }
     }
+
+    if (!topLeftCard) return;
+    const titleEl = topLeftCard.querySelector('.title');
+    const title = titleEl?.textContent || '';
+    const currentLetter = title.charAt(0)?.toUpperCase();
 
     if (currentLetter && currentLetter !== lastLetter) {
       lastLetter = currentLetter;
@@ -516,21 +528,10 @@ function render() {
     grid.innerHTML = `<div class="empty">Nichts gefunden 🤷</div>`;
   }
 
-  // Buchstaben-Divider nur in der alphabetischen "Alle"-Ansicht ohne Suche
+  // Scroll-Label orientiert sich am linken Rezept der Zeile (alphabetische Sortierung)
   const showDividers = sortMode === 'alpha' && activeCategory === 'Alle' && !query.trim();
-  let lastLetter = null;
 
   for (const item of items) {
-    if (showDividers) {
-      const letter = dividerLetter(item);
-      if (letter !== lastLetter) {
-        lastLetter = letter;
-        const divider = document.createElement('div');
-        divider.className = 'grid-divider';
-        divider.innerHTML = `<span>${letter}</span>`;
-        grid.appendChild(divider);
-      }
-    }
     const card = document.createElement('article');
     card.className = 'card';
     if (item.group) {
@@ -2475,7 +2476,7 @@ function openSettings() {
   }
 
   el.querySelector('#clear-token')?.addEventListener('click', () => {
-    if (window.clearToken) {
+    if (window.clearToken && confirm('⚠️ Token wirklich entfernen? Dann kann die App keine Daten mehr synchronisieren.')) {
       window.clearToken();
       openSettings();
     }
