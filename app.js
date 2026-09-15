@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T19:15:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T19:45:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -683,6 +683,19 @@ function wirePhotoDots(el) {
   });
 }
 
+// Zeigt "Hinzugefügt am" / "Zuletzt bearbeitet am" ganz unten auf der
+// Rezeptseite — nur im DOM, NICHT im geteilten Foto (shareRecipeAsImage()
+// zeichnet ein komplett eigenes Canvas-Bild, das nie hier vorbeischaut).
+// Ältere Bestandsrezepte haben evtl. kein "created", dann entfällt nur die erste Zeile.
+function detailDatesHTML(r) {
+  const fmt = iso => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const lines = [];
+  if (r.created) lines.push(`Hinzugefügt am ${fmt(r.created)}`);
+  if (r.updated) lines.push(`Zuletzt bearbeitet am ${fmt(r.updated)}`);
+  if (!lines.length) return '';
+  return `<div class="detail-dates">${lines.map(esc).join('<br>')}</div>`;
+}
+
 function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
@@ -713,6 +726,7 @@ function renderDetail(id, opts = {}) {
             <span class="related-text">${titleWithEmoji(rel)}</span>
           </button>`).join('')}
         </div>` : ''}
+      ${detailDatesHTML(r)}
     </div>`;
   for (const b of el.querySelectorAll('.related-item')) {
     b.onclick = () => openRecipe(b.dataset.id);
@@ -877,20 +891,22 @@ async function shareRecipeAsImage(r) {
       for (const line of wrapCanvasText(ctx, '💡 ' + r.notes, CONTENT_W)) { y += 36; ctx.fillText(line, MARGIN, y); }
     }
 
-    // Wasserzeichen
+    // Wasserzeichen — rechtsbündig, mit MARGIN Abstand zum rechten Rand
+    // (gleicher Abstand wie der Rest des Posters, für ein einheitliches Bild)
     y += 64;
     ctx.font = '600 22px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#c4a98d';
     ctx.textAlign = 'right';
     const watermarkText = '🍽️ Made by Schrödamskis Schlemmerliste';
     ctx.fillText(watermarkText, W - MARGIN, y);
-    // Emoji-Glyphen können unter die Baseline reichen (z.B. 🍽️) — die
-    // tatsächliche Textbox statt eines festen Puffers zugrunde legen,
-    // sonst wird das Wasserzeichen beim Zuschnitt unten abgeschnitten
-    const watermarkDescent = ctx.measureText(watermarkText).actualBoundingBoxDescent || 0;
+    // actualBoundingBoxDescent ist für Emoji-Glyphen (🍽️) browserübergreifend
+    // unzuverlässig — auf iOS Safari z.B. oft zu klein gemessen, wodurch das
+    // Wasserzeichen beim Zuschneiden trotzdem unten abgeschnitten wurde.
+    // Fester, großzügiger Sicherheitsabstand statt Messwert.
+    const WATERMARK_SAFETY_PADDING = 40;
 
     // Auf die tatsächlich genutzte Höhe zuschneiden
-    const finalH = Math.min(MAX_H, Math.ceil(y + watermarkDescent + 24));
+    const finalH = Math.min(MAX_H, Math.ceil(y + WATERMARK_SAFETY_PADDING));
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = W;
     finalCanvas.height = finalH;
