@@ -2873,6 +2873,33 @@ input:checked + .slider:before {
   word-break: break-word;
 }
 
+.backlog-entry-display.editable {
+  cursor: text;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s;
+}
+.backlog-entry-display.editable:hover {
+  background: var(--accent-soft);
+}
+
+.backlog-edit-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+.backlog-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 .backlog-drag {
   flex-shrink: 0;
   width: 32px;

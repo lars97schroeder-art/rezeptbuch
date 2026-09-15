@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T16:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T17:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1163,7 +1163,8 @@ function flushBacklogUpload() {
 function backlogRowHTML(entry, i) {
   let displayName = '';
   let emoji = '📝';
-  if (entry.startsWith('TEXT:')) {
+  const isText = entry.startsWith('TEXT:');
+  if (isText) {
     displayName = entry.substring(5);
   } else {
     const recipe = data.recipes.find(r => r.id === entry);
@@ -1171,9 +1172,11 @@ function backlogRowHTML(entry, i) {
     emoji = recipe ? emojiFor(recipe) : '❓';
   }
   if (!displayName) return '';
+  // Freitext-Notizen sind nachträglich editierbar (Klick auf den Text),
+  // Rezept-Einträge nicht — deren Name hängt am Rezept, nicht am Eintrag.
   return `<div class="backlog-row" data-i="${i}" data-entry="${esc(entry)}">
     <button type="button" class="backlog-drag" aria-label="Verschieben">⠿</button>
-    <span class="backlog-entry-display">${emoji} ${esc(displayName)}</span>
+    <span class="backlog-entry-display${isText ? ' editable' : ''}">${emoji} ${esc(displayName)}</span>
     <button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>
   </div>`;
 }
@@ -1274,7 +1277,8 @@ function wireBacklogList(el, weekplan) {
     }
   });
 
-  // Löschen-Button: Eintrag sofort entfernen
+  // Löschen-Button: Eintrag sofort entfernen; Klick auf eine Freitext-Notiz
+  // wandelt sie in ein Eingabefeld um (nachträglich bearbeitbar)
   function reattachListeners() {
     for (const removeBtn of list.querySelectorAll('.backlog-remove')) {
       removeBtn.onclick = (e) => {
@@ -1284,6 +1288,43 @@ function wireBacklogList(el, weekplan) {
         items.splice(i, 1);
         saveBacklogDebounced(items);
         rerender();
+      };
+    }
+
+    for (const display of list.querySelectorAll('.backlog-entry-display.editable')) {
+      display.onclick = () => {
+        const row = display.closest('.backlog-row');
+        const i = Number(row.dataset.i);
+        const currentText = items[i].substring(5); // "TEXT:" abschneiden
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'backlog-edit-input';
+        input.value = currentText;
+        display.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const finishEdit = (save) => {
+          if (save) {
+            const newText = input.value.trim();
+            if (newText) {
+              items[i] = 'TEXT:' + newText;
+              saveBacklogDebounced(items);
+            } else {
+              // leer gelassen → Eintrag entfernen
+              items.splice(i, 1);
+              saveBacklogDebounced(items);
+            }
+          }
+          rerender();
+        };
+
+        input.addEventListener('blur', () => finishEdit(true));
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+          if (e.key === 'Escape') { e.preventDefault(); finishEdit(false); }
+        });
       };
     }
   }
