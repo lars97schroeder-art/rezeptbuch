@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T18:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T19:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1215,43 +1215,53 @@ function wireBacklogList(el, weekplan) {
   const addBtn = autocompleteDiv.querySelector('.backlog-add-btn');
   const suggestionsDiv = autocompleteDiv.querySelector('.backlog-suggestions');
 
-  // Suche implementieren
+  // Suche implementieren. Absichtlich mit try/catch + sichtbarem Toast bei
+  // einem Fehler statt eines stillen Fehlschlags — falls z.B. ein Rezept
+  // mit unerwarteten/fehlenden Feldern in data.recipes steckt, würde die
+  // Suche sonst kommentarlos für IMMER aufhören, Vorschläge zu zeigen
+  // (ein einmal geworfener Fehler in .filter() bricht den kompletten
+  // Aufruf ab, ohne dass man das ohne Entwicklertools bemerken würde).
   searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    if (!query) {
-      suggestionsDiv.hidden = true;
-      return;
-    }
-
-    // Nach Rezepten im aktuellen Modus suchen
-    const matches = data.recipes.filter(r => {
-      if (recipeMode(r) !== mode) return false; // nur aktueller Modus
-      const title = r.title.toLowerCase();
-      const category = Array.isArray(r.category) ? r.category.join(' ').toLowerCase() : (r.category || '').toLowerCase();
-      return title.includes(query) || category.includes(query);
-    }).slice(0, 8);
-
-    if (matches.length === 0) {
-      suggestionsDiv.hidden = true;
-      return;
-    }
-
-    // Zeige Vorschläge
-    suggestionsDiv.innerHTML = matches.map(r =>
-      `<div class="backlog-suggestion" data-id="${esc(r.id)}">${emojiFor(r)} ${esc(r.title)}</div>`
-    ).join('');
-    suggestionsDiv.hidden = false;
-
-    // Click Handler für Vorschläge
-    for (const suggEl of suggestionsDiv.querySelectorAll('.backlog-suggestion')) {
-      suggEl.onclick = () => {
-        const recipeId = suggEl.dataset.id;
-        items.push(recipeId);
-        saveBacklogDebounced(items);
-        searchInput.value = '';
+    try {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
         suggestionsDiv.hidden = true;
-        rerender();
-      };
+        return;
+      }
+
+      // Nach Rezepten im aktuellen Modus suchen
+      const matches = data.recipes.filter(r => {
+        if (recipeMode(r) !== mode) return false; // nur aktueller Modus
+        const title = String(r.title || '').toLowerCase();
+        const category = Array.isArray(r.category) ? r.category.join(' ').toLowerCase() : String(r.category || '').toLowerCase();
+        return title.includes(query) || category.includes(query);
+      }).slice(0, 8);
+
+      if (matches.length === 0) {
+        suggestionsDiv.hidden = true;
+        return;
+      }
+
+      // Zeige Vorschläge
+      suggestionsDiv.innerHTML = matches.map(r =>
+        `<div class="backlog-suggestion" data-id="${esc(r.id)}">${emojiFor(r)} ${esc(r.title)}</div>`
+      ).join('');
+      suggestionsDiv.hidden = false;
+
+      // Click Handler für Vorschläge
+      for (const suggEl of suggestionsDiv.querySelectorAll('.backlog-suggestion')) {
+        suggEl.onclick = () => {
+          const recipeId = suggEl.dataset.id;
+          items.push(recipeId);
+          saveBacklogDebounced(items);
+          searchInput.value = '';
+          suggestionsDiv.hidden = true;
+          rerender();
+        };
+      }
+    } catch (err) {
+      console.error('Backlog-Suche fehlgeschlagen:', err);
+      toast('❌ Suche fehlgeschlagen: ' + err.message);
     }
   });
 
