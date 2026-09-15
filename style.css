@@ -2764,3 +2764,159 @@ input:checked + .slider:before {
 @media (max-width: 480px) {
   input, textarea, select { font-size: 16px; }
 }
+
+/* ===== Backlog-Autocomplete ===== */
+.backlog-autocomplete {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.backlog-input-row {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.backlog-search {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 45px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.backlog-search::placeholder { color: var(--muted); }
+
+.backlog-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.backlog-add-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.backlog-add-btn:active { transform: translateY(-50%) scale(0.9); }
+
+.backlog-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.backlog-suggestions[hidden] { display: none; }
+
+.backlog-suggestion {
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.backlog-suggestion:hover { background: var(--accent-soft); }
+
+/* ===== Backlog-Liste ===== */
+.backlog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backlog-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  touch-action: auto;
+}
+
+.backlog-row.dragging {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.backlog-entry-display {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.backlog-drag {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: color 0.15s;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.backlog-drag:hover { color: var(--accent); }
+.backlog-drag:active { cursor: grabbing; }
+
+.backlog-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: color 0.15s;
+}
+.backlog-remove:hover { color: var(--accent); }
+
+.backlog-ghost {
+  border: 1px solid var(--accent);
+  background: var(--card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  transform-origin: center;
+  scale: 1.03;
+}
+
+.backlog-drop-target {
+  opacity: 0.6;
+  background: var(--accent-soft);
+}

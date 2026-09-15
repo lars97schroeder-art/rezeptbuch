@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-12T09:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T14:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1088,120 +1088,140 @@ function flushBacklogUpload() {
 }
 
 // HTML für eine Backlog-Zeile: Griff links zum Verschieben (Finger-Drag),
-// Löschen-Button rechts. Die letzte Zeile ist immer leer (zum Anlegen eines
-// neuen Eintrags) und hat weder Griff noch Löschen-Button.
-function backlogRowHTML(text, i, isEmpty) {
-  return `<div class="backlog-row${isEmpty ? ' is-empty' : ''}" data-i="${i}">
-    ${isEmpty ? '<span class="backlog-drag-spacer"></span>' : '<button type="button" class="backlog-drag" aria-label="Verschieben">⠿</button>'}
-    <input type="text" class="backlog-input" value="${esc(text)}" data-i="${i}"${isEmpty ? ' placeholder="Neuer Eintrag …"' : ''}>
-    ${isEmpty ? '' : '<button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>'}
+// Löschen-Button rechts. Einträge können Rezept-IDs oder TEXT:... Freitext sein.
+function backlogRowHTML(entry, i) {
+  let displayName = '';
+  let emoji = '📝';
+  if (entry.startsWith('TEXT:')) {
+    displayName = entry.substring(5);
+  } else {
+    const recipe = data.recipes.find(r => r.id === entry);
+    displayName = recipe ? recipe.title : '';
+    emoji = recipe ? emojiFor(recipe) : '❓';
+  }
+  if (!displayName) return '';
+  return `<div class="backlog-row" data-i="${i}" data-entry="${esc(entry)}">
+    <button type="button" class="backlog-drag" aria-label="Verschieben">⠿</button>
+    <span class="backlog-entry-display">${emoji} ${esc(displayName)}</span>
+    <button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>
   </div>`;
 }
 
 function backlogListHTML(items) {
-  return items.map((t, i) => backlogRowHTML(t, i, false)).join('')
-    + backlogRowHTML('', items.length, true);
+  return items.map((e, i) => backlogRowHTML(e, i)).join('');
 }
 
-// Verdrahtet die Backlog-Liste per Event-Delegation auf dem Container, damit
-// dynamisch hinzugefügte Zeilen (neuer leerer Eintrag am Ende) nicht einzeln
-// neu verkabelt werden müssen. Gibt ein Controller-Objekt mit refresh()
-// zurück, damit ein Remote-Sync die Liste von außen neu einlesen kann.
+// Verdrahtet die Backlog-Liste mit Autocomplete (wie Wochenplan). Einträge
+// können Rezept-IDs oder TEXT:... Freitext sein. Gibt ein Controller-Objekt
+// mit refresh() zurück, damit ein Remote-Sync die Liste von außen neu
+// einlesen kann.
 function wireBacklogList(el, weekplan) {
   const list = el.querySelector('#backlog-list');
-  if (!list) return null;
+  const autocompleteDiv = el.querySelector('.backlog-autocomplete');
+  if (!list || !autocompleteDiv) return null;
 
   let items = getBacklogItems();
-  const rerender = () => { list.innerHTML = backlogListHTML(items); };
+  const rerender = () => { list.innerHTML = backlogListHTML(items); reattachListeners(); };
   const controller = {
     refresh() {
       items = getBacklogItems();
       rerender();
     },
-    // Fügt einen Eintrag hinzu (z.B. ein aus dem Wochenplan zurückgezogenes
-    // Gericht) und zeichnet die Liste neu
-    addItem(text) {
-      items.push(text);
+    // Fügt einen Eintrag hinzu (z.B. ein aus dem Wochenplan zurückgezogenes Gericht)
+    addItem(entry) {
+      items.push(entry);
       saveBacklogDebounced(items);
       rerender();
     },
   };
 
-  // Tippen in ein Feld: bestehender Eintrag wird direkt aktualisiert; die
-  // letzte (leere) Zeile wird beim ersten Zeichen zu einem echten Eintrag,
-  // darunter erscheint automatisch eine neue leere Zeile
-  list.addEventListener('input', (e) => {
-    const input = e.target.closest('.backlog-input');
-    if (!input) return;
-    const i = Number(input.dataset.i);
-    if (i < items.length) {
-      items[i] = input.value;
-      saveBacklogDebounced(items);
-    } else {
-      if (!input.value.trim()) return;
-      items.push(input.value);
-      saveBacklogDebounced(items);
-      const row = input.closest('.backlog-row');
-      row.classList.remove('is-empty');
-      row.querySelector('.backlog-drag-spacer')?.replaceWith(
-        Object.assign(document.createElement('button'), {
-          type: 'button', className: 'backlog-drag', ariaLabel: 'Verschieben', textContent: '⠿',
-        }));
-      input.removeAttribute('placeholder');
-      input.insertAdjacentHTML('afterend', '<button type="button" class="backlog-remove" aria-label="Entfernen">✕</button>');
-      row.insertAdjacentHTML('afterend', backlogRowHTML('', items.length, true));
+  const searchInput = autocompleteDiv.querySelector('.backlog-search');
+  const addBtn = autocompleteDiv.querySelector('.backlog-add-btn');
+  const suggestionsDiv = autocompleteDiv.querySelector('.backlog-suggestions');
+
+  // Suche implementieren
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (!query) {
+      suggestionsDiv.hidden = true;
+      return;
+    }
+
+    // Nach Rezepten im aktuellen Modus suchen
+    const matches = data.recipes.filter(r => {
+      if (recipeMode(r) !== mode) return false; // nur aktueller Modus
+      const title = r.title.toLowerCase();
+      const category = Array.isArray(r.category) ? r.category.join(' ').toLowerCase() : (r.category || '').toLowerCase();
+      return title.includes(query) || category.includes(query);
+    }).slice(0, 8);
+
+    if (matches.length === 0) {
+      suggestionsDiv.hidden = true;
+      return;
+    }
+
+    // Zeige Vorschläge
+    suggestionsDiv.innerHTML = matches.map(r =>
+      `<div class="backlog-suggestion" data-id="${esc(r.id)}">${emojiFor(r)} ${esc(r.title)}</div>`
+    ).join('');
+    suggestionsDiv.hidden = false;
+
+    // Click Handler für Vorschläge
+    for (const suggEl of suggestionsDiv.querySelectorAll('.backlog-suggestion')) {
+      suggEl.onclick = () => {
+        const recipeId = suggEl.dataset.id;
+        items.push(recipeId);
+        saveBacklogDebounced(items);
+        searchInput.value = '';
+        suggestionsDiv.hidden = true;
+        rerender();
+      };
     }
   });
 
-  // Verlässt man ein Feld und es ist leer (aber kein neuer Eintrag mehr),
-  // wird der Eintrag entfernt statt eine leere Zeile mitten in der Liste zu behalten
-  list.addEventListener('focusout', (e) => {
-    const input = e.target.closest('.backlog-input');
-    if (!input) return;
-    const i = Number(input.dataset.i);
-    if (i < items.length && !input.value.trim()) {
-      items.splice(i, 1);
-      saveBacklogDebounced(items);
-      rerender();
+  // Add-Button für Freitext
+  addBtn.onclick = () => {
+    const text = searchInput.value.trim();
+    if (!text) return;
+    const entry = 'TEXT:' + text;
+    items.push(entry);
+    saveBacklogDebounced(items);
+    searchInput.value = '';
+    suggestionsDiv.hidden = true;
+    rerender();
+  };
+
+  // Enter-Key
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!suggestionsDiv.hidden && suggestionsDiv.children.length > 0) {
+        suggestionsDiv.children[0].click();
+      } else {
+        addBtn.click();
+      }
     }
   });
 
   // Löschen-Button: Eintrag sofort entfernen
-  list.addEventListener('click', (e) => {
-    const removeBtn = e.target.closest('.backlog-remove');
-    if (!removeBtn) return;
-    const row = removeBtn.closest('.backlog-row');
-    const i = Number(row.dataset.i);
-    items.splice(i, 1);
-    saveBacklogDebounced(items);
-    rerender();
-  });
+  function reattachListeners() {
+    for (const removeBtn of list.querySelectorAll('.backlog-remove')) {
+      removeBtn.onclick = (e) => {
+        e.preventDefault();
+        const row = removeBtn.closest('.backlog-row');
+        const i = Number(row.dataset.i);
+        items.splice(i, 1);
+        saveBacklogDebounced(items);
+        rerender();
+      };
+    }
+  }
 
-  // Griff: mit dem Finger ziehen zum Umsortieren — ODER auf einen Wochentag
-  // ziehen, um den Eintrag dort direkt einzuplanen. Die eigentliche Zeile
-  // bleibt (unsichtbar) an ihrem Platz in der Liste, damit die Nachbar-
-  // Tausch-Logik unten weiter normal funktioniert — sichtbar ist stattdessen
-  // ein "Geist": eine position:fixed-Kopie, die exakt an der Fingerposition
-  // hängt (X UND Y), unabhängig davon, wo die Zeile gerade in der Liste
-  // liegt. So fühlt sich die Kachel wirklich "aus dem Raster gelöst" an,
-  // statt nur innerhalb ihrer Spalte hoch/runter zu rutschen. Nahe am
-  // oberen/unteren Bildschirmrand wird automatisch gescrollt, damit auch
-  // der (weiter oben liegende) Wochenplan erreichbar ist.
+  // Griff: mit dem Finger ziehen zum Umsortieren oder auf Wochentag verschieben
   let drag = null;
-  // Oberes/unteres Viertel des Bildschirms statt eines schmalen Rand-Streifens
-  // — leichter mit dem Daumen zu treffen, während man einen Eintrag zieht.
-  // WICHTIG: #detail (= el) ist selbst der scrollende Container
-  // (position:fixed + eigenes overflow-y:auto) — window.scrollBy() würde
-  // nur die dahinterliegende, unsichtbare Grundseite verschieben und hatte
-  // deshalb auf dem Handy keinerlei sichtbaren Effekt.
   const autoScrollZone = () => el.clientHeight * 0.25;
-  const AUTOSCROLL_MAX_SPEED = 18; // px pro Frame, ganz am Bildschirmrand
+  const AUTOSCROLL_MAX_SPEED = 18;
 
-  // Prüft Nachbar-Tausch (Umsortieren) bzw. ob über einem Wochentag gezogen
-  // wird (Drop-Ziel-Hervorhebung). Wird sowohl bei Fingerbewegung als auch
-  // aus der Auto-Scroll-Schleife heraus aufgerufen (siehe unten) — beim
-  // Halten des Fingers am Bildschirmrand ändert sich zwar clientX/clientY
-  // nicht, wohl aber, was durch das Scrollen gerade darunter liegt.
   function updateDragTargets(clientX, clientY) {
     const dayEl = document.elementFromPoint(clientX, clientY)?.closest('.weekplan-day');
     if (dayEl !== drag.overDay) {
@@ -1209,30 +1229,19 @@ function wireBacklogList(el, weekplan) {
       dayEl?.classList.add('backlog-drop-target');
       drag.overDay = dayEl || null;
     }
-    if (drag.overDay) return; // über einem Wochentag: nicht innerhalb der Liste umsortieren
+    if (drag.overDay) return;
 
-    // Die gezogene Zeile ist unsichtbar (der "Geist" ist, was man sieht) —
-    // ihre Position in der Liste dient nur noch der Buchhaltung. WICHTIG:
-    // Beim Tausch wird deshalb bewusst NUR die Nachbar-Zeile per
-    // insertBefore verschoben, niemals drag.row selbst — drag.row hält
-    // gerade Pointer Capture, und ein Verschieben des Elements, das
-    // Pointer Capture hält, mitten in der Geste kann auf echten Geräten
-    // die Touch-Erfassung unterbrechen (die Kachel blieb dann irgendwo
-    // "hängen"). Ein reiner Positions-Swap zweier Elemente lässt sich
-    // genauso gut erreichen, indem man nur eines von beiden bewegt.
     const draggedIdx = Number(drag.row.dataset.i);
     for (const sib of list.querySelectorAll('.backlog-row')) {
       if (sib === drag.row) continue;
       const sIdx = Number(sib.dataset.i);
-      if (sIdx >= items.length) continue; // leere Zeile am Ende bleibt immer unten
+      if (sIdx >= items.length) continue;
       const rect = sib.getBoundingClientRect();
       if (clientY < rect.top || clientY > rect.bottom) continue;
       [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
       if (sIdx < draggedIdx) {
-        // sib stand vor drag.row → hinter drag.row schieben
         list.insertBefore(sib, drag.row.nextSibling);
       } else {
-        // sib stand nach drag.row → vor drag.row schieben
         list.insertBefore(sib, drag.row);
       }
       sib.dataset.i = draggedIdx;
@@ -1241,8 +1250,6 @@ function wireBacklogList(el, weekplan) {
     }
   }
 
-  // Scrollt den Bildschirm, wenn y nah am oberen/unteren Rand ist. Gibt
-  // true zurück, wenn tatsächlich gescrollt wurde.
   function maybeAutoScroll(y) {
     const zone = autoScrollZone();
     if (y < zone) {
@@ -1256,12 +1263,6 @@ function wireBacklogList(el, weekplan) {
     return false;
   }
 
-  // Läuft zusätzlich per setInterval weiter, solange gezogen wird — reagiert
-  // dadurch (anders als der pointermove-Handler allein) auch, wenn der
-  // Finger reglos am Bildschirmrand gehalten wird, statt nach der Bewegung
-  // sofort stehen zu bleiben. requestAnimationFrame wurde bewusst NICHT
-  // verwendet, da es in manchen (Hintergrund-/Vorschau-)Kontexten gar nicht
-  // feuert.
   let autoScrollTimer = null;
   function autoScrollTick() {
     if (!drag) {
@@ -1272,94 +1273,102 @@ function wireBacklogList(el, weekplan) {
     if (maybeAutoScroll(drag.lastClientY)) updateDragTargets(drag.lastClientX, drag.lastClientY);
   }
 
-  list.addEventListener('pointerdown', (e) => {
-    const handle = e.target.closest('.backlog-drag');
-    if (!handle) return;
-    const row = handle.closest('.backlog-row');
-    const i = Number(row.dataset.i);
-    if (i >= items.length) return;
-    e.preventDefault();
-    // Verhindert, dass die globale Zurück-Wisch-Geste (lauscht am linken
-    // Bildschirmrand, wo auch der Drag-Griff sitzt) dieses Event mitbekommt
-    e.stopPropagation();
-
-    // Geist: sichtbare position:fixed-Kopie der Zeile, exakt an ihrer
-    // aktuellen Bildschirmposition gestartet und danach dem Finger folgend
-    const rect = row.getBoundingClientRect();
-    const ghost = row.cloneNode(true);
-    ghost.classList.add('backlog-ghost');
-    ghost.style.position = 'fixed';
-    ghost.style.left = rect.left + 'px';
-    ghost.style.top = rect.top + 'px';
-    ghost.style.width = rect.width + 'px';
-    ghost.style.height = rect.height + 'px';
-    ghost.style.margin = '0';
-    ghost.style.pointerEvents = 'none';
-    document.body.appendChild(ghost);
-
-    drag = {
-      row, ghost, pointerId: e.pointerId, startClientX: e.clientX, startClientY: e.clientY,
-      overDay: null, lastClientX: e.clientX, lastClientY: e.clientY,
-    };
-    row.classList.add('dragging');
-    // Original-Zeile bleibt für die Nachbar-Tausch-Logik in der Liste,
-    // wird aber unsichtbar — sichtbar ist nur noch der Geist. pointer-events
-    // aus, damit elementFromPoint() beim Ziehen nicht die Zeile selbst
-    // trifft, sondern das, was tatsächlich darunter liegt (Wochentag o.ä.);
-    // Pointer Capture liefert Move/Up-Events trotzdem weiter an die Zeile.
-    row.style.opacity = '0';
-    row.style.pointerEvents = 'none';
-    try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
-    lockTouchAction();
-    if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
-  });
-
-  list.addEventListener('pointermove', (e) => {
-    if (!drag || e.pointerId !== drag.pointerId) return;
-    drag.ghost.style.transform = `translate(${e.clientX - drag.startClientX}px, ${e.clientY - drag.startClientY}px)`;
-    drag.lastClientX = e.clientX;
-    drag.lastClientY = e.clientY;
-    maybeAutoScroll(e.clientY); // sofortige Reaktion bei Fingerbewegung, nicht erst beim nächsten Timer-Tick
-    updateDragTargets(e.clientX, e.clientY);
-  });
-
-  const endDrag = (e) => {
-    if (!drag || (e && e.pointerId !== drag.pointerId)) return;
-    const { row, ghost, overDay } = drag;
-    unlockTouchAction();
-    ghost.remove();
-    row.classList.remove('dragging');
-    row.style.opacity = '';
-    row.style.pointerEvents = '';
-    drag = null;
-
-    if (overDay) {
-      overDay.classList.remove('backlog-drop-target');
-      const dayKey = overDay.dataset.day;
-      const i = Number(row.dataset.i);
-      const text = items[i];
-      items.splice(i, 1);
-      saveBacklogDebounced(items);
-
-      if (!weekplan[dayKey]) weekplan[dayKey] = [];
-      const entry = 'TEXT:' + text;
-      weekplan[dayKey].push(entry);
-      saveWeekplan(weekplan);
-      weekplanUploadDebounced();
-      const selectedDiv = overDay.querySelector('.weekplan-selected');
-      if (selectedDiv) {
-        selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, text, dayKey));
-        attachTagHandlers(selectedDiv, weekplan, controller);
-      }
-      toast('📅 In den Wochenplan verschoben');
-      rerender();
-    } else {
-      saveBacklogDebounced(items);
-      rerender();
+  function attachDragHandlers() {
+    for (const handle of list.querySelectorAll('.backlog-drag')) {
+      handle.onclick = null; // clearen
+      handle.onpointerdown = null;
     }
-  };
-  list.addEventListener('pointerup', endDrag);
-  list.addEventListener('pointercancel', endDrag);
+    for (const handle of list.querySelectorAll('.backlog-drag')) {
+      handle.onpointerdown = (e) => {
+        const row = handle.closest('.backlog-row');
+        const i = Number(row.dataset.i);
+        if (i >= items.length) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const rect = row.getBoundingClientRect();
+        const ghost = row.cloneNode(true);
+        ghost.classList.add('backlog-ghost');
+        ghost.style.position = 'fixed';
+        ghost.style.left = rect.left + 'px';
+        ghost.style.top = rect.top + 'px';
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        ghost.style.margin = '0';
+        ghost.style.pointerEvents = 'none';
+        document.body.appendChild(ghost);
+
+        drag = {
+          row, ghost, pointerId: e.pointerId, startClientX: e.clientX, startClientY: e.clientY,
+          overDay: null, lastClientX: e.clientX, lastClientY: e.clientY,
+        };
+        row.classList.add('dragging');
+        row.style.opacity = '0';
+        row.style.pointerEvents = 'none';
+        try { row.setPointerCapture(e.pointerId); } catch (err) { }
+        lockTouchAction();
+        if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
+
+        const handleMove = (e) => {
+          if (!drag || e.pointerId !== drag.pointerId) return;
+          drag.ghost.style.transform = `translate(${e.clientX - drag.startClientX}px, ${e.clientY - drag.startClientY}px)`;
+          drag.lastClientX = e.clientX;
+          drag.lastClientY = e.clientY;
+          maybeAutoScroll(e.clientY);
+          updateDragTargets(e.clientX, e.clientY);
+        };
+        const handleEnd = (e) => {
+          if (!drag || (e && e.pointerId !== drag.pointerId)) return;
+          const { row, ghost, overDay } = drag;
+          unlockTouchAction();
+          ghost.remove();
+          row.classList.remove('dragging');
+          row.style.opacity = '';
+          row.style.pointerEvents = '';
+          document.removeEventListener('pointermove', handleMove);
+          document.removeEventListener('pointerup', handleEnd);
+          document.removeEventListener('pointercancel', handleEnd);
+          drag = null;
+
+          if (overDay) {
+            overDay.classList.remove('backlog-drop-target');
+            const dayKey = overDay.dataset.day;
+            const i = Number(row.dataset.i);
+            const entry = items[i];
+            items.splice(i, 1);
+            saveBacklogDebounced(items);
+
+            if (!weekplan[dayKey]) weekplan[dayKey] = [];
+            weekplan[dayKey].push(entry);
+            saveWeekplan(weekplan);
+            weekplanUploadDebounced();
+            const selectedDiv = overDay.querySelector('.weekplan-selected');
+            if (selectedDiv) {
+              let displayName = '';
+              if (entry.startsWith('TEXT:')) {
+                displayName = entry.substring(5);
+              } else {
+                const recipe = data.recipes.find(r => r.id === entry);
+                displayName = recipe ? titleWithEmoji(recipe) : '';
+              }
+              if (displayName) {
+                selectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, displayName, dayKey));
+                attachTagHandlers(selectedDiv, weekplan, controller);
+              }
+            }
+            toast('📅 In den Wochenplan verschoben');
+          }
+          rerender();
+        };
+        document.addEventListener('pointermove', handleMove);
+        document.addEventListener('pointerup', handleEnd);
+        document.addEventListener('pointercancel', handleEnd);
+      };
+    }
+  }
+
+  reattachListeners();
+  attachDragHandlers();
 
   return controller;
 }
@@ -1621,6 +1630,13 @@ function renderWeekplan(skipSync = false) {
       <div class="backlog-section">
         <h3 class="backlog-heading">📝 Rezept-Backlog</h3>
         <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche</div>
+        <div class="backlog-autocomplete">
+          <div class="backlog-input-row">
+            <input type="text" class="backlog-search" placeholder="Rezept hinzufügen oder Notiz schreiben …" autocomplete="off">
+            <button class="backlog-add-btn" title="Freitext-Notiz hinzufügen">+</button>
+          </div>
+          <div class="backlog-suggestions" hidden></div>
+        </div>
         <div class="backlog-list" id="backlog-list">${backlogListHTML(getBacklogItems())}</div>
       </div>
     </div>`;
