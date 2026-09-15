@@ -2920,3 +2920,26 @@ input:checked + .slider:before {
   opacity: 0.6;
   background: var(--accent-soft);
 }
+
+/* ===== Scroll-Label für Buchstaben ===== */
+.scroll-letter-label {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(80px, 30vw, 200px);
+  font-weight: bold;
+  color: var(--text);
+  opacity: 0.35;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+.scroll-letter-label[hidden] {
+  opacity: 0;
+  display: block;
+  pointer-events: none;
+}

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T14:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T14:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -440,6 +440,58 @@ function groupedList() {
   return items;
 }
 
+// Scroll-Label für Buchstaben beim Alphabetischen Sortieren
+function setupScrollLabel() {
+  const grid = $('#grid');
+  if (!grid) return;
+
+  let scrollLabelEl = document.querySelector('.scroll-letter-label');
+  if (!scrollLabelEl) {
+    scrollLabelEl = document.createElement('div');
+    scrollLabelEl.className = 'scroll-letter-label';
+    document.body.appendChild(scrollLabelEl);
+  }
+
+  let hideTimer = null;
+  let lastLetter = null;
+
+  const updateLabel = () => {
+    // Nur bei alphabetischer Sortierung ohne Suche
+    if (sortMode !== 'alpha' || activeCategory !== 'Alle' || query.trim()) {
+      scrollLabelEl.hidden = true;
+      return;
+    }
+
+    // Finde den obersten sichtbaren Divider
+    const dividers = grid.querySelectorAll('.grid-divider span');
+    if (!dividers.length) return;
+
+    let currentLetter = null;
+    for (const span of dividers) {
+      const rect = span.getBoundingClientRect();
+      if (rect.top < window.innerHeight / 2) {
+        currentLetter = span.textContent;
+      } else {
+        break;
+      }
+    }
+
+    if (currentLetter && currentLetter !== lastLetter) {
+      lastLetter = currentLetter;
+      scrollLabelEl.textContent = currentLetter;
+      scrollLabelEl.hidden = false;
+
+      // Verstecke nach 1 Sekunde, falls kein neuer Buchstaben-Wechsel kommt
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => {
+        scrollLabelEl.hidden = true;
+      }, 1000);
+    }
+  };
+
+  window.addEventListener('scroll', updateLabel, { passive: true });
+}
+
 function render() {
   // Kategorie-Chips
   const chips = $('#chips');
@@ -527,6 +579,8 @@ function render() {
   $('#status').textContent = data.recipes.length
     ? `${data.recipes.length} Rezepte · Stand: ${data.updated ? new Date(data.updated).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–'}`
     : '';
+
+  setupScrollLabel();
 }
 
 /* ---------- Detailansicht ---------- */
