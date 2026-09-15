@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T14:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T15:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1485,10 +1485,23 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
       return false;
     }
     function updateOverBacklog(x, y) {
-      const overBacklog = !!document.elementFromPoint(x, y)?.closest('.backlog-section');
+      const targetEl = document.elementFromPoint(x, y);
+      const overBacklog = !!targetEl?.closest('.backlog-section');
+      const overDay = targetEl?.closest('.weekplan-day');
+      const currentDay = tag.dataset.day;
+      const targetDay = overDay?.dataset.day;
+
       if (overBacklog !== tagDrag.overBacklog) {
         document.querySelector('.backlog-section')?.classList.toggle('backlog-drop-target', overBacklog);
         tagDrag.overBacklog = overBacklog;
+      }
+      if (targetDay && targetDay !== currentDay && targetDay !== tagDrag.overDay) {
+        document.querySelector(`[data-day="${tagDrag.overDay}"]`)?.classList.remove('backlog-drop-target');
+        overDay?.classList.add('backlog-drop-target');
+        tagDrag.overDay = targetDay;
+      } else if (!targetDay && tagDrag.overDay) {
+        document.querySelector(`[data-day="${tagDrag.overDay}"]`)?.classList.remove('backlog-drop-target');
+        tagDrag.overDay = null;
       }
     }
     let tagDrag = null;
@@ -1535,22 +1548,36 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
 
     const endTagDrag = (e) => {
       if (!tagDrag || (e && e.pointerId !== tagDrag.pointerId)) return;
-      const { moved, overBacklog } = tagDrag;
+      const { moved, overBacklog, overDay } = tagDrag;
       tag.style.pointerEvents = '';
       tag.classList.remove('tag-dragging');
       tag.style.transform = '';
       document.querySelector('.backlog-section')?.classList.remove('backlog-drop-target');
+      document.querySelectorAll('.weekplan-day.backlog-drop-target').forEach(d => d.classList.remove('backlog-drop-target'));
       tagDrag = null;
       if (!moved) return;
       unlockTouchAction();
-      tag.dataset.justDragged = '1'; // unterdrückt das nachfolgende Klick-Event (Rezept öffnen)
+      tag.dataset.justDragged = '1';
 
-      if (overBacklog) {
-        const dayKey = tag.dataset.day;
-        const text = tag.querySelector('.weekplan-tag-text')?.textContent || '';
-        const idx = (weekplan[dayKey] || []).indexOf(entry);
+      const fromDay = tag.dataset.day;
+
+      // Tag zu anderem Wochentag
+      if (overDay && overDay !== fromDay) {
+        const idx = (weekplan[fromDay] || []).indexOf(entry);
         if (idx > -1) {
-          weekplan[dayKey].splice(idx, 1);
+          weekplan[fromDay].splice(idx, 1);
+          if (!weekplan[overDay]) weekplan[overDay] = [];
+          weekplan[overDay].push(entry);
+          saveWeekplan(weekplan);
+          weekplanUploadDebounced();
+          tag.remove();
+          toast('📅 In anderen Wochentag verschoben');
+        }
+      } else if (overBacklog) {
+        const text = tag.querySelector('.weekplan-tag-text')?.textContent || '';
+        const idx = (weekplan[fromDay] || []).indexOf(entry);
+        if (idx > -1) {
+          weekplan[fromDay].splice(idx, 1);
           saveWeekplan(weekplan);
           weekplanUploadDebounced();
           tag.remove();
