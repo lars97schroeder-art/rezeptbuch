@@ -462,7 +462,7 @@ function setupScrollLabel() {
       return;
     }
 
-    // Finde das oberste linke Rezept (erste Zeile, linke Seite)
+    // Finde das oberste linke Rezept (erste Zeile, linke Seite) im sichtbaren Bereich
     const cards = grid.querySelectorAll('.card');
     if (!cards.length) return;
 
@@ -472,12 +472,15 @@ function setupScrollLabel() {
 
     for (const card of cards) {
       const rect = card.getBoundingClientRect();
-      if (rect.top > window.innerHeight) break;
+      // Nur sichtbare Cards betrachten (im Viewport oder gerade oben raus)
+      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+
       if (rect.top < minY) {
         minY = rect.top;
         minX = rect.left;
         topLeftCard = card;
       } else if (Math.abs(rect.top - minY) < 5 && rect.left < minX) {
+        // Gleiche Zeile aber weiter links
         minX = rect.left;
         topLeftCard = card;
       }
