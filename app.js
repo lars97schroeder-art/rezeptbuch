@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T19:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T19:15:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1550,7 +1550,10 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
   // Ziehgriff links (wie beim Backlog): nur so kann man die Pille verschieben,
   // das ausschließlich dort verankerte Long-Press verhindert, dass das Handy
   // ein Gedrückthalten auf dem Text als "Text markieren" interpretiert.
-  return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
+  // Ohne Griff (ausgeblendeter/vergangener Tag, nur lesbar) bekommt die
+  // Pille die Klasse "no-drag" — sonst bliebe die für den Griff gedachte
+  // eckige linke Ecke ohne Griff stehen und die Pille wirkt "gequetscht".
+  return `<span class="weekplan-tag${readonly ? ' no-drag' : ''}" data-entry="${esc(entry)}" data-day="${dayKey}">` +
     (readonly ? '' : `<span class="weekplan-tag-drag" aria-label="Verschieben">⠿</span>`) +
     `<span class="weekplan-tag-text${isRecipe ? ' clickable' : ''}">${esc(displayName)}</span>` +
     (readonly ? '' : `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button>`) +

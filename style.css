@@ -2490,6 +2490,15 @@ html.color-rainbow .t-card.foodmatch {
   touch-action: none;
 }
 
+/* Ausgeblendete/vergangene Tage haben keinen Ziehgriff (nur zum Ansehen) —
+   dann wieder eine ganz normale, komplett runde Pille statt der für den
+   Griff gedachten eckigen linken Ecke, sonst wirkt sie "gequetscht". Der
+   Text braucht dafür eigenes linkes Padding, das sonst der Griff mitbringt. */
+.weekplan-tag.no-drag {
+  border-radius: 999px;
+  padding-left: 12px;
+}
+
 /* Ziehgriff links: nur DORT gilt das Gedrückthalten als Zieh-Wunsch — auf
    dem Text selbst würde ein Handy das sonst als "Text markieren"-Geste
    interpretieren. -webkit-touch-callout unterdrückt das native
