@@ -2463,7 +2463,7 @@ html.color-rainbow .t-card.foodmatch {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px 6px 12px;
+  padding: 6px 8px 6px 8px;
   background: var(--accent);
   color: #fff;
   border-radius: 999px;
@@ -2476,9 +2476,25 @@ html.color-rainbow .t-card.foodmatch {
   touch-action: none;
 }
 
+/* Kleiner Ziehgriff links: nur DORT gilt das Gedrückthalten als Zieh-
+   Wunsch — auf dem Text selbst würde ein Handy das sonst als "Text
+   markieren"-Geste interpretieren. -webkit-touch-callout unterdrückt das
+   native Auswahlmenü zusätzlich, falls es doch mal anspringt. */
+.weekplan-tag-drag {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .weekplan-tag-text {
   overflow-wrap: anywhere;
   min-width: 0;
+  -webkit-touch-callout: none;
 }
 .weekplan-tag-text.clickable { cursor: pointer; }
 

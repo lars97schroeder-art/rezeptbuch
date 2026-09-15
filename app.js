@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T17:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T18:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1081,6 +1081,7 @@ function flushWeekplanUpload() {
 
 const BACKLOG_KEY = 'rezeptbuch-notes';
 const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
+const BACKLOG_LONGPRESS_MS = 500; // halbe Sekunde gedrückt halten, bevor sich die Zeile löst
 
 // Migriert einen einzelnen Eintrag: Rezept-IDs und "TEXT:..." bleiben
 // unverändert, alte reine Freitext-Einträge (aus der Zeit vor der
@@ -1162,13 +1163,14 @@ function flushBacklogUpload() {
 // Löschen-Button rechts. Einträge können Rezept-IDs oder TEXT:... Freitext sein.
 function backlogRowHTML(entry, i) {
   let displayName = '';
-  let emoji = '📝';
+  let emoji = '👨‍🍳'; // Freitext-Notizen ohne verknüpftes Rezept: Koch-Emoji
   const isText = entry.startsWith('TEXT:');
   if (isText) {
     displayName = entry.substring(5);
   } else {
     const recipe = data.recipes.find(r => r.id === entry);
     displayName = recipe ? recipe.title : '';
+    // Rezept gefunden: dessen eigenes hinterlegtes Emoji übernehmen
     emoji = recipe ? emojiFor(recipe) : '❓';
   }
   if (!displayName) return '';
@@ -1391,13 +1393,14 @@ function wireBacklogList(el, weekplan) {
       handle.onpointerdown = null;
     }
     for (const handle of list.querySelectorAll('.backlog-drag')) {
-      handle.onpointerdown = (e) => {
-        const row = handle.closest('.backlog-row');
-        const i = Number(row.dataset.i);
-        if (i >= items.length) return;
-        e.preventDefault();
-        e.stopPropagation();
+      // Erst nach 0.5s Gedrückthalten auf dem Griff löst sich die Zeile zum
+      // Verschieben — sofortiges Aktivieren war auf echten Geräten nicht
+      // zuverlässig (Konflikt mit der nativen Scroll-Gesten-Erkennung).
+      let pendingPointerId = null;
+      let pendingStartX = 0, pendingStartY = 0;
+      let pressTimer = null;
 
+      const activate = (row, startX, startY, pointerId) => {
         const rect = row.getBoundingClientRect();
         const ghost = row.cloneNode(true);
         ghost.classList.add('backlog-ghost');
@@ -1411,13 +1414,12 @@ function wireBacklogList(el, weekplan) {
         document.body.appendChild(ghost);
 
         drag = {
-          row, ghost, pointerId: e.pointerId, startClientX: e.clientX, startClientY: e.clientY,
-          overDay: null, lastClientX: e.clientX, lastClientY: e.clientY,
+          row, ghost, pointerId, startClientX: startX, startClientY: startY,
+          overDay: null, lastClientX: startX, lastClientY: startY,
         };
         row.classList.add('dragging');
         row.style.opacity = '0';
         row.style.pointerEvents = 'none';
-        try { row.setPointerCapture(e.pointerId); } catch (err) { }
         lockTouchAction();
         if (!autoScrollTimer) autoScrollTimer = setInterval(autoScrollTick, 16);
 
@@ -1469,6 +1471,11 @@ function wireBacklogList(el, weekplan) {
               }
             }
             toast('📅 In den Wochenplan verschoben');
+          } else {
+            // Nur umsortiert (nicht auf einen Wochentag gezogen) — die
+            // neue Reihenfolge muss hier explizit gespeichert werden,
+            // sonst geht sie beim nächsten Sync/Neuladen wieder verloren.
+            saveBacklogDebounced(items);
           }
           rerender();
         };
@@ -1476,6 +1483,47 @@ function wireBacklogList(el, weekplan) {
         document.addEventListener('pointerup', handleEnd);
         document.addEventListener('pointercancel', handleEnd);
       };
+
+      handle.onpointerdown = (e) => {
+        const row = handle.closest('.backlog-row');
+        const i = Number(row.dataset.i);
+        if (i >= items.length) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        pendingPointerId = e.pointerId;
+        pendingStartX = e.clientX;
+        pendingStartY = e.clientY;
+        try { handle.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          if (pendingPointerId === null) return; // Finger schon losgelassen
+          activate(row, pendingStartX, pendingStartY, pendingPointerId);
+        }, BACKLOG_LONGPRESS_MS);
+      };
+
+      handle.onpointermove = (e) => {
+        if (pendingPointerId !== e.pointerId || drag) return;
+        // Noch in der Long-Press-Wartezeit: zu viel Bewegung = kein Zug-
+        // Wunsch, sondern Scroll-Versuch o.ä. — Long-Press abbrechen
+        const dx = e.clientX - pendingStartX, dy = e.clientY - pendingStartY;
+        if (Math.hypot(dx, dy) > 12) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      const cancelPending = (e) => {
+        if (pendingPointerId !== null && (!e || e.pointerId === pendingPointerId)) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+          pendingPointerId = null;
+        }
+      };
+      handle.onpointerup = cancelPending;
+      handle.onpointercancel = cancelPending;
     }
   }
 
@@ -1489,7 +1537,11 @@ function wireBacklogList(el, weekplan) {
 // In vergangenen Wochen (readonly) entfällt der X-Button zum Entfernen.
 function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
   const isRecipe = !entry.startsWith('TEXT:');
+  // Ziehgriff links (wie beim Backlog): nur so kann man die Pille verschieben,
+  // das ausschließlich dort verankerte Long-Press verhindert, dass das Handy
+  // ein Gedrückthalten auf dem Text als "Text markieren" interpretiert.
   return `<span class="weekplan-tag" data-entry="${esc(entry)}" data-day="${dayKey}">` +
+    (readonly ? '' : `<span class="weekplan-tag-drag" aria-label="Verschieben">⠿</span>`) +
     `<span class="weekplan-tag-text${isRecipe ? ' clickable' : ''}">${esc(displayName)}</span>` +
     (readonly ? '' : `<button class="weekplan-tag-remove" data-entry="${esc(entry)}" data-day="${dayKey}" aria-label="Entfernen">✕</button>`) +
     `</span>`;
@@ -1540,7 +1592,8 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
     // Ziehen (zu anderem Tag oder zurück ins Backlog) — nur möglich, wenn
     // der Eintrag einen Entfernen-Button hat (also nicht in einer
     // vergangenen Woche oder einem ausgeblendeten/"ausgegrauten" Tag steht)
-    if (!backlogCtl || !tag.querySelector('.weekplan-tag-remove')) continue;
+    const dragHandle = tag.querySelector('.weekplan-tag-drag');
+    if (!backlogCtl || !dragHandle) continue;
 
     // #detail ist der scrollende Container (position:fixed + eigenes
     // overflow-y:auto) — das Backlog liegt meist erst weiter unten
@@ -1614,12 +1667,16 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
     // wird bei jedem neuen Eintrag erneut für ALLE Tags des Tages aufgerufen
     // (nicht nur den neuen), addEventListener würde sich dadurch bei jedem
     // Aufruf zusätzlich aufsummieren und Gesten mehrfach auslösen.
-    tag.onpointerdown = (e) => {
-      if (e.target.closest('.weekplan-tag-remove')) return;
+    // Die Handler hängen bewusst NUR am kleinen Ziehgriff links (⠿), nicht
+    // an der ganzen Pille: hält man stattdessen auf dem Text gedrückt,
+    // interpretieren manche Handys das sonst als "Text markieren"-Geste.
+    dragHandle.onpointerdown = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       pendingPointerId = e.pointerId;
       pendingStartX = e.clientX;
       pendingStartY = e.clientY;
-      try { tag.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+      try { dragHandle.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
       clearTimeout(pressTimer);
       pressTimer = setTimeout(() => {
         pressTimer = null;
@@ -1628,7 +1685,7 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
       }, TAG_LONGPRESS_MS);
     };
 
-    tag.onpointermove = (e) => {
+    dragHandle.onpointermove = (e) => {
       if (pendingPointerId !== e.pointerId) return;
       if (!tagDrag) {
         // Noch in der Long-Press-Wartezeit: zu viel Bewegung = kein Zug-Wunsch,
@@ -1698,8 +1755,8 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
         }
       }
     };
-    tag.onpointerup = endTagDrag;
-    tag.onpointercancel = endTagDrag;
+    dragHandle.onpointerup = endTagDrag;
+    dragHandle.onpointercancel = endTagDrag;
   }
 }
 
