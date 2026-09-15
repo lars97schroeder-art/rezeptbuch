@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T15:30:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T16:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1082,16 +1082,29 @@ function flushWeekplanUpload() {
 const BACKLOG_KEY = 'rezeptbuch-notes';
 const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
 
+// Migriert einen einzelnen Eintrag: Rezept-IDs und "TEXT:..." bleiben
+// unverändert, alte reine Freitext-Einträge (aus der Zeit vor der
+// Rezept-Suche im Backlog) bekommen automatisch das "TEXT:"-Präfix, damit
+// sie nicht mehr stillschweigend beim Rendern verschwinden (backlogRowHTML
+// gibt für einen Eintrag ohne Treffer sonst einen leeren String zurück).
+function migrateBacklogEntry(entry) {
+  if (entry.startsWith('TEXT:')) return entry;
+  if (data.recipes.some(r => r.id === entry)) return entry;
+  return 'TEXT:' + entry;
+}
+
 function getBacklogItems() {
   const raw = localStorage.getItem(BACKLOG_KEY);
   if (!raw) return [];
+  let items;
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.filter(x => typeof x === 'string');
+    items = Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string') : null;
   } catch (e) { /* alter Fließtext, kein JSON — unten migrieren */ }
-  const items = raw.split('\n').map(s => s.trim()).filter(Boolean);
-  saveBacklogItemsLocal(items);
-  return items;
+  if (!items) items = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  const migrated = items.map(migrateBacklogEntry);
+  if (JSON.stringify(migrated) !== JSON.stringify(items)) saveBacklogItemsLocal(migrated);
+  return migrated;
 }
 
 function saveBacklogItemsLocal(items) {
@@ -1574,7 +1587,14 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
           weekplan[overDay].push(entry);
           saveWeekplan(weekplan);
           weekplanUploadDebounced();
+          const displayName = tag.querySelector('.weekplan-tag-text')?.textContent || '';
           tag.remove();
+          const targetDayEl = document.querySelector(`.weekplan-day[data-day="${overDay}"]`);
+          const targetSelectedDiv = targetDayEl?.querySelector('.weekplan-selected');
+          if (targetSelectedDiv && displayName) {
+            targetSelectedDiv.insertAdjacentHTML('beforeend', weekplanTagHTML(entry, displayName, overDay));
+            attachTagHandlers(targetSelectedDiv, weekplan, backlogCtl);
+          }
           toast('📅 In anderen Wochentag verschoben');
         }
       } else if (overBacklog) {
