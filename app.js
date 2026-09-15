@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T19:45:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T20:15:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -37,22 +37,34 @@ function recipeMode(r) {
 
 const $ = s => document.querySelector(s);
 
-// Sperrt/entsperrt native Touch-Gesten (Scrollen etc.) für den GESAMTEN
-// Bildschirm während eines eigenen Drags (Backlog↔Wochenplan). Ohne das
-// kann der Finger, sobald er über ein Element ohne eigenes touch-action:none
-// wandert (z.B. die Backlog-Überschrift), vom Browser als native Scroll-
-// Geste übernommen werden — das unterbricht dann unsere pointermove-Events
-// mittendrin, als würde die gezogene Kachel an einer unsichtbaren Wand
-// hängenbleiben. document.body statt nur des Griffs, damit es wirklich
-// überall auf dem Bildschirm funktioniert, nicht nur direkt am Griff.
+// Sperrt/entsperrt native Touch-Gesten (Scrollen etc.) UND Text-Markieren
+// für den GESAMTEN Bildschirm während eines eigenen Drags (Backlog↔
+// Wochenplan). Ohne das touch-action-Sperren kann der Finger, sobald er
+// über ein Element ohne eigenes touch-action:none wandert (z.B. die
+// Backlog-Überschrift), vom Browser als native Scroll-Geste übernommen
+// werden — das unterbricht dann unsere pointermove-Events mittendrin, als
+// würde die gezogene Kachel an einer unsichtbaren Wand hängenbleiben. Ohne
+// das Sperren von user-select/-webkit-touch-callout kann der Finger beim
+// Ziehen über benachbarte Zeilen/Text hinweg dort eine native Text-
+// markieren-Geste auslösen, obwohl gerade eigentlich gezogen wird.
+// document.body statt nur des Griffs, damit es wirklich überall auf dem
+// Bildschirm funktioniert, nicht nur direkt am Griff.
 let touchActionLockCount = 0;
 function lockTouchAction() {
-  if (touchActionLockCount++ === 0) document.body.style.touchAction = 'none';
+  if (touchActionLockCount++ === 0) {
+    document.body.style.touchAction = 'none';
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.webkitTouchCallout = 'none';
+  }
 }
 function unlockTouchAction() {
   if (--touchActionLockCount <= 0) {
     touchActionLockCount = 0;
     document.body.style.touchAction = '';
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+    document.body.style.webkitTouchCallout = '';
   }
 }
 
@@ -1213,7 +1225,12 @@ function wireBacklogList(el, weekplan) {
   if (!list || !autocompleteDiv) return null;
 
   let items = getBacklogItems();
-  const rerender = () => { list.innerHTML = backlogListHTML(items); reattachListeners(); };
+  // WICHTIG: attachDragHandlers() muss nach JEDEM Neuzeichnen erneut laufen —
+  // list.innerHTML ersetzt alle Zeilen komplett, die neuen .backlog-drag-
+  // Griffe haben sonst keinerlei Pointer-Handler mehr (Bug: nach Löschen/
+  // Bearbeiten/Hinzufügen eines Eintrags ließ sich plötzlich GAR NICHTS
+  // mehr per Touch verschieben, weil rerender() das bisher vergessen hat).
+  const rerender = () => { list.innerHTML = backlogListHTML(items); reattachListeners(); attachDragHandlers(); };
   const controller = {
     refresh() {
       items = getBacklogItems();
