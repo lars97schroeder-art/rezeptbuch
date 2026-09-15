@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T20:45:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T21:00:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -702,8 +702,8 @@ function wirePhotoDots(el) {
 function detailDatesHTML(r) {
   const fmt = iso => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const lines = [];
-  if (r.created) lines.push(`Hinzugefügt am ${fmt(r.created)}`);
   if (r.updated) lines.push(`Zuletzt bearbeitet am ${fmt(r.updated)}`);
+  if (r.created) lines.push(`Hinzugefügt am ${fmt(r.created)}`);
   if (!lines.length) return '';
   return `<div class="detail-dates">${lines.map(esc).join('<br>')}</div>`;
 }
