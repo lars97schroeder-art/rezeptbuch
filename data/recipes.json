@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-09-12T18:38:03.305Z",
+  "updated": "2026-09-15T18:19:18.161Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -112,7 +112,8 @@
       ],
       "steps": [],
       "notes": "Rucola, Pesto, Tomaten",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "curry-kokos-pasta",
@@ -137,7 +138,8 @@
       ],
       "steps": [],
       "notes": "Mit Karotten und Zucchini",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "spaghetti-carbonara",
@@ -171,7 +173,8 @@
       ],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-16T17:24:26.475Z"
+      "updated": "2026-07-16T17:24:26.475Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "schinkennudeln",
@@ -192,7 +195,8 @@
       ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "bolognese",
@@ -211,7 +215,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Macht Annika eh am besten",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "brokkoli-pasta",
@@ -223,7 +228,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "tuerkische-pasta",
@@ -267,7 +273,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "lasagne",
@@ -283,7 +290,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "nasty-gnocchi",
@@ -314,7 +322,8 @@
       ],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-23T19:26:51.887Z"
+      "updated": "2026-07-23T19:26:51.887Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "gnocchi-mit-cashew-pesto",
@@ -347,7 +356,8 @@
       ],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-09-06T21:18:24.145Z"
+      "updated": "2026-09-06T21:18:24.145Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "sommerrollen",
@@ -367,7 +377,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "curry",
@@ -379,7 +390,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kokosmilch-gemuese-mit-sojasosse",
@@ -405,7 +417,8 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-21T17:34:15.889Z"
+      "updated": "2026-07-21T17:34:15.889Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "asia-snoodles-pfanne",
@@ -445,7 +458,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "burger",
@@ -462,7 +476,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Normal, Smashed, oder Veggie ?",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "gyros",
@@ -474,7 +489,8 @@
       "image": "data/images/gyros-1783240941.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": "Varianten: im Pita, mit Reis oder mit griechischem Salat"
+      "notes": "Varianten: im Pita, mit Reis oder mit griechischem Salat",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "selbstgemachte-pommes-a-la-andreas",
@@ -486,7 +502,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "spareribs",
@@ -498,7 +515,8 @@
       "image": "data/images/spareribs-1783243065.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "spinatknoedel",
@@ -515,7 +533,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kaspressknoedel",
@@ -527,7 +546,8 @@
       "image": "data/images/kaspressknoedel-1783240941.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "schnitzel",
@@ -544,7 +564,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "karamellisierter-rosenkohl",
@@ -556,7 +577,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "frikadellen",
@@ -601,7 +623,8 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-10T15:50:03.835Z"
+      "updated": "2026-07-10T15:50:03.835Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "koettbullar",
@@ -625,7 +648,8 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-10T15:49:15.792Z"
+      "updated": "2026-07-10T15:49:15.792Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "sellerieschnitzel",
@@ -644,7 +668,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Auf dem Foto mit süßkartoffelpüree",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "bratwuerste-mit-sauerkraut",
@@ -697,7 +722,8 @@
         "Mit gerösteten Kürbiskernen servieren."
       ],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kartoffelsuppe",
@@ -717,7 +743,8 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-09-12T18:38:03.305Z"
+      "updated": "2026-09-12T18:38:03.305Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "linseneintopf",
@@ -729,7 +756,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "gulasch",
@@ -747,7 +775,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Rezept von siggi holen!!",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "gemuesesuppe",
@@ -765,7 +794,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "rattatatatatatouille",
@@ -781,7 +811,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Mit Nudeln oder Reis, Auch Maustartouille genannt",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kartoffel-hackfleisch-pfanne",
@@ -799,7 +830,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Oder halt schupfnudeln haha",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "spanische-tortilla",
@@ -817,7 +849,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Rezept vom Kochkurs mit Ros aus Barcelona raussuchen",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kartoffelgratin",
@@ -829,7 +862,8 @@
       "image": "",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "zwiebelkuchen",
@@ -874,7 +908,8 @@
       ],
       "notes": "Gurkensalat eignet sich als Beilage 😋",
       "bereich": "kochen",
-      "updated": "2026-07-26T10:08:49.716Z"
+      "updated": "2026-07-26T10:08:49.716Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "shakshuka",
@@ -894,7 +929,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Eier in Tomatensoße, mit Käse überbacken – Brot dazu",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "haehnchen-mit-gruenem-spargel",
@@ -915,7 +951,8 @@
       ],
       "steps": [],
       "notes": "Mit Kartoffeln und Quark-Dip",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "wraps",
@@ -937,7 +974,8 @@
       "related": [
         "wrap-sauce"
       ],
-      "updated": "2026-08-01T10:33:33.322Z"
+      "updated": "2026-08-01T10:33:33.322Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "backcamembert-mit-salat",
@@ -1033,7 +1071,8 @@
       "image": "data/images/italienisches-baguette-1783240941.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": "Baguette mit Parmaschinken und Mozzarella"
+      "notes": "Baguette mit Parmaschinken und Mozzarella",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "brotzeit",
@@ -1051,7 +1090,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "hot-dogs",
@@ -1099,7 +1139,8 @@
         "Ggf Salat rein, genießen"
       ],
       "notes": "",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "maxvorstadt-sandwich",
@@ -1126,7 +1167,8 @@
       ],
       "steps": [],
       "notes": "",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "strammer-max-nach-annikas-art",
@@ -1147,7 +1189,8 @@
       ],
       "steps": [],
       "notes": "I knowwww das Foto ist nicht repräsentativ 🥺",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "granola",
@@ -1183,7 +1226,8 @@
       ],
       "notes": "Joghurt-Bowl mit Schoko-Granola, Haferflocken und frischem Obst",
       "bereich": "fruehstueck",
-      "updated": "2026-07-11T08:01:46.381Z"
+      "updated": "2026-07-11T08:01:46.381Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "bananenbrot",
@@ -1201,7 +1245,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Annika meint Kuchen… pfhhhh 😉😘",
-      "bereich": "backen"
+      "bereich": "backen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "weisswurst",
@@ -1223,7 +1268,8 @@
       ],
       "steps": [],
       "notes": "O’zapft is",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "pfannkuchen",
@@ -1256,7 +1302,8 @@
       "notes": "",
       "bereich": "kochen",
       "group": "Pfannkuchen",
-      "updated": "2026-07-12T07:15:56.866Z"
+      "updated": "2026-07-12T07:15:56.866Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "milchreis",
@@ -1268,7 +1315,8 @@
       "image": "data/images/milchreis-1783240941.jpg",
       "ingredients": [],
       "steps": [],
-      "notes": ""
+      "notes": "",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "kaesekuchen",
@@ -1286,7 +1334,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Auch bekannt als Lars Geburtstagskuchen 😋",
-      "bereich": "backen"
+      "bereich": "backen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "maultaschen-pfanne",
@@ -1310,7 +1359,8 @@
       "steps": [],
       "notes": "Wenn man mag, Gurkensalat dazu",
       "bereich": "kochen",
-      "updated": "2026-07-16T17:25:10.705Z"
+      "updated": "2026-07-16T17:25:10.705Z",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "zucchini-puffer",
@@ -1328,7 +1378,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "waffeln",
@@ -1347,7 +1398,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Die besten Waffelrezepte sind in Annika’s Waffelbuch ♥️",
-      "bereich": "backen"
+      "bereich": "backen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "annika-s-pfannkuchen-crepes",
@@ -1453,7 +1505,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "spinat-pasta",
@@ -1475,7 +1528,8 @@
       ],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "pesto-snoodels",
@@ -1491,7 +1545,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "kochen"
+      "bereich": "kochen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "annika-s-san-diego-breakfast-bagel",
@@ -1508,7 +1563,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "",
-      "bereich": "fruehstueck"
+      "bereich": "fruehstueck",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "karottenkuchen",
@@ -1524,7 +1580,8 @@
       "ingredients": [],
       "steps": [],
       "notes": "Aka Annika’s Geburtstagskuchen ♥️",
-      "bereich": "backen"
+      "bereich": "backen",
+      "created": "2026-07-04T12:00:00.000Z"
     },
     {
       "id": "zitronentarte",
