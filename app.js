@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T20:15:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T20:45:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1109,7 +1109,7 @@ function flushWeekplanUpload() {
 
 const BACKLOG_KEY = 'rezeptbuch-notes';
 const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
-const BACKLOG_LONGPRESS_MS = 500; // halbe Sekunde gedrückt halten, bevor sich die Zeile löst
+const BACKLOG_LONGPRESS_MS = 200; // 0.2 Sekunden gedrückt halten, bevor sich die Zeile löst
 
 // Migriert einen einzelnen Eintrag: Rezept-IDs und "TEXT:..." bleiben
 // unverändert, alte reine Freitext-Einträge (aus der Zeit vor der
@@ -1444,6 +1444,7 @@ function wireBacklogList(el, weekplan) {
       let pressTimer = null;
 
       const activate = (row, startX, startY, pointerId) => {
+        hapticPulse();
         const rect = row.getBoundingClientRect();
         const ghost = row.cloneNode(true);
         ghost.classList.add('backlog-ghost');
@@ -1594,8 +1595,12 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
 }
 
 // Vibriert kurz, falls das Gerät die Vibration API unterstützt (Android
-// Chrome ja, iOS Safari leider nicht — dort bleibt es einfach stumm/no-op).
+// Chrome ja, iOS Safari leider nicht — dort bleibt es einfach stumm/no-op)
+// UND der Nutzer das nicht in den Einstellungen abgeschaltet hat.
+const VIBRATION_KEY = 'rezeptbuch-vibration';
+function vibrationEnabled() { return localStorage.getItem(VIBRATION_KEY) !== 'false'; }
 function hapticPulse(ms = 40) {
+  if (!vibrationEnabled()) return;
   try { navigator.vibrate?.(ms); } catch (e) { /* nicht unterstützt */ }
 }
 
@@ -2616,6 +2621,20 @@ function openSettings() {
     </div>
 
     <div class="settings-section">
+      <h3>Bedienung</h3>
+      <div class="settings-row">
+        <label class="setting-label">
+          <div class="toggle-slider">
+            <input type="checkbox" id="vibration-toggle" ${vibrationEnabled() ? 'checked' : ''}>
+            <span class="slider"></span>
+          </div>
+          <span>📳 Vibration beim Ziehen</span>
+        </label>
+        <div class="setting-hint">Kurzes haptisches Feedback, wenn sich eine Kachel/Pille zum Verschieben löst</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <h3>Verbindung</h3>
       <div class="settings-row">
         <label class="setting-label">
@@ -2673,6 +2692,14 @@ function openSettings() {
     editToggle.onchange = () => {
       localStorage.setItem(EDIT_ENABLED_KEY, editToggle.checked ? 'true' : 'false');
       render();
+    };
+  }
+
+  const vibrationToggle = el.querySelector('#vibration-toggle');
+  if (vibrationToggle) {
+    vibrationToggle.onchange = () => {
+      localStorage.setItem(VIBRATION_KEY, vibrationToggle.checked ? 'true' : 'false');
+      if (vibrationToggle.checked) hapticPulse(); // kurzes Feedback als Bestätigung
     };
   }
 
