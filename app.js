@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T18:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T18:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1553,7 +1553,7 @@ function hapticPulse(ms = 40) {
   try { navigator.vibrate?.(ms); } catch (e) { /* nicht unterstützt */ }
 }
 
-const TAG_LONGPRESS_MS = 1000; // eine Sekunde gedrückt halten, bevor sich die Pille löst
+const TAG_LONGPRESS_MS = 300; // 0.3 Sekunden gedrückt halten, bevor sich die Pille löst
 
 // Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen
 // öffnet das Rezept, Gedrückt-Halten (~1s) löst die Pille zum Verschieben
@@ -1872,6 +1872,7 @@ function renderWeekplan(skipSync = false) {
         </div>
         <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
+      <div class="weekplan-draghint">⠿ gedrückt halten zum Verschieben</div>
       <div class="weekplan-container">
         ${daysHTML}
       </div>

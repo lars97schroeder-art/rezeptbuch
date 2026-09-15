@@ -2215,6 +2215,16 @@ html.color-rainbow .t-card.foodmatch {
   margin: 4px 0 18px;
 }
 
+/* Dezenter Hinweis, dass Pillen/Backlog-Zeilen per Gedrückthalten am
+   Griff verschiebbar sind — klein und unauffällig, damit es nicht wie
+   eine zusätzliche Bedienebene wirkt, sondern nur beiläufig erklärt. */
+.weekplan-draghint {
+  margin: -8px 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
 .weekplan-nav {
   flex: 0 0 auto;
   width: 58px;
@@ -2461,50 +2471,67 @@ html.color-rainbow .t-card.foodmatch {
 
 .weekplan-tag {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px 6px 8px;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 10px 0 0;
   background: var(--accent);
   color: #fff;
-  border-radius: 999px;
-  font-size: 13px;
+  /* Links eckiger statt komplett rund — macht den Ziehgriff-Bereich als
+     eigenes "Griff-Segment" optisch erkennbar, statt in der runden Pillen-
+     form unterzugehen. */
+  border-radius: 8px 999px 999px 8px;
+  font-size: 14px;
   font-weight: 600;
   max-width: 100%;
+  overflow: hidden;
   /* Sonst erkennt v.a. iOS Safari eine Fingerbewegung auf dem Tag als
      eigene Scroll-Geste, bevor unser Zieh-Handler (zurück ins Backlog)
      überhaupt zum Zug kommt — gleiches Problem wie beim Edge-Swipe-Guard. */
   touch-action: none;
 }
 
-/* Kleiner Ziehgriff links: nur DORT gilt das Gedrückthalten als Zieh-
-   Wunsch — auf dem Text selbst würde ein Handy das sonst als "Text
-   markieren"-Geste interpretieren. -webkit-touch-callout unterdrückt das
-   native Auswahlmenü zusätzlich, falls es doch mal anspringt. */
+/* Ziehgriff links: nur DORT gilt das Gedrückthalten als Zieh-Wunsch — auf
+   dem Text selbst würde ein Handy das sonst als "Text markieren"-Geste
+   interpretieren. -webkit-touch-callout unterdrückt das native
+   Auswahlmenü zusätzlich, falls es doch mal anspringt. align-items:stretch
+   auf dem Elternelement plus min-width/-height hier sorgen für eine
+   großzügige, leicht zu treffende Trefferfläche über die volle Pillenhöhe. */
 .weekplan-tag-drag {
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 17px;
   line-height: 1;
   cursor: grab;
+  background: rgba(0, 0, 0, 0.14);
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
 
 .weekplan-tag-text {
+  display: flex;
+  align-items: center;
   overflow-wrap: anywhere;
   min-width: 0;
+  padding: 7px 0;
   -webkit-touch-callout: none;
 }
 .weekplan-tag-text.clickable { cursor: pointer; }
 
 .weekplan-tag-remove {
+  align-self: center;
   background: rgba(255, 255, 255, 0.25);
   border: none;
   color: #fff;
   cursor: pointer;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
   padding: 0;
   font-size: 13px;
