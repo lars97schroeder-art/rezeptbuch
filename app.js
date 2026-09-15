@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T17:00:00+02:00';
+const APP_BUILD_TIME = '2026-09-15T17:30:00+02:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1495,7 +1495,20 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
     `</span>`;
 }
 
-// Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen öffnet das Rezept
+// Vibriert kurz, falls das Gerät die Vibration API unterstützt (Android
+// Chrome ja, iOS Safari leider nicht — dort bleibt es einfach stumm/no-op).
+function hapticPulse(ms = 40) {
+  try { navigator.vibrate?.(ms); } catch (e) { /* nicht unterstützt */ }
+}
+
+const TAG_LONGPRESS_MS = 1000; // eine Sekunde gedrückt halten, bevor sich die Pille löst
+
+// Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen
+// öffnet das Rezept, Gedrückt-Halten (~1s) löst die Pille zum Verschieben
+// (mit haptischem Feedback), danach folgt ein "Geist" (position:fixed-
+// Kopie) exakt dem Finger — gleiches robustes Muster wie beim Backlog-Drag,
+// das unabhängig vom Flex-Layout der Pillen-Reihe ist und deshalb nicht
+// mehr "herumfliegt", wenn sich die Umgebung während des Ziehens verschiebt.
 function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
   for (const removeBtn of selectedDiv.querySelectorAll('.weekplan-tag-remove')) {
     removeBtn.onclick = (e) => {
@@ -1524,49 +1537,77 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
       };
     }
 
-    // Zurück ins Backlog ziehen — nur möglich, wenn der Eintrag einen
-    // Entfernen-Button hat (also nicht in einer vergangenen Woche oder
-    // einem ausgeblendeten/"ausgegrauten" Tag steht)
+    // Ziehen (zu anderem Tag oder zurück ins Backlog) — nur möglich, wenn
+    // der Eintrag einen Entfernen-Button hat (also nicht in einer
+    // vergangenen Woche oder einem ausgeblendeten/"ausgegrauten" Tag steht)
     if (!backlogCtl || !tag.querySelector('.weekplan-tag-remove')) continue;
 
     // #detail ist der scrollende Container (position:fixed + eigenes
     // overflow-y:auto) — das Backlog liegt meist erst weiter unten
-    // außerhalb des sichtbaren Bereichs, daher auch hier Auto-Scroll wie
-    // beim umgekehrten Weg (Backlog → Wochenplan).
+    // außerhalb des sichtbaren Bereichs, daher Auto-Scroll wie beim
+    // Backlog-Drag.
     const detailEl = selectedDiv.closest('#detail');
     const AUTOSCROLL_MAX_SPEED = 18;
+    function autoScrollZoneTag() { return (detailEl?.clientHeight || 0) * 0.25; }
     function maybeAutoScrollTag(y) {
       if (!detailEl) return false;
-      const zone = detailEl.clientHeight * 0.25;
+      const zone = autoScrollZoneTag();
       if (y < zone) { detailEl.scrollBy(0, -AUTOSCROLL_MAX_SPEED * (1 - y / zone)); return true; }
       if (y > detailEl.clientHeight - zone) { detailEl.scrollBy(0, AUTOSCROLL_MAX_SPEED * (1 - (detailEl.clientHeight - y) / zone)); return true; }
       return false;
     }
-    function updateOverBacklog(x, y) {
+
+    let tagDrag = null; // aktiver Ghost-Drag (erst nach Long-Press)
+    let pressTimer = null; // Timer bis zur Aktivierung
+    let pendingPointerId = null;
+    let pendingStartX = 0, pendingStartY = 0;
+
+    function updateDragTargetsTag(x, y) {
       const targetEl = document.elementFromPoint(x, y);
       const overBacklog = !!targetEl?.closest('.backlog-section');
-      const overDay = targetEl?.closest('.weekplan-day');
-      const currentDay = tag.dataset.day;
-      const targetDay = overDay?.dataset.day;
+      const overDayEl = targetEl?.closest('.weekplan-day');
+      const overDay = overDayEl?.dataset.day || null;
 
       if (overBacklog !== tagDrag.overBacklog) {
         document.querySelector('.backlog-section')?.classList.toggle('backlog-drop-target', overBacklog);
         tagDrag.overBacklog = overBacklog;
       }
-      if (targetDay && targetDay !== currentDay && targetDay !== tagDrag.overDay) {
-        document.querySelector(`[data-day="${tagDrag.overDay}"]`)?.classList.remove('backlog-drop-target');
-        overDay?.classList.add('backlog-drop-target');
-        tagDrag.overDay = targetDay;
-      } else if (!targetDay && tagDrag.overDay) {
-        document.querySelector(`[data-day="${tagDrag.overDay}"]`)?.classList.remove('backlog-drop-target');
-        tagDrag.overDay = null;
+      if (overDay !== tagDrag.overDay) {
+        document.querySelector(`.weekplan-day[data-day="${tagDrag.overDay}"]`)?.classList.remove('backlog-drop-target');
+        if (overDay && overDay !== tagDrag.fromDay) overDayEl.classList.add('backlog-drop-target');
+        tagDrag.overDay = (overDay && overDay !== tagDrag.fromDay) ? overDay : null;
       }
     }
-    let tagDrag = null;
+
     let tagScrollTimer = null;
     function tagScrollTick() {
       if (!tagDrag) { clearInterval(tagScrollTimer); tagScrollTimer = null; return; }
-      if (maybeAutoScrollTag(tagDrag.lastY)) updateOverBacklog(tagDrag.lastX, tagDrag.lastY);
+      if (maybeAutoScrollTag(tagDrag.lastY)) updateDragTargetsTag(tagDrag.lastX, tagDrag.lastY);
+    }
+
+    // Aktiviert den eigentlichen Ghost-Drag nach abgeschlossenem Long-Press
+    function activateDrag(startX, startY) {
+      hapticPulse();
+      const rect = tag.getBoundingClientRect();
+      const ghost = tag.cloneNode(true);
+      ghost.classList.add('weekplan-tag-ghost');
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.margin = '0';
+      ghost.style.pointerEvents = 'none';
+      document.body.appendChild(ghost);
+
+      tag.style.opacity = '0';
+      tag.style.pointerEvents = 'none';
+      tagDrag = {
+        ghost, startClientX: startX, startClientY: startY,
+        lastX: startX, lastY: startY, overBacklog: false, overDay: null, fromDay: tag.dataset.day,
+      };
+      lockTouchAction();
+      if (!tagScrollTimer) tagScrollTimer = setInterval(tagScrollTick, 16);
     }
 
     // WICHTIG: .onpointerdown = statt addEventListener() — attachTagHandlers()
@@ -1575,46 +1616,52 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
     // Aufruf zusätzlich aufsummieren und Gesten mehrfach auslösen.
     tag.onpointerdown = (e) => {
       if (e.target.closest('.weekplan-tag-remove')) return;
-      e.preventDefault();
-      tagDrag = {
-        pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false,
-        overBacklog: false, lastX: e.clientX, lastY: e.clientY,
-      };
+      pendingPointerId = e.pointerId;
+      pendingStartX = e.clientX;
+      pendingStartY = e.clientY;
       try { tag.setPointerCapture(e.pointerId); } catch (err) { /* synthetische Events */ }
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        if (pendingPointerId === null) return; // Finger schon losgelassen
+        activateDrag(pendingStartX, pendingStartY);
+      }, TAG_LONGPRESS_MS);
     };
 
     tag.onpointermove = (e) => {
-      if (!tagDrag || e.pointerId !== tagDrag.pointerId) return;
-      const dx = e.clientX - tagDrag.startX;
-      const dy = e.clientY - tagDrag.startY;
-      // Erst ab einer kleinen Mindestbewegung als Ziehen werten, sonst
-      // würde ein normaler Tap (Rezept öffnen) immer als Drag beginnen
-      if (!tagDrag.moved && Math.hypot(dx, dy) < 10) return;
-      if (!tagDrag.moved) {
-        tagDrag.moved = true;
-        tag.classList.add('tag-dragging');
-        tag.style.pointerEvents = 'none'; // für elementFromPoint darunter
-        lockTouchAction(); // sonst kann eine Zeile ohne eigenes touch-action unterwegs die Geste kapern
-        if (!tagScrollTimer) tagScrollTimer = setInterval(tagScrollTick, 16);
+      if (pendingPointerId !== e.pointerId) return;
+      if (!tagDrag) {
+        // Noch in der Long-Press-Wartezeit: zu viel Bewegung = kein Zug-Wunsch,
+        // sondern Scroll-Versuch o.ä. — Long-Press abbrechen
+        const dx = e.clientX - pendingStartX, dy = e.clientY - pendingStartY;
+        if (Math.hypot(dx, dy) > 12) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+        return;
       }
-      tag.style.transform = `translate(${dx}px, ${dy}px)`;
+      tagDrag.ghost.style.transform = `translate(${e.clientX - tagDrag.startClientX}px, ${e.clientY - tagDrag.startClientY}px)`;
       tagDrag.lastX = e.clientX;
       tagDrag.lastY = e.clientY;
       maybeAutoScrollTag(e.clientY); // sofortige Reaktion bei Fingerbewegung
-      updateOverBacklog(e.clientX, e.clientY);
+      updateDragTargetsTag(e.clientX, e.clientY);
     };
 
     const endTagDrag = (e) => {
-      if (!tagDrag || (e && e.pointerId !== tagDrag.pointerId)) return;
-      const { moved, overBacklog, overDay } = tagDrag;
+      if (pendingPointerId !== null && (!e || e.pointerId === pendingPointerId)) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        pendingPointerId = null;
+      }
+      if (!tagDrag) return;
+      const { ghost, overBacklog, overDay } = tagDrag;
+      unlockTouchAction();
+      ghost.remove();
+      tag.style.opacity = '';
       tag.style.pointerEvents = '';
-      tag.classList.remove('tag-dragging');
-      tag.style.transform = '';
       document.querySelector('.backlog-section')?.classList.remove('backlog-drop-target');
       document.querySelectorAll('.weekplan-day.backlog-drop-target').forEach(d => d.classList.remove('backlog-drop-target'));
       tagDrag = null;
-      if (!moved) return;
-      unlockTouchAction();
       tag.dataset.justDragged = '1';
 
       const fromDay = tag.dataset.day;
