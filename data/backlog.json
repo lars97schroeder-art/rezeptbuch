@@ -1,15 +1,15 @@
 {
-  "updated": "2026-09-14T17:14:12.711Z",
+  "updated": "2026-09-19T11:03:52.433Z",
   "items": [
-    "Gemüse Lasagne",
-    "Schinkennudeln/tortellini",
-    "Udon Nudeln mit Kokosmilch",
-    "Wraps mit hack Oder chicken",
-    "Couscous Salat",
-    "Pita hack Oder chicken",
-    "SchweineSteak mit salat",
-    "Schweine spieße mit Salat",
-    "Bollo"
+    "TEXT:Gemüse Lasagne",
+    "TEXT:Schinkennudeln/tortellini",
+    "TEXT:Pita hack Oder chicken",
+    "TEXT:Wraps mit hack Oder chicken",
+    "TEXT:SchweineSteak mit salat",
+    "TEXT:Schweine spieße mit Salat",
+    "TEXT:Spinat Nudeln",
+    "TEXT:Udon Nudeln mit Kokosmilch",
+    "TEXT:Couscous Salat"
   ],
-  "text": "Gemüse Lasagne\nSchinkennudeln/tortellini\nUdon Nudeln mit Kokosmilch\nWraps mit hack Oder chicken\nCouscous Salat\nPita hack Oder chicken\nSchweineSteak mit salat\nSchweine spieße mit Salat\nBollo"
+  "text": "TEXT:Gemüse Lasagne\nTEXT:Schinkennudeln/tortellini\nTEXT:Pita hack Oder chicken\nTEXT:Wraps mit hack Oder chicken\nTEXT:SchweineSteak mit salat\nTEXT:Schweine spieße mit Salat\nTEXT:Spinat Nudeln\nTEXT:Udon Nudeln mit Kokosmilch\nTEXT:Couscous Salat"
 }
