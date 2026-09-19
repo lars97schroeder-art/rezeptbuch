@@ -1,12 +1,10 @@
 {
-  "updated": "2026-09-19T11:04:52.746Z",
+  "updated": "2026-09-19T11:06:19.880Z",
   "items": [
     "TEXT:Gemüse Lasagne",
     "TEXT:Schinkennudeln/tortellini",
-    "TEXT:Wraps mit hack Oder chicken",
     "TEXT:SchweineSteak mit salat",
-    "TEXT:Schweine spieße mit Salat",
-    "TEXT:Couscous Salat"
+    "TEXT:Schweine spieße mit Salat"
   ],
-  "text": "TEXT:Gemüse Lasagne\nTEXT:Schinkennudeln/tortellini\nTEXT:Wraps mit hack Oder chicken\nTEXT:SchweineSteak mit salat\nTEXT:Schweine spieße mit Salat\nTEXT:Couscous Salat"
+  "text": "TEXT:Gemüse Lasagne\nTEXT:Schinkennudeln/tortellini\nTEXT:SchweineSteak mit salat\nTEXT:Schweine spieße mit Salat"
 }
