@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-19T11:06:46.310Z",
+  "updated": "2026-09-19T11:07:21.828Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -267,7 +267,9 @@
       "mi": [
         "TEXT:Kai in Luzern"
       ],
-      "do": [],
+      "do": [
+        "TEXT:Schweine spieße mit Salat"
+      ],
       "fr": [],
       "sa": [],
       "so": [],
