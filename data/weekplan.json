@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-19T11:06:40.911Z",
+  "updated": "2026-09-19T11:06:46.310Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -261,7 +261,9 @@
       "mo": [
         "bolognese"
       ],
-      "di": [],
+      "di": [
+        "couscous-salat"
+      ],
       "mi": [
         "TEXT:Kai in Luzern"
       ],
