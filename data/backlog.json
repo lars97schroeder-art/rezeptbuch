@@ -1,8 +1,9 @@
 {
-  "updated": "2026-10-31T10:30:35.646Z",
+  "updated": "2026-10-31T10:30:41.116Z",
   "items": [
     "TEXT:Hotdogs",
-    "TEXT:Flammkuchen"
+    "TEXT:Flammkuchen",
+    "TEXT:Veggi Schnitzel"
   ],
-  "text": "TEXT:Hotdogs\nTEXT:Flammkuchen"
+  "text": "TEXT:Hotdogs\nTEXT:Flammkuchen\nTEXT:Veggi Schnitzel"
 }
