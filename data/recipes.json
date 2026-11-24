@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T19:28:26.906Z",
+  "updated": "2026-11-24T19:31:14.456Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1820,14 +1820,15 @@
       "emoji": "🍝",
       "image": "data/images/gemuese-lasagne-1784831862-0.jpg",
       "images": [
-        "data/images/gemuese-lasagne-1784831862-0.jpg"
+        "data/images/gemuese-lasagne-1784831862-0.jpg",
+        "data/images/gemuese-lasagne-1795548672-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-23T18:37:44.330Z",
-      "updated": "2026-07-25T11:46:30.648Z"
+      "updated": "2026-11-24T19:31:14.456Z"
     },
     {
       "id": "annika-s-high-protein-pumper-cheesecake",
