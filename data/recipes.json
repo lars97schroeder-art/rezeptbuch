@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:58:36.033Z",
+  "updated": "2026-11-24T21:00:09.234Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1027,8 +1027,10 @@
       "time": "",
       "servings": "",
       "emoji": "🇮🇹",
-      "image": "",
-      "images": [],
+      "image": "data/images/italienischer-nudelsalat-1795554006-0.jpg",
+      "images": [
+        "data/images/italienischer-nudelsalat-1795554006-0.jpg"
+      ],
       "ingredients": [
         "Pasta",
         "Pesto Rosso",
@@ -1041,7 +1043,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-08T07:54:15.917Z",
-      "updated": "2026-11-24T20:58:36.032Z"
+      "updated": "2026-11-24T21:00:09.234Z"
     },
     {
       "id": "couscous-salat",
