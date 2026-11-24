@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-09-15T21:00:00+02:00';
+const APP_BUILD_TIME = '2026-11-24T12:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -172,11 +172,20 @@ async function fetchRemoteJSON(path) {
 }
 
 // Schreibt eine JSON-Datei ins Repo (legt sie neu an oder überschreibt sie)
+let syncErrorShown = false;
 async function pushRemoteJSON(path, payload, message) {
   if (typeof ghToken !== 'function' || !ghToken()) return false;
   let sha;
   try { sha = (await ghGet(path)).sha; } catch (e) { /* erste Übertragung */ }
-  await ghPut(path, b64utf8(JSON.stringify(payload, null, 2)), message, sha);
+  try {
+    await ghPut(path, b64utf8(JSON.stringify(payload, null, 2)), message, sha);
+  } catch (e) {
+    // Läuft im Hintergrund (Debounce-Timer) — ohne Meldung würde ein
+    // abgelaufener Token wochenlang unbemerkt bleiben. Einmal pro Sitzung zeigen.
+    console.error('Sync zu GitHub fehlgeschlagen:', e);
+    if (!syncErrorShown) { syncErrorShown = true; toast('⚠️ Nicht gespeichert: ' + e.message); }
+    throw e;
+  }
   return true;
 }
 

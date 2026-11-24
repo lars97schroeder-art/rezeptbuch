@@ -27,11 +27,22 @@ function ghHeaders() {
   };
 }
 
+// Verständliche Meldung statt nacktem "GitHub-Fehler 401": GitHub liefert bei
+// abgelaufenem Token 401, bei fehlenden Schreibrechten (z.B. Token ohne
+// "repo"-Recht oder falsches Repo) bewusst 404 statt 403.
+function ghErrorMessage(status, path) {
+  if (status === 401) return 'Token abgelaufen oder ungültig – bitte in den Einstellungen neu einrichten';
+  if (status === 403) return 'GitHub verweigert den Zugriff (Token-Rechte oder Limit erreicht)';
+  if (status === 404) return 'Token ohne Schreibrecht für das Repo (404) – bitte neuen Token mit "repo"-Recht einrichten';
+  if (status === 409 || status === 422) return 'Konflikt beim Speichern – bitte kurz warten und nochmal versuchen';
+  return 'GitHub-Fehler ' + status + (path ? ' bei ' + path : '');
+}
+
 async function ghGet(path) {
   const res = await fetch(
     `https://api.github.com/repos/${GH_REPO}/contents/${encodeURI(path)}?ref=main&t=${Date.now()}`,
     { headers: ghHeaders(), cache: 'no-store' });
-  if (!res.ok) throw new Error('GitHub-Fehler ' + res.status);
+  if (!res.ok) throw new Error(ghErrorMessage(res.status, path));
   return res.json();
 }
 
@@ -41,7 +52,7 @@ async function ghPut(path, base64Content, message, sha) {
   const res = await fetch(
     `https://api.github.com/repos/${GH_REPO}/contents/${encodeURI(path)}`,
     { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error('GitHub-Fehler ' + res.status + ' bei ' + path);
+  if (!res.ok) throw new Error(ghErrorMessage(res.status, path));
   return res.json();
 }
 
