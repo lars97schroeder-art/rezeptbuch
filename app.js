@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T00:10:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T00:40:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1665,9 +1665,31 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
 // UND der Nutzer das nicht in den Einstellungen abgeschaltet hat.
 const VIBRATION_KEY = 'rezeptbuch-vibration';
 function vibrationEnabled() { return localStorage.getItem(VIBRATION_KEY) !== 'false'; }
+let hapticSwitchLabel = null;
 function hapticPulse(ms = 40) {
   if (!vibrationEnabled()) return;
-  try { navigator.vibrate?.(ms); } catch (e) { /* nicht unterstützt */ }
+  // Android/Chrome: Vibration API
+  if (typeof navigator.vibrate === 'function') {
+    try { navigator.vibrate(ms); return; } catch (e) { /* weiter zum Ersatz */ }
+  }
+  // iPhone/Safari (ab iOS 17.4) kennt navigator.vibrate nicht, löst aber beim
+  // Umschalten eines <input switch> einen kurzen Haptik-Tick aus. Dafür liegt
+  // ein unsichtbarer Schalter im Dokument, der bei Bedarf per Skript "angetippt"
+  // wird. Auf älteren Geräten passiert schlicht nichts.
+  try {
+    if (!hapticSwitchLabel) {
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      label.appendChild(input);
+      document.body.appendChild(label);
+      hapticSwitchLabel = label;
+    }
+    hapticSwitchLabel.click();
+  } catch (e) { /* kein Haptik-Ersatz verfügbar */ }
 }
 
 const TAG_LONGPRESS_MS = 300; // 0.3 Sekunden gedrückt halten, bevor sich die Pille löst
@@ -2707,7 +2729,7 @@ function openSettings() {
           </div>
           <span>Vibration beim Ziehen</span>
         </label>
-        <div class="setting-hint">Kurzes haptisches Feedback, wenn sich eine Kachel/Pille zum Verschieben löst</div>
+        <div class="setting-hint">Kurzes haptisches Feedback, wenn sich eine Kachel/Pille zum Verschieben löst. Am iPhone ab iOS 17.4.</div>
       </div>
     </div>
 
