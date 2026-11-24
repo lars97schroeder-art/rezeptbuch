@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:53:39.702Z",
+  "updated": "2026-11-24T20:54:42.109Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -591,14 +591,15 @@
       "emoji": "",
       "image": "data/images/frikadellen-1783369338-0.jpg",
       "images": [
-        "data/images/frikadellen-1783369338-0.jpg"
+        "data/images/frikadellen-1783369338-0.jpg",
+        "data/images/frikadellen-1795553680-0.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-08T07:45:04.158Z",
-      "updated": "2026-07-08T07:45:04.158Z"
+      "updated": "2026-11-24T20:54:42.109Z"
     },
     {
       "id": "wuerstelgulasch",
