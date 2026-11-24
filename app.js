@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-24T23:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-24T23:30:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1938,6 +1938,7 @@ function renderWeekplan(skipSync = false) {
     // Ausblenden-Knopf ergeben für einen bereits gelaufenen Tag keinen Sinn
     const dayDate = new Date(mon); dayDate.setDate(mon.getDate() + di);
     const isPastDay = dayDate < today;
+    const isToday = istAktuelleWoche && dayDate.getTime() === today.getTime();
     const noEdit = readonly || isPastDay;
     let tagsHTML = '';
 
@@ -1963,10 +1964,10 @@ function renderWeekplan(skipSync = false) {
     // ausgeblendeten Tagen — nur ansehen). Der Umschalt-Knopf selbst bleibt
     // oben rechts an der Karte immer voll sichtbar (eigener Layer, nicht gedimmt).
     daysHTML += `
-      <div class="weekplan-day${isOff ? ' day-off' : ''}${isPastDay ? ' past-day' : ''}" data-day="${day.key}">
+      <div class="weekplan-day${isOff ? ' day-off' : ''}${isPastDay ? ' past-day' : ''}${isToday ? ' is-today' : ''}" data-day="${day.key}">
         ${noEdit ? '' : `<button class="weekplan-day-toggle" data-day="${day.key}" aria-label="${isOff ? 'Tag wieder einblenden' : 'Tag ausblenden'}">${isOff ? '+' : '−'}</button>`}
         <div class="weekplan-day-inner">
-          <label class="weekplan-label">${day.label}</label>
+          <label class="weekplan-label">${day.label}${isToday ? '<span class="weekplan-today-mark">Heute</span>' : ''}</label>
           <div class="weekplan-autocomplete" data-day="${day.key}">
             <div class="weekplan-selected">${tagsHTML}</div>
             ${(noEdit || isOff) ? '' : `
