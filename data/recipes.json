@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:57:36.565Z",
+  "updated": "2026-11-24T20:57:56.203Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -2080,7 +2080,9 @@
     {
       "id": "ravioli",
       "title": "Ravioli",
-      "category": [],
+      "category": [
+        "Pasta"
+      ],
       "time": "",
       "servings": "",
       "emoji": "",
@@ -2093,7 +2095,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-11-24T20:57:36.564Z",
-      "updated": "2026-11-24T20:57:36.564Z"
+      "updated": "2026-11-24T20:57:56.203Z"
     }
   ]
 }
