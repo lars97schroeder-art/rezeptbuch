@@ -625,7 +625,10 @@ h1 {
 
 .detail-photo {
   width: 100%;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 1 / 1;
+  /* Foto groß, aber nie höher als gut die Hälfte des Bildschirms,
+     damit Titel und Zutaten schon auf dem ersten Blick sichtbar bleiben */
+  max-height: 56vh;
   object-fit: cover;
   display: block;
   background: var(--accent-soft);
