@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:54:42.109Z",
+  "updated": "2026-11-24T20:55:12.692Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -638,7 +638,8 @@
       "emoji": "🇸🇪",
       "image": "data/images/koettbullar-1783240941.jpg",
       "images": [
-        "data/images/koettbullar-1783240941.jpg"
+        "data/images/koettbullar-1783240941.jpg",
+        "data/images/koettbullar-1795553711-0.jpg"
       ],
       "ingredients": [
         "Ikea Köttbullar",
@@ -649,8 +650,8 @@
       "steps": [],
       "notes": "",
       "bereich": "kochen",
-      "updated": "2026-07-10T15:49:15.792Z",
-      "created": "2026-07-04T12:00:00.000Z"
+      "created": "2026-07-04T12:00:00.000Z",
+      "updated": "2026-11-24T20:55:12.692Z"
     },
     {
       "id": "sellerieschnitzel",
