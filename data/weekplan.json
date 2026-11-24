@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-19T11:07:21.828Z",
+  "updated": "2026-11-24T20:19:56.396Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -255,7 +255,10 @@
       "so": [
         "bolognese"
       ],
-      "off": []
+      "off": [
+        "sa",
+        "so"
+      ]
     },
     "2026-W39": {
       "mo": [
@@ -270,6 +273,63 @@
       "do": [
         "TEXT:Schweine spieße mit Salat"
       ],
+      "fr": [],
+      "sa": [],
+      "so": [],
+      "off": [
+        "mo",
+        "di"
+      ]
+    },
+    "2026-W40": {
+      "mo": [],
+      "di": [],
+      "mi": [
+        "gnocchi-mit-cashew-pesto"
+      ],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": [],
+      "off": [
+        "mi"
+      ]
+    },
+    "2026-W42": {
+      "mo": [],
+      "di": [],
+      "mi": [
+        "TEXT:Schinkennudeln/tortellini"
+      ],
+      "do": [],
+      "fr": [],
+      "sa": [],
+      "so": [],
+      "off": [
+        "mi"
+      ]
+    },
+    "2026-W46": {
+      "mo": [],
+      "di": [],
+      "mi": [],
+      "do": [],
+      "fr": [],
+      "sa": [
+        "wraps"
+      ],
+      "so": [],
+      "off": [
+        "sa"
+      ]
+    },
+    "2026-W48": {
+      "mo": [],
+      "di": [
+        "gemuese-lasagne"
+      ],
+      "mi": [],
+      "do": [],
       "fr": [],
       "sa": [],
       "so": [],
