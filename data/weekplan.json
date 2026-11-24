@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-24T20:19:56.396Z",
+  "updated": "2026-11-24T20:20:04.164Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -328,7 +328,9 @@
       "di": [
         "gemuese-lasagne"
       ],
-      "mi": [],
+      "mi": [
+        "kokosmilch-gemuese-mit-sojasosse"
+      ],
       "do": [],
       "fr": [],
       "sa": [],
