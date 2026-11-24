@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-24T21:50:00+01:00';
+const APP_BUILD_TIME = '2026-11-24T22:20:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1450,13 +1450,24 @@ function wireBacklogList(el, weekplan) {
       if (sIdx >= items.length) continue;
       const rect = sib.getBoundingClientRect();
       if (clientY < rect.top || clientY > rect.bottom) continue;
-      [items[draggedIdx], items[sIdx]] = [items[sIdx], items[draggedIdx]];
-      if (sIdx < draggedIdx) {
-        list.insertBefore(sib, drag.row.nextSibling);
-      } else {
-        list.insertBefore(sib, drag.row);
+      // Einsortieren statt Tauschen: schrittweise mit dem jeweiligen Nachbarn
+      // tauschen, bis die gezogene Zeile am Ziel steht. So bleibt die Reihenfolge
+      // der übrigen Einträge erhalten, auch wenn ein schneller Wisch mehrere
+      // Zeilen in einem einzigen Bewegungsereignis überspringt. Es wird immer
+      // nur die NACHBAR-Zeile verschoben, nie drag.row selbst (Pointer Capture).
+      const byIdx = new Map([...list.querySelectorAll('.backlog-row')].map(el => [Number(el.dataset.i), el]));
+      const dir = sIdx < draggedIdx ? -1 : 1;
+      let cur = draggedIdx;
+      while (cur !== sIdx) {
+        const next = cur + dir;
+        const neighbor = byIdx.get(next);
+        [items[cur], items[next]] = [items[next], items[cur]];
+        if (dir < 0) list.insertBefore(neighbor, drag.row.nextSibling);
+        else list.insertBefore(neighbor, drag.row);
+        neighbor.dataset.i = cur;
+        byIdx.set(cur, neighbor);
+        cur = next;
       }
-      sib.dataset.i = draggedIdx;
       drag.row.dataset.i = sIdx;
       break;
     }
@@ -1849,14 +1860,17 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
           toast('📅 In anderen Wochentag verschoben');
         }
       } else if (overBacklog) {
-        const text = tag.querySelector('.weekplan-tag-text')?.textContent || '';
         const idx = (weekplan[fromDay] || []).indexOf(entry);
         if (idx > -1) {
           weekplan[fromDay].splice(idx, 1);
           saveWeekplan(weekplan);
           weekplanUploadDebounced();
           tag.remove();
-          backlogCtl.addItem(text);
+          // Wochenplan und Backlog speichern Einträge im selben Format (Rezept-ID
+          // oder "TEXT:…") — also unverändert zurücklegen. Vorher wurde der
+          // Anzeigetext als nacktes Wort übergeben: Rezepte wurden zu Freitext
+          // und der Eintrag war bis zum nächsten Neuladen unsichtbar.
+          backlogCtl.addItem(entry);
           toast('📝 Zurück ins Backlog verschoben');
         }
       }
