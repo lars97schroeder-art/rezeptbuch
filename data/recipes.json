@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:50:13.607Z",
+  "updated": "2026-11-24T20:52:09.710Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1469,6 +1469,26 @@
       "bereich": "kochen",
       "created": "2026-07-25T20:21:20.157Z",
       "updated": "2026-07-26T10:07:42.061Z"
+    },
+    {
+      "id": "flammkuchen",
+      "title": "Flammkuchen",
+      "category": [
+        "Ofen & Pfanne"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/flammkuchen-1795553527-0.jpg",
+      "images": [
+        "data/images/flammkuchen-1795553527-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-11-24T20:52:09.709Z",
+      "updated": "2026-11-24T20:52:09.709Z"
     },
     {
       "id": "chicken-wings-2",
