@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-24T23:50:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T00:10:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -2616,18 +2616,28 @@ function applyTheme(theme) {
   else if (theme === 'dark') html.classList.add('theme-dark');
   else html.classList.add('theme-auto');
   localStorage.setItem(THEME_KEY, theme);
+  syncThemeColor();
 }
 
-// Farbschema (unabhängig von Hell/Dunkel): 'orange' (Standard) | 'blue' | 'rainbow'
-const COLOR_THEME_META = { orange: '#e8590c', blue: '#1466c4', rainbow: '#d6249f' };
+// Statusleisten-/Browserfarbe folgt dem Seitenhintergrund (--bg) des gerade
+// wirksamen Themes — auch wenn das Gerät hell ist, die App aber auf "Dunkel" steht.
+function syncThemeColor() {
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if (!bg) return;
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+    m.removeAttribute('media');
+    m.setAttribute('content', bg);
+  });
+}
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', syncThemeColor);
 
+// Farbschema (unabhängig von Hell/Dunkel): 'orange' (Standard) | 'blue' | 'rainbow'
 function applyColorScheme(scheme) {
   const html = document.documentElement;
   html.classList.remove('color-orange', 'color-blue', 'color-rainbow');
   html.classList.add('color-' + scheme);
   localStorage.setItem(COLOR_KEY, scheme);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta && COLOR_THEME_META[scheme]) meta.setAttribute('content', COLOR_THEME_META[scheme]);
+  syncThemeColor();
 }
 
 // Theme + Farbschema beim Start laden

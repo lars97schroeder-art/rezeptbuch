@@ -46,6 +46,13 @@ self.addEventListener('activate', event => {
       }
     }
 
+    // Einmalig aufräumen: frühere Versionen haben pro App-Start eine Kopie mit
+    // ?t=…-Query abgelegt (viele Duplikate von app.js und den Daten-Dateien).
+    const shell = await caches.open(SHELL_CACHE);
+    for (const req of await shell.keys()) {
+      if (new URL(req.url).search) await shell.delete(req);
+    }
+
     await self.clients.claim();
   })());
 });
@@ -123,8 +130,11 @@ self.addEventListener('fetch', event => {
       });
       clearTimeout(timeoutId);
       if (network.ok) {
-        // Speichere neue Version
-        cache.put(event.request, network.clone());
+        // Speichere neue Version — OHNE Query-Teil: app.js/Daten werden mit
+        // Cache-Buster (?t=…) geholt, sonst käme bei jedem Start ein weiterer
+        // Eintrag dazu und der Speicher wüchse unbegrenzt.
+        const u = new URL(event.request.url);
+        cache.put(new Request(u.origin + u.pathname), network.clone());
         return network;
       }
     } catch (e) {
