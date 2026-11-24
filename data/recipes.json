@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T19:31:14.456Z",
+  "updated": "2026-11-24T20:50:13.607Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -2008,6 +2008,26 @@
       "bereich": "kochen",
       "created": "2026-09-10T16:37:53.915Z",
       "updated": "2026-09-10T16:37:53.915Z"
+    },
+    {
+      "id": "raclette",
+      "title": "Raclette",
+      "category": [
+        "Festlich"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/raclette-1795553412-0.jpg",
+      "images": [
+        "data/images/raclette-1795553412-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-11-24T20:50:13.606Z",
+      "updated": "2026-11-24T20:50:13.606Z"
     }
   ]
 }
