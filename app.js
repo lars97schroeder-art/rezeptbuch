@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-24T21:20:00+01:00';
+const APP_BUILD_TIME = '2026-11-24T21:50:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -823,20 +823,41 @@ function drawImageCover(ctx, img, x, y, w, h) {
 // Erstellt ein Poster-Bild des Rezepts (Foto, Titel, Zutaten, Zubereitung,
 // Wasserzeichen) und öffnet damit den nativen Teilen-Dialog des Handys.
 async function shareRecipeAsImage(r) {
-  toast('📤 Erstelle Bild …');
+  toast('Erstelle Bild …');
   try {
     const W = 900;
     const MARGIN = 56;
     const CONTENT_W = W - MARGIN * 2;
     const MAX_H = 3000; // großzügig bemessen, wird am Ende zugeschnitten
 
+    // Farben/Schriften wie in der App (siehe :root in style.css)
+    const PAPER = '#F8F4EE', INK = '#1D1814', MUTED = '#6F645B', ACCENT = '#B8470F', HAIR = '#E7DED2', SOFT = '#F4E7DA';
+    const SERIF = "Fraunces, 'Iowan Old Style', Georgia, serif";
+    const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    // Canvas zeichnet mit der Schrift nur, wenn sie schon geladen ist
+    try {
+      await Promise.all([
+        document.fonts.load(`600 52px ${SERIF}`),
+        document.fonts.load(`500 28px ${SERIF}`),
+        document.fonts.load(`italic 500 27px ${SERIF}`),
+      ]);
+    } catch (e) { /* Fallback-Serife */ }
+
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = MAX_H;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#fff8f0';
+    ctx.fillStyle = PAPER;
     ctx.fillRect(0, 0, W, MAX_H);
+
+    // Foto-Banner mit abgerundetem Unterrand (wie die Rezeptseite)
+    const roundedBottom = (h, rad) => {
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, h - rad);
+      ctx.quadraticCurveTo(W, h, W - rad, h); ctx.lineTo(rad, h);
+      ctx.quadraticCurveTo(0, h, 0, h - rad); ctx.closePath();
+    };
 
     let y = 0;
     const BANNER_H = 520;
@@ -844,14 +865,18 @@ async function shareRecipeAsImage(r) {
     if (imgs.length) {
       try {
         const img = await loadImageEl(imgs[0]);
+        ctx.save(); roundedBottom(BANNER_H, 40); ctx.clip();
         drawImageCover(ctx, img, 0, 0, W, BANNER_H);
+        ctx.restore();
         y = BANNER_H;
       } catch (e) { /* Bild nicht ladbar — ohne Banner weiter */ }
     }
     if (!y) {
       const emojiBannerH = 300;
-      ctx.fillStyle = '#ffe3d1';
+      ctx.save(); roundedBottom(emojiBannerH, 40); ctx.clip();
+      ctx.fillStyle = SOFT;
       ctx.fillRect(0, 0, W, emojiBannerH);
+      ctx.restore();
       ctx.font = '150px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -861,77 +886,90 @@ async function shareRecipeAsImage(r) {
       y = emojiBannerH;
     }
 
-    y += 56;
-    ctx.fillStyle = '#33251c';
-    ctx.font = '900 46px -apple-system, BlinkMacSystemFont, sans-serif';
+    y += 62;
+    ctx.fillStyle = INK;
+    ctx.font = `600 54px ${SERIF}`;
     const titleText = r.title + (r.emoji ? ' ' + r.emoji : '');
-    for (const line of wrapCanvasText(ctx, titleText, CONTENT_W)) { y += 52; ctx.fillText(line, MARGIN, y); }
+    for (const line of wrapCanvasText(ctx, titleText, CONTENT_W)) { y += 58; ctx.fillText(line, MARGIN, y); }
 
-    const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join('   ·   ');
+    const meta = [categoryLabel(r), displayDuration(r.time), r.servings].filter(Boolean).join('  ·  ').toUpperCase();
     if (meta) {
-      y += 42;
-      ctx.font = '500 26px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#8a7566';
+      y += 44;
+      ctx.font = `500 22px ${SANS}`;
+      ctx.fillStyle = MUTED;
       ctx.fillText(meta, MARGIN, y);
     }
 
-    y += 30;
-    ctx.strokeStyle = '#f0e2d6';
+    y += 34;
+    ctx.strokeStyle = HAIR;
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(MARGIN, y); ctx.lineTo(W - MARGIN, y); ctx.stroke();
 
     if ((r.ingredients || []).length) {
-      y += 50;
-      ctx.font = '800 30px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#e8590c';
+      y += 58;
+      ctx.font = `600 38px ${SERIF}`;
+      ctx.fillStyle = INK;
       ctx.fillText('Zutaten', MARGIN, y);
       for (const ing of r.ingredients) {
         const heading = String(ing).trim().match(/^\*\s*(.+)/);
         if (heading) {
-          y += 40;
-          ctx.font = '800 24px -apple-system, BlinkMacSystemFont, sans-serif';
-          ctx.fillStyle = '#e8590c';
-          for (const line of wrapCanvasText(ctx, heading[1].toUpperCase(), CONTENT_W - 10)) { y += 30; ctx.fillText(line, MARGIN + 10, y); }
+          y += 46;
+          ctx.font = `700 21px ${SANS}`;
+          ctx.fillStyle = ACCENT;
+          for (const line of wrapCanvasText(ctx, heading[1].toUpperCase(), CONTENT_W)) { y += 28; ctx.fillText(line, MARGIN, y); }
         } else {
-          ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
-          ctx.fillStyle = '#33251c';
-          for (const line of wrapCanvasText(ctx, '•  ' + ing, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
+          ctx.font = `400 27px ${SANS}`;
+          ctx.fillStyle = INK;
+          const lines = wrapCanvasText(ctx, String(ing), CONTENT_W - 28);
+          y += 12;
+          lines.forEach((line, li) => { y += 38; ctx.fillText(line, MARGIN + 28, y); });
+          ctx.fillStyle = ACCENT;
+          ctx.beginPath(); ctx.arc(MARGIN + 7, y - lines.length * 38 + 28, 4, 0, Math.PI * 2); ctx.fill();
         }
       }
     }
 
     if ((r.steps || []).length) {
-      y += 50;
-      ctx.font = '800 30px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#e8590c';
+      y += 84;
+      ctx.font = `600 38px ${SERIF}`;
+      ctx.fillStyle = INK;
       ctx.fillText('Zubereitung', MARGIN, y);
-      ctx.font = '400 27px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#33251c';
       r.steps.forEach((step, i) => {
-        for (const line of wrapCanvasText(ctx, `${i + 1}.  ${step}`, CONTENT_W - 10)) { y += 38; ctx.fillText(line, MARGIN + 10, y); }
-        y += 10;
+        ctx.font = `400 27px ${SANS}`;
+        const lines = wrapCanvasText(ctx, String(step), CONTENT_W - 56);
+        y += 14;
+        const top = y;
+        lines.forEach(line => { y += 40; ctx.fillStyle = INK; ctx.fillText(line, MARGIN + 56, y); });
+        // Serifen-Ziffer, auf Höhe der ersten Zeile
+        ctx.font = `500 40px ${SERIF}`;
+        ctx.fillStyle = ACCENT;
+        ctx.fillText(String(i + 1), MARGIN, top + 40);
+        y += 8;
       });
     }
 
     if (r.notes) {
-      y += 40;
-      ctx.font = 'italic 500 26px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = '#8a7566';
-      for (const line of wrapCanvasText(ctx, '💡 ' + r.notes, CONTENT_W)) { y += 36; ctx.fillText(line, MARGIN, y); }
+      y += 44;
+      ctx.font = `italic 500 28px ${SERIF}`;
+      const lines = wrapCanvasText(ctx, r.notes, CONTENT_W - 28);
+      const start = y;
+      ctx.fillStyle = INK;
+      for (const line of lines) { y += 40; ctx.fillText(line, MARGIN + 28, y); }
+      ctx.fillStyle = ACCENT;
+      ctx.fillRect(MARGIN, start + 8, 4, y - start);
     }
 
     // Wasserzeichen — rechtsbündig, mit MARGIN Abstand zum rechten Rand
     // (gleicher Abstand wie der Rest des Posters, für ein einheitliches Bild)
-    y += 64;
-    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#c4a98d';
+    y += 72;
+    ctx.font = `500 24px ${SERIF}`;
+    ctx.fillStyle = '#A39588';
     ctx.textAlign = 'right';
-    const watermarkText = '🍽️ Made by Schrödamskis Schlemmerliste';
+    const watermarkText = 'Made by Schrödamskis Schlemmerliste';
     ctx.fillText(watermarkText, W - MARGIN, y);
-    // actualBoundingBoxDescent ist für Emoji-Glyphen (🍽️) browserübergreifend
-    // unzuverlässig — auf iOS Safari z.B. oft zu klein gemessen, wodurch das
-    // Wasserzeichen beim Zuschneiden trotzdem unten abgeschnitten wurde.
-    // Fester, großzügiger Sicherheitsabstand statt Messwert.
+    ctx.textAlign = 'left';
+    // Fester Sicherheitsabstand unter dem Wasserzeichen statt gemessener Textbox
+    // (actualBoundingBoxDescent ist für Glyphen wie Emoji browserübergreifend unzuverlässig).
     const WATERMARK_SAFETY_PADDING = 40;
 
     // Auf die tatsächlich genutzte Höhe zuschneiden
