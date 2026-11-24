@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T21:00:09.234Z",
+  "updated": "2026-11-24T21:00:30.208Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1886,8 +1886,8 @@
       "id": "pasta-alla-zozzona",
       "title": "Pasta alla Zozzona",
       "category": [
-        "Comfort food",
-        "Ofen & Pfanne"
+        "Ofen & Pfanne",
+        "Pasta & Gnocchi"
       ],
       "time": "",
       "servings": "",
@@ -1927,7 +1927,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-31T22:53:40.731Z",
-      "updated": "2026-07-31T22:53:40.731Z"
+      "updated": "2026-11-24T21:00:30.207Z"
     },
     {
       "id": "chicken-wings",
