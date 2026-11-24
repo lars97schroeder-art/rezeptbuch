@@ -1,12 +1,7 @@
 {
-  "updated": "2026-10-31T10:31:21.717Z",
+  "updated": "2026-11-24T20:49:05.239Z",
   "items": [
-    "TEXT:Hotdogs",
-    "TEXT:Flammkuchen",
-    "TEXT:Veggi Schnitzel",
-    "bratwuerste-mit-sauerkraut",
-    "TEXT:Gefüllte Paprika",
-    "TEXT:Kumpier süsskartoffel"
+    "TEXT:Gefüllte Paprika"
   ],
-  "text": "TEXT:Hotdogs\nTEXT:Flammkuchen\nTEXT:Veggi Schnitzel\nbratwuerste-mit-sauerkraut\nTEXT:Gefüllte Paprika\nTEXT:Kumpier süsskartoffel"
+  "text": "TEXT:Gefüllte Paprika"
 }
