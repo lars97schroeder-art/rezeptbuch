@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-24T20:20:04.164Z",
+  "updated": "2026-11-24T20:20:09.959Z",
   "weeks": {
     "2026-W28": {
       "mo": [
@@ -329,7 +329,8 @@
         "gemuese-lasagne"
       ],
       "mi": [
-        "kokosmilch-gemuese-mit-sojasosse"
+        "kokosmilch-gemuese-mit-sojasosse",
+        "TEXT:Reis"
       ],
       "do": [],
       "fr": [],
