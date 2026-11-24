@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:52:09.710Z",
+  "updated": "2026-11-24T20:53:39.702Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1921,6 +1921,29 @@
       "bereich": "kochen",
       "created": "2026-07-31T22:53:40.731Z",
       "updated": "2026-07-31T22:53:40.731Z"
+    },
+    {
+      "id": "chicken-wings",
+      "title": "Chicken Wings",
+      "category": [
+        "Comfort food",
+        "Ofen & Pfanne",
+        "Airfryer"
+      ],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/chicken-wings-1795553616-0.jpg",
+      "images": [
+        "data/images/chicken-wings-1795553616-0.jpg",
+        "data/images/chicken-wings-1795553616-1.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-11-24T20:53:39.702Z",
+      "updated": "2026-11-24T20:53:39.702Z"
     },
     {
       "id": "hefezopf-ohne-milch-und-butter",
