@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:56:06.646Z",
+  "updated": "2026-11-24T20:57:36.565Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -2076,6 +2076,24 @@
       "bereich": "kochen",
       "created": "2026-11-24T20:50:13.606Z",
       "updated": "2026-11-24T20:50:13.606Z"
+    },
+    {
+      "id": "ravioli",
+      "title": "Ravioli",
+      "category": [],
+      "time": "",
+      "servings": "",
+      "emoji": "",
+      "image": "data/images/ravioli-1795553854-0.jpg",
+      "images": [
+        "data/images/ravioli-1795553854-0.jpg"
+      ],
+      "ingredients": [],
+      "steps": [],
+      "notes": "",
+      "bereich": "kochen",
+      "created": "2026-11-24T20:57:36.564Z",
+      "updated": "2026-11-24T20:57:36.564Z"
     }
   ]
 }
