@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-24T12:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-24T21:20:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -36,6 +36,14 @@ function recipeMode(r) {
 }
 
 const $ = s => document.querySelector(s);
+
+// Linien-Icons für die Bedienung (Stroke = currentColor, einheitliche Strichstärke)
+const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const ICON = {
+  heart: `<svg ${ICON_ATTRS}><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>`,
+  cross: `<svg ${ICON_ATTRS}><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+  star: `<svg ${ICON_ATTRS}><path d="M12 3.8l2.5 5.1 5.6.8-4 4 .9 5.6-5-2.6-5 2.6.9-5.6-4-4 5.6-.8z"/></svg>`,
+};
 
 // Sperrt/entsperrt native Touch-Gesten (Scrollen etc.) UND Text-Markieren
 // für den GESAMTEN Bildschirm während eines eigenen Drags (Backlog↔
@@ -549,7 +557,7 @@ function render() {
     grid.innerHTML = `<div class="empty">Noch keine Rezepte geladen.<br>
       Tippe oben auf <strong>⟳</strong>, wenn du Internet hast.</div>`;
   } else if (!items.length) {
-    grid.innerHTML = `<div class="empty">Nichts gefunden 🤷</div>`;
+    grid.innerHTML = `<div class="empty">Nichts gefunden.</div>`;
   }
 
   // Scroll-Label orientiert sich am linken Rezept der Zeile (alphabetische Sortierung)
@@ -739,7 +747,7 @@ function renderDetail(id, opts = {}) {
         ${ingredientsHTML(r.ingredients)}` : ''}
       ${(r.steps || []).length ? `<h3>Zubereitung</h3>
         <ol>${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join('')}</ol>` : ''}
-      ${r.notes ? `<div class="detail-notes">💡 ${esc(r.notes)}</div>` : ''}
+      ${r.notes ? `<div class="detail-notes">${esc(r.notes)}</div>` : ''}
       ${related.length ? `<h3>Dazu passt auch</h3>
         <div class="related-list">
           ${related.map(rel => `<button class="related-item" data-id="${esc(rel.id)}">
@@ -1926,7 +1934,7 @@ function renderWeekplan(skipSync = false) {
       <div class="weekplan-header">
         <button class="weekplan-nav" data-dir="-1" aria-label="Woche zurück">‹</button>
         <div class="weekplan-weektitle">
-          <div class="weekplan-kw">📅 KW ${isoKalenderwoche(weekplanViewDate)}${istAktuelleWoche ? ' <span class="weekplan-now">jetzt</span>' : ''}</div>
+          <div class="weekplan-kw">KW ${isoKalenderwoche(weekplanViewDate)}${istAktuelleWoche ? ' <span class="weekplan-now">jetzt</span>' : ''}</div>
           <div class="weekplan-range">${rangeText}</div>
           ${istAktuelleWoche ? '' : '<button class="weekplan-today-btn">Zur aktuellen Woche</button>'}
         </div>
@@ -1939,11 +1947,11 @@ function renderWeekplan(skipSync = false) {
 
       <div class="backlog-divider"></div>
       <div class="backlog-section">
-        <h3 class="backlog-heading">📝 Rezept-Backlog</h3>
+        <h3 class="backlog-heading">Rezept-Backlog</h3>
         <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche</div>
         <div class="backlog-autocomplete">
           <div class="backlog-input-row">
-            <input type="text" class="backlog-search" placeholder="Rezept hinzufügen oder Notiz schreiben …" autocomplete="off">
+            <input type="text" class="backlog-search" placeholder="Rezept oder Notiz hinzufügen" autocomplete="off">
             <button class="backlog-add-btn" title="Freitext-Notiz hinzufügen">+</button>
           </div>
           <div class="backlog-suggestions" hidden></div>
@@ -2137,14 +2145,14 @@ function tinderCardHTML(r, cls) {
       <div class="t-title">${titleWithEmoji(r)}</div>
       <div class="t-meta">${esc([categoryLabel(r), displayDuration(r.time)].filter(Boolean).join(' · '))}</div>
     </div>
-    <div class="t-card-badge-text like-text"><span>WILL ICH 😍</span></div>
-    <div class="t-card-badge-text nope-text"><span>NÖ 🙅</span></div>
+    <div class="t-card-badge-text like-text"><span>Will ich</span></div>
+    <div class="t-card-badge-text nope-text"><span>Nö</span></div>
   </div>`;
 }
 
   function tinderPlaceholderHTML() {
     return `<div class="t-card behind placeholder">
-      <div class="t-emoji">✨</div>
+      <div class="t-emoji"></div>
       <div class="t-info">
         <div class="t-title">Noch eine Karte...</div>
         <div class="t-meta">Tippe oder wische, um weiterzumachen</div>
@@ -2158,11 +2166,6 @@ function tinderCardHTML(r, cls) {
   // Rezept neu gerendert wird.
   function tinderNextPreviewHTML() {
     return `<div class="t-card behind foodmatch">
-      <span class="foodmatch-deco d1">🍅</span>
-      <span class="foodmatch-deco d2">🌿</span>
-      <span class="foodmatch-deco d3">🧄</span>
-      <span class="foodmatch-deco d4">🧀</span>
-      <span class="foodmatch-icon">🍽️</span>
       <div class="foodmatch-text">
         <div class="foodmatch-title">Food Match</div>
         <div class="foodmatch-sub">Dein nächstes Gericht wartet …</div>
@@ -2179,17 +2182,17 @@ function renderTinderCard() {
   el.innerHTML = `
     <button class="detail-close tinder-close" aria-label="Zurück">←</button>
     <div class="tinder">
-      <div class="tinder-status">❤️ ${tinder.likes.length} / 3 · noch ${tinder.deck.length} Karten</div>
+      <div class="tinder-status">${tinder.likes.length} von 3 gewählt · noch ${tinder.deck.length} Karten</div>
       <div class="tinder-stack">
         ${next ? tinderNextPreviewHTML() : tinderPlaceholderHTML()}
         ${tinderCardHTML(top, 'top')}
       </div>
       <div class="tinder-buttons">
-        <button class="t-nope" aria-label="Nö">👎</button>
-        <button class="t-superlike" aria-label="Superlike">⭐</button>
-        <button class="t-like" aria-label="Will ich">❤️</button>
+        <button class="t-nope" aria-label="Nö">${ICON.cross}</button>
+        <button class="t-superlike" aria-label="Superlike">${ICON.star}</button>
+        <button class="t-like" aria-label="Will ich">${ICON.heart}</button>
       </div>
-      <div class="tinder-hint">Wischen oder tippen: links = nö, Mitte = superlike, rechts = will ich!</div>
+      <div class="tinder-hint">Wischen oder tippen: links = nö, Mitte = Superlike, rechts = will ich</div>
     </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -2218,7 +2221,7 @@ function superlike(recipe) {
   const el = $('#detail');
   const overlay = document.createElement('div');
   overlay.className = 'superlike-overlay';
-  overlay.innerHTML = '<div class="superlike-text">SUPERLIKE ⭐</div>';
+  overlay.innerHTML = '<div class="superlike-text">Superlike</div>';
   el.appendChild(overlay);
 
   setTimeout(() => {
@@ -2349,9 +2352,9 @@ function renderTinderResult(ids) {
     el.innerHTML = `
       <button class="detail-close" aria-label="Zurück">←</button>
       <div class="detail-body group-body">
-        <h2>Alles weggewischt 😅</h2>
+        <h2>Alles weggewischt</h2>
         <div class="detail-meta">Vielleicht ist beim nächsten Mischen was dabei.</div>
-        <button class="tinder-again">🔀 Nochmal mischen</button>
+        <button class="tinder-again">Nochmal mischen</button>
       </div>`;
     el.querySelector('.detail-close').onclick = () => closeOverlay();
     el.querySelector('.tinder-again').onclick = () => {
@@ -2363,7 +2366,7 @@ function renderTinderResult(ids) {
     el.innerHTML = `
       <div class="tinder-match-screen" id="match-screen">
         <div class="match-overlay">
-          <div class="match-text">IT'S A MATCH! 🎉</div>
+          <div class="match-text">It's a Match!</div>
         </div>
         <div class="tinder-photo-preview fullscreen" id="photo-preview">
           ${winners.map((w, i) => `
@@ -2378,8 +2381,8 @@ function renderTinderResult(ids) {
       <button class="detail-close" aria-label="Zurück">←</button>
       <button class="detail-home" aria-label="Startseite" style="display:none;">🏠</button>
       <div class="detail-body group-body" style="display:none;">
-        <h2>Jetzt gilt's! 🎲</h2>
-        <div class="detail-meta">Was kochen wir heute? 😉</div>
+        <h2>Jetzt gilt's!</h2>
+        <div class="detail-meta">Was kochen wir heute?</div>
 
         <div class="slot-machine" id="slot-container" style="display:none;">
           <div class="slot-window">
@@ -2388,9 +2391,9 @@ function renderTinderResult(ids) {
         </div>
 
         <div class="slot-buttons">
-          <button class="slot-spin" id="slot-btn" style="display:none;">🎰 LOSCHEN!</button>
-          <button class="slot-share" id="slot-share-btn" style="display:none;">📤 Als Nachricht teilen</button>
-          <button class="tinder-again" style="display:none;">🔀 Nochmal mischen</button>
+          <button class="slot-spin" id="slot-btn" style="display:none;">Loschen!</button>
+          <button class="slot-share" id="slot-share-btn" style="display:none;">Als Nachricht teilen</button>
+          <button class="tinder-again" style="display:none;">Nochmal mischen</button>
         </div>
       </div>`;
 
@@ -2434,7 +2437,7 @@ const SLOT_CELL_H = 110;
 
 function finishSpin(winners, pick, btn) {
   const w = winners[pick];
-  btn.textContent = '✨ ' + w.title + (w.emoji ? ' ' + w.emoji : '');
+  btn.textContent = w.title + (w.emoji ? ' ' + w.emoji : '');
   btn.disabled = false;
   btn.onclick = () => {
     renderDetail(w.id);
@@ -2516,7 +2519,8 @@ function spinSlot(winners) {
 let toastTimer;
 function toast(msg) {
   const t = $('#toast');
-  t.textContent = msg;
+  // Führende Emojis weglassen — die Bedienung kommt ohne Emoji-Schmuck aus
+  t.textContent = String(msg).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '');
   t.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
@@ -2524,7 +2528,8 @@ function toast(msg) {
 
 function showToastWithoutTimeout(msg) {
   const t = $('#toast');
-  t.textContent = msg;
+  // Führende Emojis weglassen — die Bedienung kommt ohne Emoji-Schmuck aus
+  t.textContent = String(msg).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '');
   t.hidden = false;
   clearTimeout(toastTimer);
 }
@@ -2591,22 +2596,22 @@ function openSettings() {
   el.innerHTML = `
   <button class="detail-close" aria-label="Zurück">←</button>
   <div class="ed-body settings-body">
-    <h2>⚙️ Einstellungen</h2>
+    <h2>Einstellungen</h2>
 
     <div class="settings-section">
       <h3>Anzeige</h3>
       <div class="settings-row">
         <label class="setting-radio">
           <input type="radio" name="theme" value="light" ${currentTheme === 'light' ? 'checked' : ''}>
-          <span>☀️ Annika (Hell)</span>
+          <span>Annika (Hell)</span>
         </label>
         <label class="setting-radio">
           <input type="radio" name="theme" value="dark" ${currentTheme === 'dark' ? 'checked' : ''}>
-          <span>🌙 Lars (Dunkel)</span>
+          <span>Lars (Dunkel)</span>
         </label>
         <label class="setting-radio">
           <input type="radio" name="theme" value="auto" ${currentTheme === 'auto' ? 'checked' : ''}>
-          <span>🔄 Systemvorgabe</span>
+          <span>Systemvorgabe</span>
         </label>
       </div>
     </div>
@@ -2616,15 +2621,15 @@ function openSettings() {
       <div class="settings-row">
         <label class="setting-radio">
           <input type="radio" name="colorscheme" value="orange" ${currentColor === 'orange' ? 'checked' : ''}>
-          <span>🟧 Orange</span>
+          <span><i class="swatch swatch-orange"></i>Orange</span>
         </label>
         <label class="setting-radio">
           <input type="radio" name="colorscheme" value="blue" ${currentColor === 'blue' ? 'checked' : ''}>
-          <span>🟦 Blau</span>
+          <span><i class="swatch swatch-blue"></i>Blau</span>
         </label>
         <label class="setting-radio">
           <input type="radio" name="colorscheme" value="rainbow" ${currentColor === 'rainbow' ? 'checked' : ''}>
-          <span>🌈 Rainbow</span>
+          <span><i class="swatch swatch-rainbow"></i>Rainbow</span>
         </label>
       </div>
     </div>
@@ -2637,7 +2642,7 @@ function openSettings() {
             <input type="checkbox" id="vibration-toggle" ${vibrationEnabled() ? 'checked' : ''}>
             <span class="slider"></span>
           </div>
-          <span>📳 Vibration beim Ziehen</span>
+          <span>Vibration beim Ziehen</span>
         </label>
         <div class="setting-hint">Kurzes haptisches Feedback, wenn sich eine Kachel/Pille zum Verschieben löst</div>
       </div>
@@ -2651,7 +2656,7 @@ function openSettings() {
             <input type="checkbox" id="offline-toggle" ${localStorage.getItem(OFFLINE_MODE_KEY) === 'true' ? 'checked' : ''}>
             <span class="slider"></span>
           </div>
-          <span>🔒 Offline-Modus</span>
+          <span>Offline-Modus</span>
         </label>
         <div class="setting-hint">Keine Abgleiche mit Server, nur Lesen möglich</div>
       </div>
@@ -2666,19 +2671,19 @@ function openSettings() {
                 <input type="checkbox" id="edit-toggle" ${editEnabled && !offline ? 'checked' : ''}${offline ? ' disabled' : ''}>
                 <span class="slider"></span>
               </div>
-              <span>✏️ Bearbeitungsmodus</span>
+              <span>Bearbeitungsmodus</span>
             </label>
             <div class="setting-hint">${offline
               ? 'Im Offline-Modus deaktiviert – wird beim Ausschalten wiederhergestellt'
               : 'Token ist gespeichert – schalte Bearbeiten an/aus'}</div>
           </div>
           <button class="setting-btn" id="clear-token">Token entfernen</button>
-          <button class="setting-btn" id="share-token">🔗 Token teilen</button>`
+          <button class="setting-btn" id="share-token">Token teilen</button>`
         : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
     </div>
 
     <div class="settings-section">
-      <h3>🔥 Rezept-Tinder</h3>
+      <h3>Food Match</h3>
       <div class="setting-hint">Kategorien, die beim Tindern nicht als eigene Karte vorkommen sollen (z.B. Saucen, Beilagen)</div>
       <button class="setting-btn" id="tinder-cats-btn">Kategorien auswählen</button>
     </div>
@@ -2746,11 +2751,11 @@ function openSettings() {
     modal.innerHTML = `
       <div class="token-share-content">
         <button class="token-share-close">✕</button>
-        <h3>🔗 Token für deine Freundin</h3>
+        <h3>Token für deine Freundin</h3>
         <p>Teile diesen Token mit deiner Freundin:</p>
         <input type="text" readonly value="${esc(token)}" class="token-share-input">
-        <button class="token-share-copy">📋 In Zwischenablage kopieren</button>
-        <p class="token-share-hint">Deine Freundin kann den Token dann unter ⚙️ → "Token einrichten" einfügen</p>
+        <button class="token-share-copy">In Zwischenablage kopieren</button>
+        <p class="token-share-hint">Deine Freundin kann den Token dann in den Einstellungen unter "Token einrichten" einfügen</p>
       </div>
     `;
 
@@ -2822,7 +2827,7 @@ function openSettings() {
         if (freshDate !== oldDate) {
           const statusEl = el.querySelector('.update-status');
           if (statusEl) {
-            statusEl.innerHTML = `<div style="color: var(--accent); font-weight: 600; margin-top: 8px;">🔄 Update verfügbar</div>`;
+            statusEl.innerHTML = `<div style="color: var(--accent); font-weight: 600; margin-top: 8px;">Update verfügbar</div>`;
           }
         }
       }
@@ -2897,13 +2902,13 @@ $('#search-clear').onclick = () => {
 /* ---------- Bereichs-Umschalter (Frühstück / Kochen / Backen) ---------- */
 
 function renderModeUI() {
-  $('#mode-btn').textContent = `${MODES[mode].emoji} ${MODES[mode].label} ▾`;
+  $('#mode-btn').textContent = MODES[mode].label;
   const menu = $('#mode-menu');
   menu.innerHTML = '';
   for (const [key, m] of Object.entries(MODES)) {
     const b = document.createElement('button');
     b.className = key === mode ? 'active' : '';
-    b.textContent = `${m.emoji} ${m.label}`;
+    b.textContent = m.label;
     b.onclick = () => {
       mode = key;
       localStorage.setItem(MODE_KEY, mode);
@@ -2931,9 +2936,9 @@ document.addEventListener('click', e => {
 
 // Sortier-Button: Menü mit Alphabet / Zubereitungszeit / Zuletzt hinzugefügt
 const SORT_OPTIONS = [
-  ['alpha', '🔤 Alphabetisch'],
-  ['time', '⏱️ Zubereitungszeit'],
-  ['recent', '🆕 Zuletzt hinzugefügt'],
+  ['alpha', 'Alphabetisch'],
+  ['time', 'Zubereitungszeit'],
+  ['recent', 'Zuletzt hinzugefügt'],
 ];
 
 $('#sort-btn').onclick = e => {
@@ -2983,18 +2988,13 @@ function showAppUpdateDialog() {
   if (document.querySelector('.app-update-dialog')) return; // nicht doppelt zeigen
   const dialog = document.createElement('div');
   dialog.className = 'app-update-dialog';
-  dialog.style.cssText = `
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: var(--card); border: 3px solid var(--accent); border-radius: 12px;
-    padding: 24px; z-index: 2000; text-align: center; max-width: 300px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);`;
-  const btnStyle = `padding: 12px 20px; margin: 6px; border: none; border-radius: 6px;
-    cursor: pointer; font-size: 15px; font-weight: bold; font-family: inherit;`;
   dialog.innerHTML = `
-    <h3 style="margin: 0 0 12px 0; color: var(--accent);">✨ App-Update verfügbar!</h3>
-    <p style="margin: 0 0 12px 0; color: var(--text);">Neue Funktionen sind bereit.</p>
-    <button class="app-update-now" style="${btnStyle} background: var(--accent); color: white;">🔄 Jetzt updaten</button>
-    <button class="app-update-later" style="${btnStyle} background: none; color: var(--muted); border: 1px solid var(--muted);">Später</button>`;
+    <h3>App-Update verfügbar</h3>
+    <p>Neue Funktionen sind bereit.</p>
+    <div class="app-update-buttons">
+      <button class="app-update-now">Jetzt updaten</button>
+      <button class="app-update-later">Später</button>
+    </div>`;
   document.body.appendChild(dialog);
   dialog.querySelector('.app-update-now').onclick = () => { dialog.remove(); performAppUpdate(); };
   dialog.querySelector('.app-update-later').onclick = () => dialog.remove();

@@ -122,7 +122,7 @@ function setAiScanBusy(busy, label) {
   const box = $('.ai-scan-box');
   if (!box) return;
   $('#ai-scan-progress').hidden = !busy;
-  $('#ai-scan-label').textContent = busy ? label : '🤖 Rezept per KI erfassen';
+  $('#ai-scan-label').textContent = busy ? label : 'Rezept per KI erfassen';
   for (const b of box.querySelectorAll('button')) b.disabled = busy;
   const goBtn = $('.ed-scan-link-go');
   if (goBtn) goBtn.disabled = busy;
@@ -149,7 +149,7 @@ async function scanRecipePhotos(files) {
   try { dataUrls = await Promise.all(files.map(resizePhoto)); }
   catch (err) { return toast('Foto-Fehler: ' + err.message); }
 
-  setAiScanBusy(true, dataUrls.length > 1 ? `🤖 ${dataUrls.length} Fotos werden ausgelesen …` : '🤖 Rezept wird ausgelesen …');
+  setAiScanBusy(true, dataUrls.length > 1 ? `${dataUrls.length} Fotos werden ausgelesen …` : 'Rezept wird ausgelesen …');
   try {
     const res = await fetch(SCAN_WORKER_URL, {
       method: 'POST',
@@ -173,7 +173,7 @@ async function scanRecipePhotos(files) {
 
 // Rezept-Link per KI (Cloudflare-Worker + Claude) auslesen und Editor-Felder befüllen
 async function scanRecipeUrl(url) {
-  setAiScanBusy(true, '🤖 Rezept wird von der Seite ausgelesen …');
+  setAiScanBusy(true, 'Rezept wird von der Seite ausgelesen …');
   try {
     const res = await fetch(SCAN_WORKER_URL, {
       method: 'POST',
@@ -248,10 +248,10 @@ function openEditor(id) {
     <h2>${r ? 'Rezept bearbeiten' : 'Neues Rezept'}</h2>
     ${r ? '' : `
     <div class="ai-scan-box">
-      <div class="ai-scan-label" id="ai-scan-label">🤖 Rezept per KI erfassen</div>
+      <div class="ai-scan-label" id="ai-scan-label">Rezept per KI erfassen</div>
       <div class="ai-scan-buttons">
-        <button type="button" class="ed-scan-btn">📷 Foto</button>
-        <button type="button" class="ed-scan-link-btn">🔗 Link</button>
+        <button type="button" class="ed-scan-btn">Foto</button>
+        <button type="button" class="ed-scan-link-btn">Link</button>
       </div>
       <input type="file" id="ed-scan-input" accept="image/*" multiple hidden>
       <div class="ai-scan-progress" id="ai-scan-progress" hidden><div class="ai-scan-progress-bar"></div></div>
@@ -265,9 +265,9 @@ function openEditor(id) {
     <div class="ed-row">
       <div class="ed-field"><label>Bereich</label>
         <select id="ed-bereich">
-          <option value="kochen"${bereich === 'kochen' ? ' selected' : ''}>🍳 Kochen</option>
-          <option value="backen"${bereich === 'backen' ? ' selected' : ''}>🧁 Backen</option>
-          <option value="fruehstueck"${bereich === 'fruehstueck' ? ' selected' : ''}>🥐 Frühstück</option>
+          <option value="kochen"${bereich === 'kochen' ? ' selected' : ''}>Kochen</option>
+          <option value="backen"${bereich === 'backen' ? ' selected' : ''}>Backen</option>
+          <option value="fruehstueck"${bereich === 'fruehstueck' ? ' selected' : ''}>Frühstück</option>
         </select></div>
       <div class="ed-field"><label>Kategorien</label>
         <div id="ed-categories-container" class="ed-categories-container"></div></div>
@@ -298,9 +298,9 @@ function openEditor(id) {
       <input type="file" id="ed-photo-input" accept="image/*" multiple></div>
     <div class="ed-buttons">
       <button type="button" class="ed-cancel">Abbrechen</button>
-      <button type="button" class="ed-save">💾 Speichern</button>
+      <button type="button" class="ed-save">Speichern</button>
     </div>
-    ${r ? '<button type="button" class="ed-delete">🗑 Rezept löschen</button>' : ''}
+    ${r ? '<button type="button" class="ed-delete">Rezept löschen</button>' : ''}
   </div>`;
 
   // Kategorien-Auswahl initialisieren
@@ -520,7 +520,7 @@ function openTokenSetup() {
   const el = edEl();
   el.innerHTML = `
   <div class="ed-body">
-    <h2>✏️ Bearbeiten am Handy</h2>
+    <h2>Bearbeiten am Handy</h2>
     <p class="ed-text">${has
       ? 'Bearbeiten ist auf diesem Gerät <strong>aktiv</strong>. In jeder Rezept-Ansicht gibt es den ✏️-Knopf, in der Übersicht die „＋ Neues Rezept“-Kachel.'
       : 'Damit dieses Gerät Rezepte bearbeiten darf, braucht es einmalig einen GitHub-Schlüssel (Token). Er wird nur hier auf dem Gerät gespeichert.'}</p>
@@ -822,4 +822,3 @@ window.editorEnhanceDetail = (el, id) => {
   el.appendChild(b);
 };
 
-$('#btn-edit').onclick = openTokenSetup;

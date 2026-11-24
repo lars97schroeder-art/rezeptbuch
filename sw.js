@@ -11,6 +11,8 @@ const SHELL_FILES = [
   'app.js',
   'editor.js',
   'style.css',
+  'fonts/fraunces-latin.woff2',
+  'fonts/fraunces-italic-latin.woff2',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png',
