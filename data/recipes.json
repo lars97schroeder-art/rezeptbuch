@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T20:55:12.692Z",
+  "updated": "2026-11-24T20:56:06.646Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1331,13 +1331,16 @@
       "emoji": "🍰",
       "image": "data/images/kaesekuchen-1783372643-0.jpg",
       "images": [
-        "data/images/kaesekuchen-1783372643-0.jpg"
+        "data/images/kaesekuchen-1783372643-0.jpg",
+        "data/images/kaesekuchen-1795553763-0.jpg",
+        "data/images/kaesekuchen-1795553763-1.jpg"
       ],
       "ingredients": [],
       "steps": [],
       "notes": "Auch bekannt als Lars Geburtstagskuchen 😋",
       "bereich": "backen",
-      "created": "2026-07-04T12:00:00.000Z"
+      "created": "2026-07-04T12:00:00.000Z",
+      "updated": "2026-11-24T20:56:06.645Z"
     },
     {
       "id": "maultaschen-pfanne",
