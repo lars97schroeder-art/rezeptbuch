@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-24T19:28:20.354Z",
+  "updated": "2026-11-24T19:28:26.906Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -2007,22 +2007,6 @@
       "bereich": "kochen",
       "created": "2026-09-10T16:37:53.915Z",
       "updated": "2026-09-10T16:37:53.915Z"
-    },
-    {
-      "id": "zsgvd",
-      "title": "Zsgvd",
-      "category": [],
-      "time": "",
-      "servings": "",
-      "emoji": "",
-      "image": "",
-      "images": [],
-      "ingredients": [],
-      "steps": [],
-      "notes": "",
-      "bereich": "kochen",
-      "created": "2026-11-24T19:28:20.353Z",
-      "updated": "2026-11-24T19:28:20.353Z"
     }
   ]
 }
