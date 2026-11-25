@@ -8,7 +8,7 @@ const GH_REPO = activeLibrary().repo;
 const TOKEN_KEY = 'rezeptbuch-token'; // Token der ersten Bibliothek
 
 // Cloudflare-Worker, der Rezeptfotos per KI ausliest (siehe recipe-scan-worker/)
-const SCAN_WORKER_URL = 'https://rezeptbuch-scan.schlemmerliste.workers.dev';
+const SCAN_WORKER_URL = 'https://rezeptbuch-scan.schlemmer-lars.workers.dev';
 
 // Weitere Bibliotheken bringen ihren Token selbst mit
 const ghToken = () => activeLibrary().id === 'main'
