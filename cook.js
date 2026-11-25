@@ -412,26 +412,72 @@ async function downloadPhotos() {
 
 /* ---------- Hilfe ---------- */
 
+// Zeile: [Überschrift, Erklärung, optional Zeichen davor]
+const helpRow = ([title, text, mark = '', tone = '']) => `<div class="help-row">
+  ${mark ? `<span class="help-mark ${tone}" aria-hidden="true">${mark}</span>` : ''}
+  <span class="set-text"><span class="set-title">${title}</span><span class="set-hint">${text}</span></span>
+</div>`;
+
+// Aufklappbares Thema mit kurzer Einleitung und Abschnitten
+const helpTopic = (title, intro, parts) => `<details class="help-topic">
+  <summary><span class="set-text"><span class="set-title">${title}</span><span class="set-hint">${intro}</span></span></summary>
+  <div class="help-body">${parts.map(([heading, rows]) =>
+    `${heading ? `<h4>${heading}</h4>` : ''}${rows.map(helpRow).join('')}`).join('')}</div>
+</details>`;
+
 function openHelp() {
   enterOverlay('help');
-  const topic = (title, rows) => `<section class="set-group"><h3>${title}</h3><div class="set-card">${rows.map(([what, effect]) =>
-    `<div class="set-block help-row"><span class="set-title">${what}</span><span class="set-hint">${effect}</span></div>`).join('')}</div></section>`;
   const el = $('#editor');
   el.innerHTML = `
     <button class="detail-close" aria-label="Zurück">←</button>
     <div class="ed-body settings-body">
       <h2>Hilfe und Gesten</h2>
-      ${topic('Überall', [
-        ['Vom linken Rand nach rechts wischen', 'Eine Seite zurück. Auf der Startseite öffnen sich die Einstellungen.'],
-        ['Rückgängig', 'Erscheint nach jedem Löschen für ein paar Sekunden.']])}
-      ${topic('Rezepte', [
-        ['Foto antippen', 'Groß ansehen. Zwei Finger oder doppelt tippen zum Zoomen, nach unten wischen zum Schließen.'],
-        ['Kochen starten', 'Zutaten abhaken, dann Schritt für Schritt. Zeitangaben werden zu Timern.']])}
-      ${topic('Wochenplan', [
-        ['Griff links gedrückt halten', 'Eintrag auf einen anderen Tag oder ins Backlog ziehen.'],
-        ['Minus am Tag', 'Tag für diese Woche ausblenden.']])}
-      ${topic('Food Match', [
-        ['Rechts, links, Stern', 'Will ich, nö, oder sofort dieses Gericht. Nach drei Treffern wird gelost.']])}
+      ${helpTopic('Food Match', 'Wenn keiner weiß, was es geben soll', [
+        ['So läuft es', [
+          ['Karten wischen', 'Du bekommst Rezepte in zufälliger Reihenfolge: aus dem gewählten Bereich, passend zu Kategorie und Suche auf der Startseite.', '1'],
+          ['Drei Favoriten sammeln', 'Oben siehst du, wie viele du schon hast. Nach dem dritten heißt es „It’s a Match!“.', '2'],
+          ['Das Los entscheidet', 'Eines der drei wird ausgelost. Tippe auf den Namen, um das Rezept zu öffnen, oder verschicke es als Nachricht.', '3']]],
+        ['Knöpfe und Wischen', [
+          ['Will ich', 'Nach rechts wischen oder auf das Herz tippen.', ICON.heart, 'good'],
+          ['Nö', 'Nach links wischen oder auf das Kreuz tippen.', ICON.cross, 'bad'],
+          ['Superlike', 'Der Stern: Genau das gibt es. Das Rezept öffnet sich sofort, ohne Auslosen.', ICON.star]]],
+        ['Gut zu wissen', [
+          ['Nochmal mischen', 'Nach dem Match wird nur neu gelost. Hast du alles weggewischt, startet eine neue Runde.'],
+          ['Kategorien ausschließen', 'Zum Beispiel Saucen oder Beilagen: Einstellungen → Rezepte → Food Match.']]]])}
+
+      ${helpTopic('Startseite', 'Finden, filtern, sortieren', [
+        ['', [
+          ['Bereich wechseln', 'Oben zwischen Frühstück, Kochen und Backen umschalten.'],
+          ['Suchen und filtern', 'Nach Rezept oder Zutat suchen oder eine Kategorie antippen. Daneben sortierst du.'],
+          ['Mehr Platz', 'Beim Runterscrollen verschwinden Suche und Kategorien, beim Hochscrollen sind sie wieder da.'],
+          ['Neu und Update', 'Frisch hinzugefügte oder geänderte Rezepte sind einen Tag lang markiert.']]]])}
+
+      ${helpTopic('Rezepte', 'Ansehen, bearbeiten, teilen', [
+        ['', [
+          ['Foto antippen', 'Groß ansehen. Mit zwei Fingern oder doppeltem Tippen zoomen, nach unten wischen zum Schließen.'],
+          ['Teilen', 'Der Pfeil oben rechts macht aus dem Rezept ein Bild zum Verschicken.'],
+          ['Bearbeiten', 'Mit Zugang: über den Stift. Neue Rezepte legst du über die Plus-Kachel an.'],
+          ['Aus Foto oder Link', 'Beim neuen Rezept liest die KI Fotos oder Rezeptseiten aus. Bitte kurz prüfen.']]]])}
+
+      ${helpTopic('Kochmodus', 'Schritt für Schritt am Herd', [
+        ['', [
+          ['Starten', '„Kochen starten“ im Rezept. Erst Zutaten abhaken, dann folgt ein Schritt nach dem anderen.'],
+          ['Blättern', 'Mit „Weiter“ oder seitlich wischen. Tippe auf einen blassen Schritt, um dorthin zu springen.'],
+          ['Zutaten nachsehen', 'Das Symbol oben rechts zeigt die Liste, ohne den Schritt zu verlassen.'],
+          ['Timer', 'Zeitangaben im Schritt werden zu Timer-Knöpfen. Der Ton kommt nur bei offener App und lautem iPhone.'],
+          ['Foto zum Schluss', 'Am Ende die Kamera öffnen, das Foto landet beim Rezept.']]]])}
+
+      ${helpTopic('Wochenplan und Backlog', 'Planen und Ideen sammeln', [
+        ['', [
+          ['Eintragen', 'Beim Tag oder im Backlog tippen und ein Rezept wählen. Mit dem Plus wird daraus eine freie Notiz.'],
+          ['Verschieben', 'Den Griff links kurz gedrückt halten, dann auf einen anderen Tag oder ins Backlog ziehen.'],
+          ['Tag ausblenden', 'Das Minus am Tag, falls ihr nicht kocht.'],
+          ['Wochen wechseln', 'Mit den Pfeilen oben. Alle in der Bibliothek sehen denselben Plan.']]]])}
+
+      ${helpTopic('Überall', 'Gesten und Sicherheitsnetz', [
+        ['', [
+          ['Zurück', 'Vom linken Rand nach rechts wischen. Auf der Startseite öffnen sich so die Einstellungen.'],
+          ['Rückgängig', 'Nach jedem Löschen erscheint der Knopf für ein paar Sekunden.']]]])}
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.hidden = false;
