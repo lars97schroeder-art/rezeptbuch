@@ -5,6 +5,32 @@
 // JSON zurück. Der Anthropic-API-Key liegt als Secret
 // (wrangler secret put ANTHROPIC_API_KEY) und wird dem Browser nie sichtbar.
 
+// Zugang: Nur wer in einen dieser Daten-Speicher schreiben darf, darf die KI
+// benutzen (jede Anfrage kostet Geld). Neue Bibliotheken hier ergänzen.
+const ALLOWED_REPOS = [
+  'lars97schroeder-art/schlemmer-daten-lars-annika',
+  'lars97schroeder-art/rezeptbuch', // Geräte vor dem Umzug
+];
+
+// Echte Prüfung auf Schreibrecht: einen losen Datenblock anlegen, der in keiner
+// Datei auftaucht (lesen darf bei öffentlichen Speichern jeder)
+async function hasAccess(token) {
+  if (typeof token !== 'string' || !/^[\w]{20,255}$/.test(token)) return false;
+  for (const repo of ALLOWED_REPOS) {
+    const res = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'rezeptbuch-scan',
+      },
+      body: JSON.stringify({ content: 'Zugangsprüfung', encoding: 'utf-8' }),
+    });
+    if (res.ok) return true;
+  }
+  return false;
+}
+
 const ALLOWED_ORIGINS = [
   'https://lars97schroeder-art.github.io',
   'http://localhost:8123',
@@ -55,7 +81,11 @@ export default {
 
     // "images" (mehrere Fotos, z.B. mehrseitiges Rezept) oder das ältere
     // einzelne "image" — beide werden unterstützt
-    const { image, mediaType, images, url } = body;
+    const { image, mediaType, images, url, token } = body || {};
+    if (!await hasAccess(token)) {
+      return new Response(JSON.stringify({ error: 'Kein Zugang: Bitte App updaten und Token in den Einstellungen prüfen' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
     const imageList = Array.isArray(images) && images.length
       ? images
       : (image ? [{ data: image, mediaType: mediaType || 'image/jpeg' }] : []);

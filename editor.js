@@ -169,6 +169,7 @@ async function scanRecipePhotos(files) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        token: ghToken(), // der Dienst prüft damit den Zugang
         images: dataUrls.map(d => ({ data: d.split(',')[1], mediaType: 'image/jpeg' })),
       }),
     });
@@ -192,7 +193,7 @@ async function scanRecipeUrl(url) {
     const res = await fetch(SCAN_WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ token: ghToken(), url }),
     });
     if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
     applyScanResult(await res.json());
