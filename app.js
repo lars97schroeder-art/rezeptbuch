@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T15:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T16:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -743,6 +743,68 @@ function detailDatesHTML(r) {
   return `<div class="detail-dates">${lines.map(esc).join('<br>')}</div>`;
 }
 
+/* ---------- Fotos groß ansehen ---------- */
+
+// Vollbild mit allen Fotos des offenen Rezepts: seitlich wischen blättert,
+// ✕, nach unten wischen oder Zurück schließt
+function openLightbox(index) {
+  if (document.querySelector('.lightbox')) return;
+  const srcs = [...$('#detail').querySelectorAll('img.detail-photo')].map(img => img.getAttribute('src'));
+  const many = srcs.length > 1;
+  const box = document.createElement('div');
+  box.className = 'lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'Foto groß');
+  box.innerHTML = `
+    <div class="lightbox-strip">${srcs.map(src => `<div class="lightbox-slide"><img src="${esc(src)}" alt=""></div>`).join('')}</div>
+    <button class="lightbox-close" aria-label="Schließen">✕</button>
+    ${many ? `<button class="lightbox-nav prev" aria-label="Vorheriges Foto">‹</button>
+      <button class="lightbox-nav next" aria-label="Nächstes Foto">›</button>
+      <div class="lightbox-count"></div>` : ''}`;
+  document.body.appendChild(box);
+  history.pushState({ ...history.state, view: 'photo', depth: navDepth() + 1 }, '');
+
+  const strip = box.querySelector('.lightbox-strip');
+  const current = () => Math.round(strip.scrollLeft / strip.clientWidth);
+  const update = () => {
+    if (!many) return;
+    const i = current();
+    box.dataset.index = i;
+    box.querySelector('.lightbox-count').textContent = `${i + 1} / ${srcs.length}`;
+    box.querySelector('.prev').hidden = i === 0;
+    box.querySelector('.next').hidden = i === srcs.length - 1;
+  };
+  box.dataset.index = index;
+  strip.scrollLeft = index * strip.clientWidth;
+  update();
+  strip.addEventListener('scroll', update, { passive: true });
+
+  const close = () => history.back();
+  box.querySelector('.lightbox-close').onclick = close;
+  box.querySelector('.prev')?.addEventListener('click', () => strip.scrollBy({ left: -strip.clientWidth, behavior: 'smooth' }));
+  box.querySelector('.next')?.addEventListener('click', () => strip.scrollBy({ left: strip.clientWidth, behavior: 'smooth' }));
+
+  let start = null;
+  box.addEventListener('touchstart', e => {
+    start = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  box.addEventListener('touchend', e => {
+    if (!start) return;
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    start = null;
+    if (dy > 90 && dy > Math.abs(dx) * 1.5) close();
+  });
+}
+
+// Schließen und die kleine Galerie auf das zuletzt gesehene Foto stellen
+function closeLightbox(box) {
+  const index = Number(box.dataset.index) || 0;
+  box.remove();
+  const small = $('#detail').querySelector('.detail-photos');
+  if (small) small.scrollLeft = index * small.clientWidth;
+}
+
 function renderDetail(id, opts = {}) {
   const r = data.recipes.find(x => x.id === id);
   if (!r) return;
@@ -793,6 +855,7 @@ function renderDetail(id, opts = {}) {
     };
   }
   wirePhotoDots(el);
+  el.querySelectorAll('img.detail-photo').forEach((img, i) => { img.onclick = () => openLightbox(i); });
   if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
   el.hidden = false;
   document.body.style.overflow = 'hidden';
@@ -1099,6 +1162,9 @@ window.addEventListener('popstate', e => {
   lastBackAt = Date.now();
   resetSwipe();
   document.querySelectorAll('.ed-modal-overlay, .token-share-modal').forEach(m => m.remove());
+  // War ein Foto groß offen, schließt Zurück nur das: die Ansicht bleibt stehen
+  const lightbox = $('.lightbox');
+  if (lightbox) return closeLightbox(lightbox);
   const s = e.state;
   if (s?.view === 'overlay') {
     renderOverlayPage(s.page);
@@ -3279,7 +3345,7 @@ function swipeStart(x, y, time, el) {
   if (swipe) resetSwipe();
   if (x > swipeEdge()) return;
   // Eigene Zieh-/Wisch-Elemente haben Vorrang
-  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay')) return;
+  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay, .lightbox')) return;
   if (scrollableToLeft(el)) return;
   const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
   swipe = { x, y, mode, target: null, under: null, samples: [{ x, t: time }] };
