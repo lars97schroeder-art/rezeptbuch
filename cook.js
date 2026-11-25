@@ -28,7 +28,7 @@ applyTextSize();
 
 /* ---------- Kochmodus ---------- */
 
-let cook = null; // { recipe, ingredients, steps, pages, page, checked, box, afterClose }
+let cook = null; // { recipe, ingredients, steps, pages, page, checked, box }
 
 const cookIngredients = r => (r.ingredients || []).map(x => String(x).trim()).filter(Boolean);
 const cookSteps = r => (r.steps || []).map(x => String(x).trim()).filter(Boolean);
@@ -89,7 +89,6 @@ function openCook(id) {
     recipe, ingredients, steps, pages, box,
     page: resume ? Math.min(saved.page, pages.length - 1) : 0,
     checked: new Set(resume ? saved.checked : []),
-    afterClose: null,
   };
 
   const q = s => box.querySelector(s);
@@ -123,12 +122,11 @@ function openCook(id) {
 // Wird von popstate aufgerufen (✕, Zurück-Geste)
 function closeCook() {
   if (!cook) return;
-  const { box, afterClose } = cook;
+  const { box } = cook;
   saveCookState();
   cook = null;
   box.remove();
   releaseScreen();
-  if (afterClose) setTimeout(afterClose, 0);
 }
 
 function cookGo(direction, swiped = false) {
@@ -137,6 +135,35 @@ function cookGo(direction, swiped = false) {
   if (next >= cook.pages.length) { if (!swiped) history.back(); return; }
   cook.page = next;
   renderCook();
+}
+
+// Kamera direkt öffnen; das Foto wird sofort beim Rezept gespeichert
+function wireCookPhoto(body, id) {
+  const button = body.querySelector('.cook-photo');
+  const input = body.querySelector('.cook-camera');
+  const result = body.querySelector('.cook-photo-result');
+  let failed = null; // nicht gespeichertes Foto für einen neuen Versuch
+  const upload = async file => {
+    button.disabled = true;
+    button.textContent = 'Wird hochgeladen …';
+    try {
+      const preview = await addPhotoToRecipe(id, file);
+      failed = null;
+      result.innerHTML = `<img src="${preview}" alt="Dein Foto"><p>Beim Rezept gespeichert ✓</p>`;
+      button.textContent = 'Noch ein Foto';
+    } catch (err) {
+      failed = file;
+      result.textContent = 'Nicht gespeichert: ' + err.message;
+      button.textContent = 'Erneut versuchen';
+    }
+    button.disabled = false;
+  };
+  button.onclick = () => { if (failed) upload(failed); else input.click(); };
+  input.onchange = () => {
+    const file = input.files[0];
+    input.value = '';
+    if (file) upload(file);
+  };
 }
 
 function renderCookIngredients(container) {
@@ -175,8 +202,15 @@ function renderCook() {
     renderCookIngredients(body.querySelector('div'));
   } else if (page.type === 'step') {
     const times = stepTimes(page.text);
-    body.innerHTML = `<p class="cook-step">${esc(page.text)}</p>
-      <div class="cook-timer-buttons">${times.map((t, i) => `<button type="button" data-i="${i}">Timer ${esc(t.label)} starten</button>`).join('')}</div>`;
+    // Aktueller Schritt groß, darunter die folgenden ausgegraut (wie Songtexte)
+    const upcoming = cook.pages.map((p, index) => ({ ...p, index })).filter(p => p.type === 'step' && p.index > cook.page);
+    body.innerHTML = `<div class="cook-flow"><p class="cook-step">${esc(page.text)}</p>
+      <div class="cook-timer-buttons">${times.map((t, i) => `<button type="button" data-i="${i}">Timer ${esc(t.label)} starten</button>`).join('')}</div>
+      ${upcoming.length ? `<div class="cook-upcoming">${upcoming.map(p =>
+        `<button type="button" data-page="${p.index}" aria-label="Zu Schritt ${p.i + 1}">${esc(p.text)}</button>`).join('')}</div>` : ''}</div>`;
+    for (const b of body.querySelectorAll('.cook-upcoming button')) {
+      b.onclick = () => { cook.page = Number(b.dataset.page); renderCook(); };
+    }
     for (const b of body.querySelectorAll('.cook-timer-buttons button')) {
       b.onclick = () => startTimer(times[Number(b.dataset.i)], `Schritt ${page.i + 1}`);
     }
@@ -184,9 +218,11 @@ function renderCook() {
     const mayEdit = isEditModeEnabled();
     body.innerHTML = `<div class="cook-done"><div class="cook-done-emoji">${emojiFor(cook.recipe)}</div>
       <h2>Guten Appetit</h2>
-      ${mayEdit ? '<p class="cook-note">Lust, ein Foto vom Ergebnis hinzuzufügen?</p><button type="button" class="cook-photo">Foto hinzufügen</button>' : ''}</div>`;
-    const photo = body.querySelector('.cook-photo');
-    if (photo) photo.onclick = () => { const id = cook.recipe.id; cook.afterClose = () => openEditor(id); history.back(); };
+      ${mayEdit ? `<p class="cook-note">Lust, ein Foto vom Ergebnis zu machen?</p>
+        <button type="button" class="cook-photo">Foto aufnehmen</button>
+        <input type="file" class="cook-camera" accept="image/*" capture="environment" hidden>
+        <div class="cook-photo-result" aria-live="polite"></div>` : ''}</div>`;
+    if (mayEdit) wireCookPhoto(body, cook.recipe.id);
   }
   body.scrollTop = 0;
   saveCookState();

@@ -2789,6 +2789,29 @@ html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove {
 .cook-body h2, .cook-done h2 { font-family: var(--font-display); font-size: 26px; font-weight: 600; margin-bottom: 10px; }
 .cook-step { font-family: var(--font-display); font-size: var(--cook-step); line-height: 1.42; overflow-wrap: anywhere; white-space: pre-wrap; }
 .cook-timer-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.cook-timer-buttons:empty { display: none; }
+/* Folgende Schritte: ausgegraut, nach unten immer blasser, antippbar */
+.cook-flow { animation: cookRise 0.3s ease; }
+@keyframes cookRise { from { opacity: 0.3; transform: translateY(22px); } }
+.cook-upcoming { display: flex; flex-direction: column; gap: 22px; margin-top: 34px; }
+.cook .cook-upcoming button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: calc(var(--cook-step) * 0.82);
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  opacity: 0.65;
+}
+.cook .cook-upcoming button:nth-child(2) { opacity: 0.45; }
+.cook .cook-upcoming button:nth-child(n+3) { opacity: 0.3; }
+.cook-photo:disabled { opacity: 0.6; }
+.cook-photo-result { margin-top: 14px; font-size: 15px; color: var(--muted); }
+.cook-photo-result img { display: block; max-width: 220px; max-height: 220px; margin: 0 auto 8px; border-radius: var(--r-md); }
 .cook-timer-buttons button, .cook-photo {
   min-height: 54px;
   padding: 0 18px;

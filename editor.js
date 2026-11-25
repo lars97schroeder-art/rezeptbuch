@@ -528,6 +528,43 @@ async function saveFromEditor(existingId) {
   }
 }
 
+// Ein einzelnes Foto an ein Rezept anhängen (z. B. am Ende des Kochmodus).
+// Gibt das verkleinerte Foto als Vorschau zurück
+async function addPhotoToRecipe(id, file) {
+  if (edBusy) throw new Error('Gerade wird etwas anderes gespeichert');
+  edBusy = true;
+  try {
+    const photo = await resizePhoto(file);
+    const { sha, json: remote } = await freshRemoteData();
+    const recipe = remote.recipes.find(r => r.id === id);
+    if (!recipe) throw new Error('Das Rezept gibt es nicht mehr');
+    const path = `data/images/${id}-${Math.floor(Date.now() / 1000)}-0.jpg`;
+    await ghPut(path, photo.split(',')[1], `Foto: ${recipe.title} (vom Handy)`);
+    // gleich fürs Offline-Kochen merken (Cache ist Zugabe, darf scheitern)
+    try {
+      const cache = await caches.open(IMG_CACHE);
+      await cache.put(assetURL(path), new Response(dataUrlToBlob(photo), { headers: { 'Content-Type': 'image/jpeg' } }));
+    } catch (e) { /* ohne Cache wird beim Ansehen geladen */ }
+    recipe.images = [...imagesOf(recipe), path];
+    recipe.image = recipe.images[0];
+    recipe.updated = new Date().toISOString();
+    recipe.updatedBy = userName();
+    await commitRemoteData(remote, sha, `${recipe.title}: Foto hinzugefügt (vom Handy)`);
+    data = remote;
+    saveLocal();
+    render();
+    // Rezeptseite darunter gleich mit dem neuen Foto zeigen
+    if (!$('#detail').hidden) {
+      const top = $('#detail').scrollTop;
+      renderDetail(id);
+      $('#detail').scrollTop = top;
+    }
+    return photo;
+  } finally {
+    edBusy = false;
+  }
+}
+
 async function deleteFromEditor(id) {
   const r = data.recipes.find(x => x.id === id);
   if (!r || !confirm(`„${r.title}" wirklich löschen?`)) return;
