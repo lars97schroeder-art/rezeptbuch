@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T23:59:00+01:00';
+const APP_BUILD_TIME = '2026-11-26T09:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -3036,7 +3036,7 @@ function openSettings() {
       </div>`)}
 
     ${group('Kochmodus', `
-      ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an. Verfügbar am iPhone ab iOS 18.4.', cookFlag(COOK_WAKE_KEY))}
+      ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an, auf jedem iPhone ab iOS 18.4. Nicht gemeint ist das Always-On-Display für den Sperrbildschirm (14 Pro, 15 Pro, 16 Pro, 17, Air und neuer).', cookFlag(COOK_WAKE_KEY))}
       <div class="set-block">
         <span class="set-title">Schriftgröße beim Kochen</span>
         ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
@@ -3050,7 +3050,9 @@ function openSettings() {
         <span class="set-select-wrap"><select id="start-select" class="set-select">${Object.entries(START_OPTIONS).map(([value, label]) =>
           `<option value="${value}" ${startPage() === value ? 'selected' : ''}>${label}</option>`).join('')}</select></span>
       </label>
-      ${toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst. Am iPhone ab iOS 17.4.', vibrationEnabled())}
+      ${typeof navigator.vibrate === 'function'
+        ? toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst', vibrationEnabled())
+        : `<div class="set-block set-off"><span class="set-title">Vibration</span><span class="set-hint">Am iPhone nicht möglich: Apple lässt Web-Apps seit iOS 26.5 nicht mehr vibrieren.</span></div>`}
       ${toggle('offline-toggle', 'Offline-Modus', 'Keine Abgleiche mit dem Server, nur Lesen möglich', offline)}
       ${link('refresh-btn', 'Nach Updates suchen', 'Rezepte und App-Funktionen', 'action')}
       <div class="update-status"></div>`)}

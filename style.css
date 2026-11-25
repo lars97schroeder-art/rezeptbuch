@@ -1869,6 +1869,7 @@ button.set-row:active { background: var(--wash); }
   mask: var(--i-chevron) center / contain no-repeat;
   transform: rotate(-90deg);
 }
+.set-off .set-title { color: var(--muted); }
 .set-row.action .set-title { color: var(--accent); font-weight: 600; }
 .set-row.danger .set-title { color: var(--bad); }
 
