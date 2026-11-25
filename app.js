@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T18:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T19:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -3017,7 +3017,7 @@ function openSettings() {
 
       if (hasAppUpdate) {
         showAppUpdateDialog();
-      } else if (!hasUpdates) {
+      } else if (!hasUpdates || $('#toast').textContent.startsWith('Überprüfe')) {
         toast('✅ Alles aktuell – Rezepte und App-Funktionen');
       }
     } catch (err) {
@@ -3210,6 +3210,8 @@ async function performAppUpdate() {
 
 // Dialog: neue App-Funktionen verfügbar → jetzt updaten oder später (ignorieren)
 function showAppUpdateDialog() {
+  // Ein stehender Hinweis ("Überprüfe Updates …") darf den Dialog nicht verdecken
+  $('#toast').hidden = true;
   if (document.querySelector('.app-update-dialog')) return; // nicht doppelt zeigen
   const dialog = document.createElement('div');
   dialog.className = 'app-update-dialog';

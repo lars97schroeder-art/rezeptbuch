@@ -2033,6 +2033,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 .app-update-dialog h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 .app-update-dialog p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
 .app-update-buttons { display: flex; gap: 10px; }
+/* Solange der Update-Dialog unten steht, erscheinen Hinweise oben */
+body:has(.app-update-dialog) #toast { top: calc(env(safe-area-inset-top) + 16px); bottom: auto; }
 .app-update-buttons button {
   flex: 1;
   padding: 13px;
