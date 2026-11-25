@@ -187,7 +187,9 @@ header {
   top: 0;
   z-index: 10;
   background: var(--bg);
-  padding: calc(env(safe-area-inset-top) + 10px) 16px 0;
+  /* Abstand zu den Kacheln als padding: ein margin der Titelzeile würde hier
+     zusammenfallen */
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 12px;
   /* Platz für Kacheln (61px) sowie Suche + Kategorien, die unten an der
      Kopfzeile hängen. Bleibt beim Scrollen gleich, damit nichts springt */
   margin-bottom: calc(61px + var(--extra-h, 110px));
@@ -221,7 +223,6 @@ header.extra-hidden .header-extra-inner {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
 }
 
 /* Masthead: Name als Serifen-Schriftzug, das Köche-Paar klein als Signatur */
@@ -340,7 +341,7 @@ h1 {
   pointer-events: auto;
   transition: padding 0.24s ease;
 }
-header.extra-hidden .shortcuts-row { padding-bottom: 6px; border-bottom-color: var(--border); }
+header.extra-hidden .shortcuts-row { padding-bottom: 10px; border-bottom-color: var(--border); }
 
 .weekplan-shortcut {
   position: relative;
