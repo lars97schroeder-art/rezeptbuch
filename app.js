@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T17:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T18:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -3246,6 +3246,35 @@ async function checkAppUpdateAvailable() {
       row.classList.toggle('compact', compact);
     }
   }, { passive: true });
+})();
+
+// Suche + Kategorien: beim Runterscrollen weg, beim Hochscrollen wieder da
+(() => {
+  const header = document.querySelector('header');
+  const extra = $('#header-extra');
+  if (!extra) return; // alte index.html aus dem Zwischenspeicher
+  new ResizeObserver(() => header.style.setProperty('--extra-h', extra.firstElementChild.offsetHeight + 'px'))
+    .observe(extra.firstElementChild);
+
+  const STEP = 14; // so weit muss man in eine Richtung scrollen
+  let anchor = window.scrollY;
+  const show = visible => {
+    if (header.classList.contains('extra-hidden') !== visible) return;
+    header.classList.toggle('extra-hidden', !visible);
+    if (!visible) $('#sort-menu').hidden = true;
+  };
+  window.addEventListener('scroll', () => {
+    // iPhone federt über die Seitenränder hinaus: solche Werte begrenzen
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const y = Math.max(0, Math.min(window.scrollY, max));
+    const hidden = header.classList.contains('extra-hidden');
+    // Ganz oben und während des Tippens bleibt alles sichtbar
+    if (y < 60 || document.activeElement === $('#search')) { anchor = y; return show(true); }
+    // Anker folgt der aktuellen Richtung; erst eine Gegenbewegung zählt
+    if (hidden ? y > anchor : y < anchor) { anchor = y; return; }
+    if (Math.abs(y - anchor) >= STEP) { anchor = y; show(hidden); }
+  }, { passive: true });
+  $('#search').addEventListener('focus', () => show(true));
 })();
 
 /* ---------- App-Start ---------- */

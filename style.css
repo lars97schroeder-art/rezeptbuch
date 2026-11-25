@@ -187,17 +187,36 @@ header {
   top: 0;
   z-index: 10;
   background: var(--bg);
-  padding: calc(env(safe-area-inset-top) + 10px) 16px 6px;
-  border-bottom: 1px solid var(--border);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 0;
+  /* Platz für Suche + Kategorien, die unten an der Kopfzeile hängen */
+  margin-bottom: var(--extra-h, 118px);
+  border-bottom: 1px solid transparent;
 }
-@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  header {
-    background: var(--bg-glass);
-    -webkit-backdrop-filter: saturate(1.4) blur(16px);
-    backdrop-filter: saturate(1.4) blur(16px);
-  }
-}
+header.extra-hidden { border-bottom-color: var(--border); }
 
+/* Suche + Kategorien liegen über dem Inhalt: so verschiebt das Ein- und
+   Ausblenden nichts auf der Seite (kein Ruckeln beim Scrollen) */
+.header-extra {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  /* schneidet nur oben ab, Menüs dürfen nach unten herausragen */
+  clip-path: inset(0 0 -100vh 0);
+  pointer-events: none;
+}
+.header-extra-inner {
+  padding: 0 16px 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  pointer-events: auto;
+  transition: transform 0.24s ease, visibility 0.24s;
+}
+header.extra-hidden .header-extra-inner {
+  transform: translateY(-101%);
+  visibility: hidden;
+  pointer-events: none;
+}
 .topbar {
   display: flex;
   align-items: center;
@@ -420,7 +439,7 @@ h1 {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 8px 0 4px;
+  padding: 8px 0 2px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -447,7 +466,7 @@ h1 {
   font-weight: 600;
 }
 
-.sort-wrap { position: relative; flex: 0 0 auto; }
+.sort-wrap { position: relative; flex: 0 0 auto; margin-top: 6px; }
 
 #sort-btn {
   display: flex;
@@ -475,6 +494,10 @@ html.color-rainbow .h1-text em { color: transparent; }
 /* Große Bildschirme: Kopfzeile am Raster ausrichten, Bedienelemente nicht endlos strecken */
 @media (min-width: 700px) {
   header {
+    padding-left: max(16px, calc((100% - 1100px) / 2 + 16px));
+    padding-right: max(16px, calc((100% - 1100px) / 2 + 16px));
+  }
+  .header-extra-inner {
     padding-left: max(16px, calc((100% - 1100px) / 2 + 16px));
     padding-right: max(16px, calc((100% - 1100px) / 2 + 16px));
   }
