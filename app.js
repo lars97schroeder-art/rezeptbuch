@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T00:40:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T10:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -619,8 +619,10 @@ function render() {
 /* ---------- Detailansicht ---------- */
 
 function openRecipe(id, opts = {}) {
+  rememberScroll();
   renderDetail(id, opts);
-  history.pushState({ view: 'recipe', id, random: !!opts.random }, '');
+  $('#detail').scrollTop = 0;
+  pushView({ view: 'recipe', id, random: !!opts.random });
   // ISO-Check im Hintergrund: hat sich GENAU DIESES Rezept geändert,
   // wird die offene Ansicht sofort mit den frischen Daten neu gezeichnet
   const shownBefore = JSON.stringify(data.recipes.find(r => r.id === id) || null);
@@ -638,8 +640,10 @@ function openRecipe(id, opts = {}) {
 }
 
 function openGroup(name) {
+  rememberScroll();
   renderGroup(name);
-  history.pushState({ view: 'group', group: name }, '');
+  $('#detail').scrollTop = 0;
+  pushView({ view: 'group', group: name });
 }
 
 function renderGroup(name) {
@@ -664,10 +668,7 @@ function renderGroup(name) {
       </div>
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
-  el.querySelector('.detail-home').onclick = () => {
-    el.hidden = true;
-    document.body.style.overflow = '';
-  };
+  el.querySelector('.detail-home').onclick = () => goHome();
   for (const b of el.querySelectorAll('.variant')) {
     b.onclick = () => openRecipe(b.dataset.id);
   }
@@ -761,10 +762,7 @@ function renderDetail(id, opts = {}) {
     b.onclick = () => openRecipe(b.dataset.id);
   }
   el.querySelector('.detail-close').onclick = () => closeOverlay();
-  el.querySelector('.detail-home').onclick = () => {
-    el.hidden = true;
-    document.body.style.overflow = '';
-  };
+  el.querySelector('.detail-home').onclick = () => goHome();
   el.querySelector('.detail-share').onclick = () => shareRecipeAsImage(r);
   const rnd = el.querySelector('.detail-random');
   if (rnd) {
@@ -774,7 +772,7 @@ function renderDetail(id, opts = {}) {
       const next = list[Math.floor(Math.random() * list.length)];
       renderDetail(next.id, { random: true });
       // ersetzt den Verlaufseintrag: einmal zurück führt immer zur Übersicht
-      history.replaceState({ view: 'recipe', id: next.id, random: true }, '');
+      replaceView({ view: 'recipe', id: next.id, random: true });
     };
   }
   wirePhotoDots(el);
@@ -998,7 +996,31 @@ async function shareRecipeAsImage(r) {
   }
 }
 
-// Reine Anzeige-Schließung (kein History-Eingriff) — nur von popstate genutzt
+/* ---------- Navigation / Verlauf ----------
+   Jede Ansicht hat genau einen Verlaufseintrag mit "depth" (Abstand zur
+   Startseite). So führt Zurück immer zur vorherigen Ansicht, der Home-Knopf
+   räumt den ganzen Verlauf auf, und Einstellungen/Editor ("overlay") liegen
+   als eigene Einträge ÜBER der Ansicht, die darunter unverändert bleibt. */
+
+const navDepth = () => history.state?.depth || 0;
+
+// Scroll-Position der aktuellen Ansicht merken, damit Zurück dort wieder landet
+function rememberScroll() {
+  if (history.state && !$('#detail').hidden) {
+    history.replaceState({ ...history.state, scroll: $('#detail').scrollTop }, '');
+  }
+}
+function pushView(state) { history.pushState({ ...state, depth: navDepth() + 1 }, ''); }
+function replaceView(state) { history.replaceState({ ...state, depth: navDepth() || 1 }, ''); }
+
+// Einstellungen/Editor öffnen: einmal pro Seite ein Eintrag (Neuzeichnen zählt nicht)
+function enterOverlay(page) {
+  if (history.state?.view === 'overlay' && history.state.page === page) return;
+  rememberScroll();
+  pushView({ view: 'overlay', page });
+}
+
+// Reine Anzeige-Schließung (kein History-Eingriff)
 function hideDetail() {
   // Sicherheitsnetz: falls Wochenplan oder Backlog gerade einen ausstehenden
   // Upload haben (Debounce-Timer läuft noch), beim Verlassen sofort sichern
@@ -1010,32 +1032,72 @@ function hideDetail() {
 }
 
 // Schließen läuft IMMER über die History (history.back), damit der Verlauf
-// synchron bleibt. Sonst bleiben alte Zustände auf dem Stack liegen und man
-// landet beim nächsten Zurück auf einem „zufälligen" alten Rezept.
+// synchron bleibt. Die kurze Sperre verhindert, dass zwei Auslöser derselben
+// Geste (eigener Wisch + iPhone-Zurückgeste, Doppeltipp) zwei Ebenen springen.
+let lastBackAt = 0;
 function closeOverlay() {
+  const now = Date.now();
+  if (now - lastBackAt < 450) return;
+  lastBackAt = now;
   if (history.state) history.back();
-  else hideDetail();
+  else { closeEditor(); hideDetail(); }
+}
+
+// Home-Knopf: Ansichten schließen UND den Verlauf bis zur Startseite abräumen
+function goHome() {
+  const depth = navDepth();
+  closeEditor();
+  hideDetail();
+  if (depth) history.go(-depth);
+}
+
+function renderOverlayPage(page) {
+  if (page === 'settings') openSettings();
+  else if (page === 'library-recipes') openLibraryRecipes();
+  else if (page === 'library-categories') openLibraryCategories();
+  else if (page === 'token') openTokenSetup();
+  else closeEditor();
 }
 
 // Zurück-Navigation: null = Übersicht, sonst die jeweilige Ansicht wiederherstellen
 window.addEventListener('popstate', e => {
+  lastBackAt = Date.now();
+  cancelSwipe();
+  document.querySelectorAll('.ed-modal-overlay, .token-share-modal').forEach(m => m.remove());
   const s = e.state;
+  if (s?.view === 'overlay') return renderOverlayPage(s.page);
+  const detail = $('#detail');
+  if (!$('#editor').hidden) {
+    closeEditor();
+    // Die Ansicht unter den Einstellungen/dem Editor ist noch da: so lassen
+    if (s && !detail.hidden) return;
+  }
   if (!s) return hideDetail();
-  if (s.view === 'group') renderGroup(s.group);
-  else if (s.view === 'recipe') renderDetail(s.id, { random: s.random });
-  else if (s.view === 'weekplan') renderWeekplan();
+  if (s.view === 'group') {
+    if (!data.recipes.some(r => r.group === s.group)) return goHome();
+    renderGroup(s.group);
+  } else if (s.view === 'recipe') {
+    if (!data.recipes.some(r => r.id === s.id)) return goHome();
+    renderDetail(s.id, { random: s.random });
+  } else if (s.view === 'weekplan') renderWeekplan();
   else if (s.view === 'tinder') renderTinder();
-  else if (s.view === 'tinder-result' || s.view === 'tinder-result-recipe') renderTinderResult(s.ids || []);
-  else hideDetail();
+  else if (s.view === 'tinder-result') renderTinderResult(s.ids || []);
+  else if (s.view === 'tinder-result-recipe') renderDetail((s.ids || [])[s.winnerIndex]);
+  else return hideDetail();
+  detail.scrollTop = s.scroll || 0;
 });
+
+// Nach Neuladen (z.B. Update) startet die App auf der Übersicht — alter Zustand weg
+history.replaceState(null, '');
 
 /* ---------- Rezept-Tinder 🔥 ---------- */
 
 let tinder = null; // { deck: [Rezepte], likes: [Rezepte] }
 
 function openTinder() {
+  rememberScroll();
   renderTinder();
-  history.pushState({ view: 'tinder' }, '');
+  pushView({ view: 'tinder' });
 }
 
 // Welche Woche gerade im Wochenplan angezeigt wird (Standard: aktuelle Woche)
@@ -1045,8 +1107,10 @@ let weekplanViewKey = null;
 function openWeekplan() {
   weekplanViewDate = new Date(); // beim Öffnen immer zurück auf die laufende Woche
   clearWeekplanUpdateDot();
+  rememberScroll();
   renderWeekplan();
-  history.pushState({ view: 'weekplan' }, '');
+  $('#detail').scrollTop = 0;
+  pushView({ view: 'weekplan' });
 }
 
 const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
@@ -2303,7 +2367,7 @@ function superlike(recipe) {
     overlay.remove();
     tinder.deck.shift();
     renderDetail(recipe.id);
-    history.replaceState({ view: 'recipe', id: recipe.id }, '');
+    replaceView({ view: 'recipe', id: recipe.id });
   }, 2500);
 }
 
@@ -2416,7 +2480,7 @@ function attachSwipe(card, onSwipe) {
 }
 
 function showTinderResult(ids) {
-  history.replaceState({ view: 'tinder-result', ids }, '');
+  replaceView({ view: 'tinder-result', ids });
   renderTinderResult(ids);
 }
 
@@ -2433,7 +2497,7 @@ function renderTinderResult(ids) {
       </div>`;
     el.querySelector('.detail-close').onclick = () => closeOverlay();
     el.querySelector('.tinder-again').onclick = () => {
-      history.replaceState({ view: 'tinder' }, '');
+      replaceView({ view: 'tinder' });
       renderTinder();
     };
   } else {
@@ -2473,10 +2537,7 @@ function renderTinderResult(ids) {
       </div>`;
 
     el.querySelector('.detail-close').onclick = () => closeOverlay();
-    el.querySelector('.detail-home').onclick = () => {
-      el.hidden = true;
-      document.body.style.overflow = '';
-    };
+    el.querySelector('.detail-home').onclick = () => goHome();
 
     // Nach 2.5 Sekunden: Match-Screen ausblenden, Slot-Machine einblenden
     setTimeout(() => {
@@ -2515,8 +2576,10 @@ function finishSpin(winners, pick, btn) {
   btn.textContent = w.title + (w.emoji ? ' ' + w.emoji : '');
   btn.disabled = false;
   btn.onclick = () => {
+    rememberScroll();
     renderDetail(w.id);
-    history.pushState({ view: 'tinder-result-recipe', ids: winners.map(x => x.id), winnerIndex: pick }, '');
+    $('#detail').scrollTop = 0;
+    pushView({ view: 'tinder-result-recipe', ids: winners.map(x => x.id), winnerIndex: pick });
   };
 
   const shareBtn = $('#slot-share-btn');
@@ -2669,6 +2732,7 @@ function applyColorScheme(scheme) {
 })();
 
 function openSettings() {
+  enterOverlay('settings');
   const hasToken = ghToken && ghToken();
   const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
   const offline = localStorage.getItem(OFFLINE_MODE_KEY) === 'true';
@@ -2768,6 +2832,15 @@ function openSettings() {
     </div>
 
     <div class="settings-section">
+      <h3>Rezeptbibliothek</h3>
+      ${hasToken && !offline
+        ? `<div class="setting-hint">Mehrere Rezepte auf einmal löschen und Kategorien umbenennen oder entfernen</div>
+          <button class="setting-btn" id="lib-recipes-btn">Rezepte verwalten</button>
+          <button class="setting-btn" id="lib-cats-btn">Kategorien verwalten</button>`
+        : `<div class="setting-hint">${offline ? 'Im Offline-Modus nicht möglich' : 'Braucht einen eingerichteten Token (siehe Bearbeiten)'}</div>`}
+    </div>
+
+    <div class="settings-section">
       <h3>Food Match</h3>
       <div class="setting-hint">Kategorien, die beim Tindern nicht als eigene Karte vorkommen sollen (z.B. Saucen, Beilagen)</div>
       <button class="setting-btn" id="tinder-cats-btn">Kategorien auswählen</button>
@@ -2782,7 +2855,10 @@ function openSettings() {
     </div>
   </div>`;
 
-  el.querySelector('.detail-close').onclick = () => { el.hidden = true; document.body.style.overflow = ''; };
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
+
+  el.querySelector('#lib-recipes-btn')?.addEventListener('click', () => openLibraryRecipes());
+  el.querySelector('#lib-cats-btn')?.addEventListener('click', () => openLibraryCategories());
 
   el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
 
@@ -2860,11 +2936,7 @@ function openSettings() {
     });
   });
 
-  el.querySelector('#setup-token')?.addEventListener('click', () => {
-    el.hidden = true;
-    document.body.style.overflow = '';
-    if (window.openTokenSetup) window.openTokenSetup();
-  });
+  el.querySelector('#setup-token')?.addEventListener('click', () => openTokenSetup());
 
   el.querySelector('#refresh-btn').onclick = async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
@@ -3168,67 +3240,71 @@ function clearWeekplanUpdateDot() {
 // Wisch-Gesten vom linken Rand nach rechts:
 //  - in einer Ansicht (#detail/#editor): zurück
 //  - auf der Rezeptübersicht: Einstellungen öffnen ("nach vorne")
-let swipeStart = null;
-let swipeStartY = 0;
-let swipeMode = null; // 'back' | 'settings'
-const swipeTarget = () => $('#detail').hidden ? $('#editor') : $('#detail');
+// Erst wenn die Bewegung klar waagerecht ist, "greift" die Geste; Scrollen,
+// Abbruch durch den Browser (pointercancel) und Seitenwechsel setzen alles
+// zurück, damit nie eine halb verschobene, durchscheinende Seite stehen bleibt.
+let swipe = null; // { id, x, y, mode: 'back'|'settings', target }
+// Das oberste Fenster zählt: Editor/Einstellungen liegen ÜBER der Rezeptansicht
+const swipeTarget = () => $('#editor').hidden ? $('#detail') : $('#editor');
+
+function resetSwipeStyles(t) {
+  if (!t) return;
+  t.classList.remove('swiping');
+  t.style.transform = '';
+  t.style.opacity = '';
+}
+function cancelSwipe() {
+  resetSwipeStyles(swipe?.target);
+  swipe = null;
+}
 
 document.addEventListener('pointerdown', (e) => {
-  if (e.clientX >= 50) return;
-  swipeStart = e.clientX;
-  swipeStartY = e.clientY;
-  swipeMode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
-}, false);
+  cancelSwipe();
+  if (e.clientX >= 40 || e.isPrimary === false) return;
+  // Eigene Zieh-/Wisch-Elemente haben Vorrang
+  if (e.target.closest('input, textarea, .backlog-drag, .weekplan-tag-drag, .detail-photos, .tinder')) return;
+  const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
+  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, mode, target: null };
+});
 
 document.addEventListener('pointermove', (e) => {
-  if (swipeStart === null) return;
-  const swipeDistance = e.clientX - swipeStart;
-  const dy = Math.abs(e.clientY - swipeStartY);
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const dx = e.clientX - swipe.x;
+  const dy = Math.abs(e.clientY - swipe.y);
 
-  // Übersicht: Wisch nach rechts öffnet die Einstellungen
-  if (swipeMode === 'settings') {
-    if (swipeDistance > 80 && dy < 60) {
-      swipeStart = null; swipeMode = null;
-      openSettings();
-    } else if (swipeDistance < -10 || dy > 80) {
-      swipeStart = null; swipeMode = null; // vertikales Scrollen / falsche Richtung
+  if (!swipe.target) {
+    // Richtung entscheiden: senkrecht oder nach links = keine Wisch-Geste
+    if ((dy > 12 && dy > dx) || dx < -10) { swipe = null; return; }
+    if (swipe.mode === 'settings') {
+      if (dx > 80 && dy < 60) { swipe = null; openSettings(); }
+      return;
     }
-    return;
-  }
-
-  const target = swipeTarget();
-  const closeBtn = target.querySelector('.detail-close');
-
-  // Nur swipen, wenn der Zurück-Button sichtbar ist (aber nicht auf Tinder-Seite)
-  if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) {
-    swipeStart = null;
-    return;
-  }
-
-  // Zeige Swipe-Animation während des Swipens
-  if (!target.hidden) {
-    target.style.transform = `translateX(${Math.min(swipeDistance, 100)}px)`;
-    target.style.opacity = Math.max(0.5, 1 - swipeDistance / 300);
-  }
-
-  // Wenn genug geswipet wurde: schließen. #detail läuft über die History
-  // (closeOverlay → history.back), damit man auf der richtigen Übersicht landet.
-  // #editor (Einstellungen/Editor) hat keinen History-State → direkt verstecken.
-  if (swipeDistance > 100 && e.clientX < 200) {
-    swipeStart = null;
-    target.style.transform = '';
-    target.style.opacity = '';
-    if (target.id === 'detail') closeOverlay();
-    else { target.hidden = true; document.body.style.overflow = ''; }
-  }
-}, false);
-
-document.addEventListener('pointerup', () => {
-  if (swipeStart !== null && swipeMode === 'back') {
+    if (dx < 14 || dx < dy * 1.5) return;
     const target = swipeTarget();
-    target.style.transform = '';
-    target.style.opacity = '';
+    const closeBtn = target.querySelector('.detail-close');
+    // Nur wenn ein sichtbarer Zurück-Knopf da ist (nicht beim Food Match)
+    if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) {
+      swipe = null;
+      return;
+    }
+    swipe.target = target;
+    target.classList.add('swiping');
   }
-  swipeStart = null;
-  swipeMode = null;
-}, false);
+  swipe.target.style.transform = `translateX(${Math.max(0, Math.min(dx, 120))}px)`;
+  swipe.target.style.opacity = Math.max(0.65, 1 - dx / 400);
+});
+
+document.addEventListener('pointerup', (e) => {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const { target } = swipe;
+  const dx = e.clientX - swipe.x;
+  cancelSwipe();
+  // Erst beim Loslassen auslösen — wer zurückzieht, bleibt auf der Seite
+  if (target && dx > 90) closeOverlay();
+});
+document.addEventListener('pointercancel', cancelSwipe);
+
+// Während die Geste läuft, darf der Browser sie nicht als Scrollen übernehmen
+document.addEventListener('touchmove', (e) => { if (swipe?.target) e.preventDefault(); }, { passive: false });
+// Der schmale Randstreifen gehört ganz uns (verhindert die iPhone-Browsergeste)
+document.getElementById('edge-swipe-guard')?.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });

@@ -202,7 +202,12 @@ function closeEditor() {
   if ($('#detail').hidden) document.body.style.overflow = '';
 }
 
-window.addEventListener('popstate', closeEditor);
+// Zurück-Knöpfe im Editor/in den Einstellungen: über den Verlauf, damit die
+// Ansicht darunter bzw. die vorherige Einstellungsseite wieder erscheint
+function leaveEditorPage() {
+  if (history.state?.view === 'overlay') closeOverlay();
+  else closeEditor();
+}
 
 function edPhotoListHTML() {
   const thumb = (src, typ, i) => `
@@ -230,6 +235,8 @@ function openEditor(id) {
     toast('🔒 Im Offline-Modus: Bearbeiten nicht möglich');
     return;
   }
+
+  enterOverlay('edit');
 
   // Auto-Check: Falls bestehendes Rezept, checke auf Updates
   if (id) {
@@ -324,7 +331,7 @@ function openEditor(id) {
   };
 
   renderEdPhotos();
-  el.querySelector('.ed-close').onclick = closeEditor;
+  el.querySelector('.ed-close').onclick = leaveEditorPage;
 
   const scanBtn = el.querySelector('.ed-scan-btn');
   if (scanBtn) {
@@ -360,7 +367,7 @@ function openEditor(id) {
     e.target.value = '';
     renderEdPhotos();
   };
-  el.querySelector('.ed-cancel').onclick = closeEditor;
+  el.querySelector('.ed-cancel').onclick = leaveEditorPage;
   el.querySelector('.ed-save').onclick = () => saveFromEditor(r ? r.id : null);
   const del = el.querySelector('.ed-delete');
   if (del) del.onclick = () => deleteFromEditor(r.id);
@@ -463,20 +470,21 @@ async function saveFromEditor(existingId) {
 
     data = remote;
     saveLocal();
+    const detailWasOpen = !$('#detail').hidden;
+    const fromOverlay = history.state?.view === 'overlay';
     closeEditor();
     // Auf der (jetzt aktualisierten) Rezeptseite bleiben statt eine Ebene
     // zurückzuspringen. closeOverlay()/history.back() würde bei Rezepten, die
     // über die Tinder-Slot-Machine geöffnet wurden, auf der Slot-Machine
     // landen statt beim Rezept — das wollen wir hier vermeiden.
     renderDetail(recipe.id);
-    if ($('#detail').hidden) {
-      // z. B. über die "+ Neues Rezept"-Kachel ohne offene Detailansicht
-      $('#detail').hidden = false;
-      document.body.style.overflow = 'hidden';
-      history.pushState({ view: 'recipe', id: recipe.id }, '');
-    } else {
-      history.replaceState({ view: 'recipe', id: recipe.id }, '');
-    }
+    $('#detail').hidden = false;
+    document.body.style.overflow = 'hidden';
+    if (!fromOverlay) replaceView({ view: 'recipe', id: recipe.id });
+    // Editor über der Rezeptseite: dessen Eintrag einfach zurücknehmen
+    else if (detailWasOpen) history.back();
+    // z. B. "+ Neues Rezept" von der Übersicht: Editor-Eintrag wird zum Rezept
+    else replaceView({ view: 'recipe', id: recipe.id });
     render();
     toast('Gespeichert ✓');
   } catch (e) {
@@ -502,8 +510,11 @@ async function deleteFromEditor(id) {
     }
     data = remote;
     saveLocal();
+    // Editor UND die Seite des gelöschten Rezepts aus dem Verlauf nehmen
+    const steps = Math.min(history.state?.view === 'overlay' ? 2 : 1, navDepth());
     closeEditor();
-    closeOverlay();
+    if (steps) history.go(-steps);
+    else hideDetail();
     render();
     toast('Gelöscht ✓');
   } catch (e) {
@@ -516,6 +527,7 @@ async function deleteFromEditor(id) {
 /* ---------- Token-Einrichtung ---------- */
 
 function openTokenSetup() {
+  enterOverlay('token');
   const has = !!ghToken();
   const el = edEl();
   el.innerHTML = `
@@ -533,7 +545,7 @@ function openTokenSetup() {
     </div>
     ${has ? '<button type="button" class="ed-delete">Token von diesem Gerät entfernen</button>' : ''}
   </div>`;
-  el.querySelector('.ed-cancel').onclick = closeEditor;
+  el.querySelector('.ed-cancel').onclick = leaveEditorPage;
   el.querySelector('.ed-save').onclick = async () => {
     const t = $('#ed-token').value.trim();
     if (!t) return toast('Bitte Token einfügen');
@@ -542,14 +554,14 @@ function openTokenSetup() {
       { headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github+json' } });
     if (!res.ok) return toast('Token funktioniert nicht (Fehler ' + res.status + ')');
     localStorage.setItem(TOKEN_KEY, t);
-    closeEditor();
+    leaveEditorPage();
     render();
     toast('Bearbeiten aktiviert ✓');
   };
   const del = el.querySelector('.ed-delete');
   if (del) del.onclick = () => {
     localStorage.removeItem(TOKEN_KEY);
-    closeEditor();
+    leaveEditorPage();
     render();
     toast('Token entfernt');
   };
@@ -614,7 +626,8 @@ function openCategorySelector(allCats) {
 
   let html = '<div class="ed-modal"><h3>Kategorien auswählen</h3><div class="ed-cat-list">';
 
-  for (const cat of allCats) {
+  // auch neu angelegte, noch an keinem Rezept gespeicherte Auswahl anzeigen
+  for (const cat of [...new Set([...allCats, ...(window.edSelectedCategories || [])])]) {
     const checked = (window.edSelectedCategories || []).includes(cat);
     html += `<label class="ed-cat-option"><input type="checkbox" data-cat="${esc(cat)}" ${checked ? 'checked' : ''}> ${esc(cat)}</label>`;
   }
@@ -822,3 +835,272 @@ window.editorEnhanceDetail = (el, id) => {
   el.appendChild(b);
 };
 
+
+/* ---------- Rezeptbibliothek (Einstellungen) ---------- */
+
+let libBusy = false;
+let libSelected = new Set();   // Rezept-IDs bzw. "bereich|Kategorie"
+let libQuery = '';
+
+function libraryAllowed() {
+  if (isEditModeEnabled() || (ghToken() && localStorage.getItem(OFFLINE_MODE_KEY) !== 'true')) return true;
+  toast('Dafür braucht es einen Token und eine Online-Verbindung');
+  return false;
+}
+
+// Seitengerüst; behält die Auswahl, wenn dieselbe Seite nur neu gezeichnet wird
+function libShell(page, title, hint) {
+  if (history.state?.page !== page) { libSelected = new Set(); libQuery = ''; }
+  enterOverlay(page);
+  const el = edEl();
+  el.innerHTML = `
+    <button class="detail-close ed-close" aria-label="Zurück">←</button>
+    <div class="ed-body lib-body">
+      <h2>${title}</h2>
+      <p class="ed-text">${hint}</p>
+      <div id="lib-content"></div>
+    </div>
+    <div class="lib-bar" id="lib-bar" hidden>
+      <span id="lib-count"></span>
+      <button type="button" id="lib-action"></button>
+    </div>`;
+  el.querySelector('.ed-close').onclick = leaveEditorPage;
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
+  return el;
+}
+
+// Änderung auf den aktuellsten Stand anwenden und als EIN Commit speichern
+async function libCommit(message, mutate) {
+  if (libBusy || edBusy) return null;
+  libBusy = edBusy = true;
+  try {
+    toast('Speichere …');
+    const { sha, json: remote } = await freshRemoteData();
+    const result = mutate(remote);
+    await commitRemoteData(remote, sha, message);
+    data = remote;
+    saveLocal();
+    render();
+    return { remote, result };
+  } catch (e) {
+    toast('Fehler: ' + e.message);
+    return null;
+  } finally {
+    libBusy = edBusy = false;
+  }
+}
+
+function openLibraryRecipes() {
+  if (!libraryAllowed()) return;
+  const el = libShell('library-recipes', 'Rezepte verwalten',
+    'Rezepte antippen, die weg sollen. Gelöscht wird erst nach einer Rückfrage.');
+  el.querySelector('#lib-content').innerHTML = `
+    <input type="search" id="lib-search" class="lib-search" placeholder="Rezept oder Kategorie suchen" autocomplete="off" value="${esc(libQuery)}">
+    <div class="lib-list" id="lib-list"></div>`;
+  el.querySelector('#lib-search').oninput = ev => { libQuery = ev.target.value; renderLibRecipeList(); };
+  el.querySelector('#lib-action').onclick = libDeleteRecipes;
+  renderLibRecipeList();
+}
+
+function renderLibRecipeList() {
+  const list = $('#lib-list');
+  if (!list) return;
+  const q = libQuery.trim().toLowerCase();
+  const recipes = data.recipes
+    .filter(r => !q || [r.title, ...recipeCategories(r)].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => a.title.localeCompare(b.title, 'de'));
+  list.innerHTML = recipes.map(r => {
+    const img = imagesOf(r)[0];
+    const meta = [MODES[recipeMode(r)]?.label, categoryLabel(r)].filter(Boolean).join(' · ');
+    return `<label class="lib-row">
+      <input type="checkbox" data-key="${esc(r.id)}" ${libSelected.has(r.id) ? 'checked' : ''}>
+      ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<span class="lib-thumb">${emojiFor(r)}</span>`}
+      <span class="lib-text">${esc(r.title)}<small>${esc(meta)}</small></span>
+    </label>`;
+  }).join('') || '<div class="ed-text">Nichts gefunden.</div>';
+  for (const box of list.querySelectorAll('input[type="checkbox"]')) {
+    box.onchange = () => {
+      if (box.checked) libSelected.add(box.dataset.key); else libSelected.delete(box.dataset.key);
+      updateLibRecipeBar();
+    };
+  }
+  updateLibRecipeBar();
+}
+
+function updateLibRecipeBar() {
+  const n = libSelected.size;
+  $('#lib-bar').hidden = !n;
+  $('#lib-count').textContent = n === 1 ? '1 ausgewählt' : `${n} ausgewählt`;
+  const btn = $('#lib-action');
+  btn.textContent = 'Löschen';
+  btn.className = 'danger';
+}
+
+async function libDeleteRecipes() {
+  const chosen = data.recipes.filter(r => libSelected.has(r.id));
+  if (!chosen.length) return;
+  const names = chosen.slice(0, 6).map(r => '• ' + r.title).join('\n')
+    + (chosen.length > 6 ? `\n… und ${chosen.length - 6} weitere` : '');
+  const label = chosen.length === 1 ? '1 Rezept' : `${chosen.length} Rezepte`;
+  if (!confirm(`${label} wirklich löschen?\n\n${names}`)) return;
+  const ids = new Set(chosen.map(r => r.id));
+  const done = await libCommit(`${label} gelöscht (vom Handy)`, remote => {
+    const removed = remote.recipes.filter(r => ids.has(r.id));
+    remote.recipes = remote.recipes.filter(r => !ids.has(r.id));
+    for (const r of remote.recipes) {
+      if (r.related) r.related = r.related.filter(id => !ids.has(id));
+    }
+    return removed;
+  });
+  if (!done) return;
+  libSelected = new Set();
+  renderLibRecipeList();
+  toast(`${label} gelöscht ✓`);
+  // Nicht mehr benutzte Fotos nacheinander aufräumen (parallel gäbe Konflikte)
+  const stillUsed = new Set(done.remote.recipes.flatMap(imagesOf));
+  (async () => {
+    for (const r of done.result) {
+      for (const p of imagesOf(r)) {
+        if (!stillUsed.has(p)) await ghDeleteFile(p, `Foto entfernt: ${r.title}`);
+      }
+    }
+  })();
+}
+
+// Kategorien je Bereich mit Anzahl der Rezepte
+function libCategoryCounts(modeKey) {
+  const counts = new Map();
+  for (const r of data.recipes) {
+    if (recipeMode(r) !== modeKey) continue;
+    for (const c of recipeCategories(r)) counts.set(c, (counts.get(c) || 0) + 1);
+  }
+  return [...counts].sort((a, b) => a[0].localeCompare(b[0], 'de'));
+}
+
+function openLibraryCategories() {
+  if (!libraryAllowed()) return;
+  const el = libShell('library-categories', 'Kategorien verwalten',
+    'Umbenennen oder entfernen. Zum Zusammenfassen mindestens zwei Kategorien eines Bereichs anhaken. Rezepte bleiben immer erhalten.');
+  el.querySelector('#lib-action').onclick = libMergeCategories;
+  renderLibCategoryList();
+}
+
+function renderLibCategoryList() {
+  const box = $('#lib-content');
+  if (!box) return;
+  const sections = Object.entries(MODES).map(([key, m]) => {
+    const cats = libCategoryCounts(key);
+    if (!cats.length) return '';
+    return `<div class="settings-section"><h3>${m.label}</h3>${cats.map(([name, n]) => {
+      const k = key + '|' + name;
+      return `<div class="lib-cat" data-mode="${key}" data-name="${esc(name)}">
+        <label><input type="checkbox" data-key="${esc(k)}" ${libSelected.has(k) ? 'checked' : ''}>
+          <span class="lib-text">${esc(name)}<small>${n === 1 ? '1 Rezept' : n + ' Rezepte'}</small></span></label>
+        <button type="button" class="lib-rename">Umbenennen</button>
+        <button type="button" class="lib-remove" aria-label="Kategorie ${esc(name)} entfernen">✕</button>
+      </div>`;
+    }).join('')}</div>`;
+  }).join('');
+  box.innerHTML = sections || '<div class="ed-text">Noch keine Kategorien.</div>';
+  for (const row of box.querySelectorAll('.lib-cat')) {
+    const { mode: modeKey, name } = row.dataset;
+    row.querySelector('input').onchange = ev => {
+      const k = ev.target.dataset.key;
+      if (ev.target.checked) {
+        // Zusammenfassen geht nur innerhalb eines Bereichs
+        for (const other of [...libSelected]) if (!other.startsWith(modeKey + '|')) libSelected.delete(other);
+        libSelected.add(k);
+      } else libSelected.delete(k);
+      for (const b of box.querySelectorAll('input[type="checkbox"]')) b.checked = libSelected.has(b.dataset.key);
+      updateLibCategoryBar();
+    };
+    row.querySelector('.lib-rename').onclick = () => libRenameCategory(modeKey, name);
+    row.querySelector('.lib-remove').onclick = () => libRemoveCategory(modeKey, name);
+  }
+  updateLibCategoryBar();
+}
+
+function updateLibCategoryBar() {
+  const n = libSelected.size;
+  $('#lib-bar').hidden = n < 2;
+  $('#lib-count').textContent = `${n} Kategorien`;
+  const btn = $('#lib-action');
+  btn.textContent = 'Zusammenfassen';
+  btn.className = '';
+}
+
+// Ersetzt die Kategorien "from" durch "to" (null = entfernen), ohne Doppelte
+async function libApplyCategories(modeKey, from, to, message, doneText) {
+  const done = await libCommit(message, remote => {
+    for (const r of remote.recipes) {
+      if ((r.bereich || 'kochen') !== modeKey) continue;
+      const cats = recipeCategories(r);
+      if (!cats.some(c => from.includes(c))) continue;
+      r.category = [...new Set(cats.map(c => from.includes(c) ? to : c).filter(Boolean))];
+    }
+  });
+  if (!done) return;
+  // Gemerkte Auswahlen mitziehen: Food-Match-Ausschlüsse und aktiver Filter
+  const excluded = tinderExcludedCategories();
+  const stillExists = new Set(data.recipes.flatMap(recipeCategories));
+  const next = [...new Set(excluded.flatMap(c => {
+    if (!from.includes(c)) return [c];
+    return [to, stillExists.has(c) ? c : null].filter(Boolean);
+  }))];
+  localStorage.setItem(TINDER_EXCLUDED_KEY, JSON.stringify(next));
+  if (from.includes(activeCategory)) activeCategory = 'Alle';
+  libSelected = new Set();
+  render();
+  renderLibCategoryList();
+  toast(doneText);
+}
+
+// Kleiner Dialog mit Namensfeld (und optionalen Vorschlägen)
+function libAskName(title, preset, suggestions, onOk) {
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+  modal.innerHTML = `<div class="ed-modal">
+    <h3>${esc(title)}</h3>
+    ${suggestions.length ? `<div class="lib-suggest">${suggestions.map(s => `<button type="button">${esc(s)}</button>`).join('')}</div>` : ''}
+    <div class="ed-cat-new"><input id="lib-name" value="${esc(preset)}" placeholder="Name der Kategorie" autocomplete="off"></div>
+    <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button><button type="button" class="ed-modal-ok">Speichern</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  const input = modal.querySelector('#lib-name');
+  for (const b of modal.querySelectorAll('.lib-suggest button')) b.onclick = () => { input.value = b.textContent; };
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.ed-modal-ok').onclick = () => {
+    const name = input.value.trim();
+    if (!name) return toast('Bitte einen Namen eingeben');
+    if (name.toLowerCase() === 'alle') return toast('„Alle“ ist reserviert');
+    modal.remove();
+    onOk(name);
+  };
+  modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+}
+
+function libRenameCategory(modeKey, oldName) {
+  libAskName(`„${oldName}“ umbenennen`, oldName, [], name => {
+    if (name === oldName) return;
+    const exists = libCategoryCounts(modeKey).some(([c]) => c === name);
+    if (exists && !confirm(`„${name}“ gibt es schon. Beide Kategorien zusammenfassen?`)) return;
+    libApplyCategories(modeKey, [oldName], name, `Kategorie ${oldName} -> ${name} (vom Handy)`, 'Umbenannt ✓');
+  });
+}
+
+function libRemoveCategory(modeKey, name) {
+  const n = libCategoryCounts(modeKey).find(([c]) => c === name)?.[1] || 0;
+  if (!confirm(`Kategorie „${name}“ entfernen?\n\nSie wird aus ${n === 1 ? '1 Rezept' : n + ' Rezepten'} entfernt. Die Rezepte bleiben erhalten.`)) return;
+  libApplyCategories(modeKey, [name], null, `Kategorie ${name} entfernt (vom Handy)`, 'Kategorie entfernt ✓');
+}
+
+function libMergeCategories() {
+  const keys = [...libSelected];
+  if (keys.length < 2) return;
+  const modeKey = keys[0].split('|')[0];
+  const names = keys.map(k => k.slice(k.indexOf('|') + 1));
+  libAskName(`${names.length} Kategorien zusammenfassen`, names[0], names, target => {
+    libApplyCategories(modeKey, names, target, `Kategorien zusammengefasst zu ${target} (vom Handy)`, 'Zusammengefasst ✓');
+  });
+}
