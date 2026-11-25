@@ -4,13 +4,21 @@
    Braucht einmalig einen GitHub-Token (Einrichtung über den ✏️-Knopf oben).
    Der Token bleibt nur auf diesem Gerät gespeichert (localStorage). */
 
-const GH_REPO = 'lars97schroeder-art/rezeptbuch';
-const TOKEN_KEY = 'rezeptbuch-token';
+const GH_REPO = activeLibrary().repo;
+const TOKEN_KEY = 'rezeptbuch-token'; // Token der ersten Bibliothek
 
 // Cloudflare-Worker, der Rezeptfotos per KI ausliest (siehe recipe-scan-worker/)
 const SCAN_WORKER_URL = 'https://rezeptbuch-scan.schlemmerliste.workers.dev';
 
-const ghToken = () => localStorage.getItem(TOKEN_KEY) || '';
+// Weitere Bibliotheken bringen ihren Token selbst mit
+const ghToken = () => activeLibrary().id === 'main'
+  ? localStorage.getItem(TOKEN_KEY) || '' : activeLibrary().token || '';
+
+// Wer war's: der Name steht in jeder Änderung auf GitHub
+function signMessage(message) {
+  if (!userName()) return message;
+  return `${message.replace(/ \((vom Handy|aus der App)\)$/, '')} (von ${userName()})`;
+}
 
 window.clearToken = () => {
   const old = ghToken();
@@ -53,7 +61,7 @@ async function ghGet(path) {
 }
 
 async function ghPut(path, base64Content, message, sha) {
-  const body = { message, content: base64Content, branch: 'main' };
+  const body = { message: signMessage(message), content: base64Content, branch: 'main' };
   if (sha) body.sha = sha;
   const res = await fetch(
     `https://api.github.com/repos/${GH_REPO}/contents/${encodeURI(path)}`,
@@ -68,7 +76,7 @@ async function ghDeleteFile(path, message) {
     await fetch(
       `https://api.github.com/repos/${GH_REPO}/contents/${encodeURI(path)}`,
       { method: 'DELETE', headers: ghHeaders(),
-        body: JSON.stringify({ message, sha: info.sha, branch: 'main' }) });
+        body: JSON.stringify({ message: signMessage(message), sha: info.sha, branch: 'main' }) });
   } catch (e) { /* Aufräumen ist optional – nicht referenzierte Dateien stören nicht */ }
 }
 
@@ -219,7 +227,7 @@ function leaveEditorPage() {
 function edPhotoListHTML() {
   const thumb = (src, typ, i) => `
     <span class="ed-thumb">
-      <img src="${esc(src)}" alt="">
+      <img src="${esc(assetURL(src))}" alt="">
       <button type="button" class="ed-x" data-typ="${typ}" data-i="${i}">✕</button>
     </span>`;
   return edKeep.map((p, i) => thumb(p, 'keep', i)).join('')
@@ -440,6 +448,8 @@ async function saveFromEditor(existingId) {
       await ghPut(path, edNeu[i].split(',')[1], `Foto: ${title} (vom Handy)`);
       await cache.put(new Request(path), new Response(dataUrlToBlob(edNeu[i]),
         { headers: { 'Content-Type': 'image/jpeg' } }));
+      if (assetURL(path) !== path) await cache.put(assetURL(path), new Response(dataUrlToBlob(edNeu[i]),
+        { headers: { 'Content-Type': 'image/jpeg' } }));
       images.push(path);
     }
 
@@ -467,6 +477,10 @@ async function saveFromEditor(existingId) {
     else if (old.created) recipe.created = old.created;
     // Geändert-Zeitpunkt: immer jetzt — steuert den Neu/Update-Hinweis (1 Tag).
     recipe.updated = new Date().toISOString();
+    // Wer war's
+    recipe.updatedBy = userName();
+    if (!old) recipe.createdBy = userName();
+    else if (old.createdBy) recipe.createdBy = old.createdBy;
 
     if (old) {
       remote.recipes[remote.recipes.indexOf(old)] = recipe;
@@ -950,7 +964,7 @@ function renderLibRecipeList() {
     const meta = [MODES[recipeMode(r)]?.label, categoryLabel(r)].filter(Boolean).join(' · ');
     return `<label class="lib-row">
       <input type="checkbox" data-key="${esc(r.id)}" ${libSelected.has(r.id) ? 'checked' : ''}>
-      ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<span class="lib-thumb">${emojiFor(r)}</span>`}
+      ${img ? `<img src="${esc(assetURL(img))}" alt="" loading="lazy">` : `<span class="lib-thumb">${emojiFor(r)}</span>`}
       <span class="lib-text">${esc(r.title)}<small>${esc(meta)}</small></span>
     </label>`;
   }).join('') || '<div class="ed-text">Nichts gefunden.</div>';

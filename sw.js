@@ -9,6 +9,7 @@ const SHELL_FILES = [
   './',
   'index.html',
   'app.js',
+  'libraries.js',
   'editor.js',
   'cook.js',
   'style.css',
@@ -60,7 +61,22 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  if (event.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (event.request.method !== 'GET') return;
+
+  // Fotos weiterer Bibliotheken (andere Adresse): ebenfalls offline verfügbar
+  if (url.hostname === 'raw.githubusercontent.com' && url.pathname.includes('/data/images/')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(IMG_CACHE);
+      const hit = await cache.match(url.href, { ignoreSearch: true });
+      if (hit) return hit;
+      const res = await fetch(url.href, { mode: 'cors' });
+      if (res.ok) cache.put(url.href, res.clone());
+      return res;
+    })());
+    return;
+  }
+
+  if (url.origin !== location.origin) return;
 
   // index.html: ABSOLUT KRITISCH - IMMER vom Netz, NIEMALS cachen
   // Grund: version-check Script muss laufen, alte v3.1 darf nicht vom Cache kommen

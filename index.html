@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Schrödamskis Schlemmerliste</title>
+<title>Schlemmerliste</title>
 <meta name="theme-color" content="#F8F4EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161210" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest?v=20260707">
@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Schlemmerliste">
 <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20261126-1">
+<link rel="stylesheet" href="style.css?v=20261126-2">
 <script>
 // Version-Check: entfernt kaputte oder uralte Rezeptdaten VOR app.js.
 // WICHTIG: NIEMALS localStorage.clear() — das würde den GitHub-Token und
@@ -105,8 +105,9 @@ console.log('✅ Version-Check abgeschlossen');
 <div id="editor" hidden></div>
 <div id="toast" hidden></div>
 
-<script src="editor.js?v=20261125-2"></script>
-<script src="cook.js?v=20261125-2"></script>
+<script src="libraries.js?v=20261126-1"></script>
+<script src="editor.js?v=20261126-1"></script>
+<script src="cook.js?v=20261126-1"></script>
 <script>
 // Cache-Buster: app.js wird IMMER neu vom Server geladen, nie vom Cache
 // Das ist KRITISCH für Updates - ohne das bleiben alte Versionen gecacht

@@ -2,9 +2,14 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-26T09:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-26T15:00:00+01:00';
 
-const DATA_KEY = 'rezeptbuch-data';
+// Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
+if (typeof libKey !== 'function' && !location.search.includes('force')) {
+  location.replace(location.pathname + '?force=' + Date.now());
+}
+
+const DATA_KEY = libKey('rezeptbuch-data');
 const IMG_CACHE = 'rezept-bilder-v1';
 const OFFLINE_MODE_KEY = 'rezeptbuch-offline-mode';
 
@@ -187,7 +192,7 @@ async function fetchRemoteJSON(path) {
     } catch (e) { /* API nicht erreichbar → Pages-Fallback */ }
   }
   try {
-    const res = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+    const res = await fetch(assetURL(path) + '?t=' + Date.now(), { cache: 'no-store' });
     if (res.ok) return await res.json();
   } catch (e) { /* offline */ }
   return null;
@@ -303,7 +308,8 @@ async function precacheImages(recipes) {
     const cache = await caches.open(IMG_CACHE);
     const wanted = new Set();
     for (const r of recipes) {
-      for (const img of imagesOf(r)) {
+      for (const path of imagesOf(r)) {
+        const img = assetURL(path);
         wanted.add(new URL(img, location.href).href);
         if (await cache.match(img)) continue;
         try {
@@ -311,6 +317,12 @@ async function precacheImages(recipes) {
           if (imgRes.ok) await cache.put(img, imgRes);
         } catch (e) { /* einzelnes Bild fehlgeschlagen – beim nächsten Update erneut */ }
       }
+    }
+    // Fotos der anderen Bibliotheken auf diesem Gerät ebenfalls behalten
+    for (const lib of libraries()) {
+      if (lib.id === activeLibrary().id) continue;
+      const stored = JSON.parse(localStorage.getItem(libKey('rezeptbuch-data', lib)) || 'null');
+      for (const path of (stored?.recipes || []).flatMap(imagesOf)) wanted.add(new URL(assetURL(path, lib), location.href).href);
     }
     for (const req of await cache.keys()) {
       if (!wanted.has(req.url)) await cache.delete(req);
@@ -584,7 +596,7 @@ function render() {
     const card = document.createElement('article');
     card.className = 'card';
     if (item.group) {
-      const groupImgs = item.members.flatMap(m => imagesOf(m));
+      const groupImgs = item.members.flatMap(m => imagesOf(m)).map(p => assetURL(p));
       card.innerHTML = groupImgs.length
         ? `<img class="photo" src="${esc(groupImgs[Math.floor(Math.random() * groupImgs.length)])}" alt="" loading="lazy">`
         : `<div class="photo placeholder">${emojiFor(item.members[0])}</div>`;
@@ -596,7 +608,7 @@ function render() {
       card.onclick = () => openGroup(item.group);
     } else {
       const r = item.recipe;
-      const cover = randomImage(r);
+      const cover = assetURL(randomImage(r));
       card.innerHTML = cover
         ? `<img class="photo" src="${esc(cover)}" alt="" loading="lazy">`
         : `<div class="photo placeholder">${emojiFor(r)}</div>`;
@@ -677,7 +689,7 @@ function renderGroup(name) {
         ${members.map(m => `
           <button class="variant" data-id="${esc(m.id)}">
             ${imagesOf(m).length
-              ? `<img src="${esc(imagesOf(m)[0])}" alt="">`
+              ? `<img src="${esc(assetURL(imagesOf(m)[0]))}" alt="">`
               : `<span class="v-emoji">${emojiFor(m)}</span>`}
             <span class="v-text">${titleWithEmoji(m)}${m.time ? `<small>${esc(m.time)}</small>` : ''}</span>
             <span class="v-arrow">›</span>
@@ -695,7 +707,7 @@ function renderGroup(name) {
 
 // Foto-Bereich der Detailansicht: ein Foto, oder Wisch-Galerie mit Punkten
 function detailPhotosHTML(r) {
-  const imgs = imagesOf(r);
+  const imgs = imagesOf(r).map(p => assetURL(p));
   if (!imgs.length) return `<div class="detail-photo placeholder">${emojiFor(r)}</div>`;
   if (imgs.length === 1) return `<img class="detail-photo" src="${esc(imgs[0])}" alt="">`;
   return `<div class="detail-photos-wrap">
@@ -737,8 +749,9 @@ function wirePhotoDots(el) {
 function detailDatesHTML(r) {
   const fmt = iso => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const lines = [];
-  if (r.updated) lines.push(`Zuletzt bearbeitet am ${fmt(r.updated)}`);
-  if (r.created) lines.push(`Hinzugefügt am ${fmt(r.created)}`);
+  const by = name => name ? ` von ${name}` : '';
+  if (r.updated) lines.push(`Zuletzt bearbeitet am ${fmt(r.updated)}${by(r.updatedBy)}`);
+  if (r.created) lines.push(`Hinzugefügt am ${fmt(r.created)}${by(r.createdBy)}`);
   if (!lines.length) return '';
   return `<div class="detail-dates">${lines.map(esc).join('<br>')}</div>`;
 }
@@ -922,7 +935,7 @@ function renderDetail(id, opts = {}) {
       ${related.length ? `<h3>Dazu passt auch</h3>
         <div class="related-list">
           ${related.map(rel => `<button class="related-item" data-id="${esc(rel.id)}">
-            ${imagesOf(rel).length ? `<img src="${esc(randomImage(rel))}" alt="">` : `<span class="related-emoji">${emojiFor(rel)}</span>`}
+            ${imagesOf(rel).length ? `<img src="${esc(assetURL(randomImage(rel)))}" alt="">` : `<span class="related-emoji">${emojiFor(rel)}</span>`}
             <span class="related-text">${titleWithEmoji(rel)}</span>
           </button>`).join('')}
         </div>` : ''}
@@ -976,6 +989,8 @@ function wrapCanvasText(ctx, text, maxWidth) {
 function loadImageEl(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    // Fotos anderer Bibliotheken kommen von einer anderen Adresse
+    if (/^https?:/.test(src)) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
@@ -1034,7 +1049,7 @@ async function shareRecipeAsImage(r) {
     const imgs = imagesOf(r);
     if (imgs.length) {
       try {
-        const img = await loadImageEl(imgs[0]);
+        const img = await loadImageEl(assetURL(imgs[0]));
         ctx.save(); roundedBottom(BANNER_H, 40); ctx.clip();
         drawImageCover(ctx, img, 0, 0, W, BANNER_H);
         ctx.restore();
@@ -1135,7 +1150,7 @@ async function shareRecipeAsImage(r) {
     ctx.font = `500 24px ${SERIF}`;
     ctx.fillStyle = '#A39588';
     ctx.textAlign = 'right';
-    const watermarkText = 'Made by Schrödamskis Schlemmerliste';
+    const watermarkText = 'Made by ' + activeLibrary().name;
     ctx.fillText(watermarkText, W - MARGIN, y);
     ctx.textAlign = 'left';
     // Fester Sicherheitsabstand unter dem Wasserzeichen statt gemessener Textbox
@@ -1313,8 +1328,8 @@ function openWeekplan() {
   pushView({ view: 'weekplan' });
 }
 
-const WEEKPLAN_KEY = 'rezeptbuch-weekplan';
-const WEEKPLAN_UPDATED_KEY = 'rezeptbuch-weekplan-updated';
+const WEEKPLAN_KEY = libKey('rezeptbuch-weekplan');
+const WEEKPLAN_UPDATED_KEY = libKey('rezeptbuch-weekplan-updated');
 
 // "off" ist eine Liste ausgeblendeter Wochentage (z. B. "diese Woche kochen
 // wir montags nicht") — wird wie ein normaler Tages-Eintrag mitgespeichert.
@@ -1343,7 +1358,12 @@ function getAllWeekplans() {
   } catch (e) { return {}; }
 }
 
+const WEEKPLAN_BY_KEY = libKey('rezeptbuch-weekplan-by');
+const BACKLOG_BY_KEY = libKey('rezeptbuch-notes-by');
+const changedByText = key => localStorage.getItem(key) ? `Zuletzt geändert von ${localStorage.getItem(key)}` : '';
+
 function persistWeekplans(weeks) {
+  localStorage.setItem(WEEKPLAN_BY_KEY, userName());
   localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, new Date().toISOString());
 }
@@ -1385,6 +1405,7 @@ async function syncWeekplanFromRemote() {
   if (!weeks || !isRemoteNewer(remote, WEEKPLAN_UPDATED_KEY)) return false;
   localStorage.setItem(WEEKPLAN_KEY, JSON.stringify({ weeks }));
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, remote.updated);
+  localStorage.setItem(WEEKPLAN_BY_KEY, remote.by || '');
   return true;
 }
 
@@ -1393,7 +1414,7 @@ async function syncWeekplanFromRemote() {
 // flushWeekplanUpload) — daher bewusst ohne Toast, wie beim Backlog.
 async function uploadWeekplan() {
   if (typeof ghToken !== 'function' || !ghToken()) return;
-  const payload = { updated: new Date().toISOString(), weeks: getAllWeekplans() };
+  const payload = { updated: new Date().toISOString(), by: localStorage.getItem(WEEKPLAN_BY_KEY) || userName(), weeks: getAllWeekplans() };
   await pushRemoteJSON('data/weekplan.json', payload, 'Wochenplan aktualisiert (aus der App)');
   localStorage.setItem(WEEKPLAN_UPDATED_KEY, payload.updated);
 }
@@ -1416,7 +1437,7 @@ function flushWeekplanUpload() {
   if (!weekplanUploadPending) return;
   clearTimeout(weekplanUploadTimer);
   weekplanUploadPending = false;
-  uploadWeekplan();
+  return uploadWeekplan();
 }
 
 /* Rezept-Backlog: Liste einzelner Einträge unter dem Wochenplan zum Sammeln
@@ -1426,8 +1447,8 @@ function flushWeekplanUpload() {
    Frühere Version speicherte einen einzigen Fließtext (ein Eintrag pro
    Zeile) — wird beim ersten Lesen automatisch in einzelne Einträge migriert. */
 
-const BACKLOG_KEY = 'rezeptbuch-notes';
-const BACKLOG_UPDATED_KEY = 'rezeptbuch-notes-updated';
+const BACKLOG_KEY = libKey('rezeptbuch-notes');
+const BACKLOG_UPDATED_KEY = libKey('rezeptbuch-notes-updated');
 const BACKLOG_LONGPRESS_MS = 200; // 0.2 Sekunden gedrückt halten, bevor sich die Zeile löst
 
 // Migriert einen einzelnen Eintrag: Rezept-IDs und "TEXT:..." bleiben
@@ -1455,7 +1476,8 @@ function getBacklogItems() {
   return migrated;
 }
 
-function saveBacklogItemsLocal(items) {
+function saveBacklogItemsLocal(items, by = userName()) {
+  localStorage.setItem(BACKLOG_BY_KEY, by);
   localStorage.setItem(BACKLOG_KEY, JSON.stringify(items));
   localStorage.setItem(BACKLOG_UPDATED_KEY, new Date().toISOString());
 }
@@ -1471,6 +1493,7 @@ async function syncBacklogFromRemote() {
   if (!items) return false;
   localStorage.setItem(BACKLOG_KEY, JSON.stringify(items));
   localStorage.setItem(BACKLOG_UPDATED_KEY, remote.updated);
+  localStorage.setItem(BACKLOG_BY_KEY, remote.by || '');
   return true;
 }
 
@@ -1479,7 +1502,7 @@ async function syncBacklogFromRemote() {
 // alter App-Version den Stand übergangsweise weiterlesen kann.
 async function uploadBacklog(items) {
   if (typeof ghToken !== 'function' || !ghToken()) return;
-  const payload = { updated: new Date().toISOString(), items, text: items.join('\n') };
+  const payload = { updated: new Date().toISOString(), by: localStorage.getItem(BACKLOG_BY_KEY) || userName(), items, text: items.join('\n') };
   await pushRemoteJSON('data/backlog.json', payload, 'Backlog aktualisiert (aus der App)');
   localStorage.setItem(BACKLOG_UPDATED_KEY, payload.updated);
 }
@@ -1503,7 +1526,7 @@ function flushBacklogUpload() {
   if (!backlogUploadPending) return;
   clearTimeout(backlogUploadTimer);
   backlogUploadPending = false;
-  uploadBacklog(getBacklogItems());
+  return uploadBacklog(getBacklogItems());
 }
 
 // HTML für eine Backlog-Zeile: Griff links zum Verschieben (Finger-Drag),
@@ -2300,6 +2323,7 @@ function renderWeekplan(skipSync = false) {
         <button class="weekplan-nav" data-dir="1" aria-label="Woche vor">›</button>
       </div>
       <div class="weekplan-draghint">⠿ gedrückt halten zum Verschieben</div>
+      ${changedByText(WEEKPLAN_BY_KEY) ? `<div class="changed-by">${esc(changedByText(WEEKPLAN_BY_KEY))}</div>` : ''}
       <div class="weekplan-container">
         ${daysHTML}
       </div>
@@ -2307,7 +2331,7 @@ function renderWeekplan(skipSync = false) {
       <div class="backlog-divider"></div>
       <div class="backlog-section">
         <h3 class="backlog-heading">Rezept-Backlog</h3>
-        <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche</div>
+        <div class="backlog-hint">Zum Merken für später — unabhängig von der Woche${changedByText(BACKLOG_BY_KEY) ? `<br>${esc(changedByText(BACKLOG_BY_KEY))}` : ''}</div>
         <div class="backlog-autocomplete">
           <div class="backlog-input-row">
             <input type="text" class="backlog-search" placeholder="Rezept oder Notiz hinzufügen" autocomplete="off">
@@ -2498,7 +2522,7 @@ function renderTinder() {
 function tinderCardHTML(r, cls) {
   return `<div class="t-card ${cls}">
     ${imagesOf(r).length
-      ? `<img src="${esc(randomImage(r))}" alt="" draggable="false">`
+      ? `<img src="${esc(assetURL(randomImage(r)))}" alt="" draggable="false">`
       : `<div class="t-emoji">${emojiFor(r)}</div>`}
     <div class="t-info">
       <div class="t-title">${titleWithEmoji(r)}</div>
@@ -2740,7 +2764,7 @@ function renderTinderResult(ids) {
         <div class="tinder-photo-preview fullscreen" id="photo-preview">
           ${winners.map((w, i) => `
             <div class="preview-card">
-              ${imagesOf(w).length ? `<img src="${esc(randomImage(w))}" alt="">` : `<div class="preview-emoji">${emojiFor(w)}</div>`}
+              ${imagesOf(w).length ? `<img src="${esc(assetURL(randomImage(w)))}" alt="">` : `<div class="preview-emoji">${emojiFor(w)}</div>`}
               <div class="preview-title">${titleWithEmoji(w)}</div>
             </div>
           `).join('')}
@@ -2932,11 +2956,11 @@ function showToastWithoutTimeout(msg) {
 
 /* ---------- Einstellungen ---------- */
 
-const LAST_UPDATE_KEY = 'rezeptbuch-last-update';
+const LAST_UPDATE_KEY = libKey('rezeptbuch-last-update');
 const THEME_KEY = 'rezeptbuch-theme';
 const COLOR_KEY = 'rezeptbuch-colorscheme';
 const EDIT_ENABLED_KEY = 'rezeptbuch-edit-enabled';
-const TINDER_EXCLUDED_KEY = 'rezeptbuch-tinder-excluded-cats';
+const TINDER_EXCLUDED_KEY = libKey('rezeptbuch-tinder-excluded-cats');
 
 function tinderExcludedCategories() {
   try { return JSON.parse(localStorage.getItem(TINDER_EXCLUDED_KEY) || '[]'); }
@@ -3015,6 +3039,14 @@ function openSettings() {
   <div class="ed-body settings-body">
     <h2>Einstellungen</h2>
 
+    ${group('Ich', `
+      ${link('name-btn', 'Mein Name', esc(userName() || 'Noch nicht eingetragen'))}
+      ${libraries().length > 1 ? `<div class="set-block">
+        <span class="set-title">Bibliothek</span>
+        <span class="set-select-wrap"><select id="library-select" class="set-select">${libraries().map(l =>
+          `<option value="${esc(l.id)}" ${l.id === activeLibrary().id ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></span>
+      </div>` : ''}`)}
+
     ${group('Anzeige', `
       <div class="set-block">
         <span class="set-title">Erscheinungsbild</span>
@@ -3068,7 +3100,9 @@ function openSettings() {
       ${link('backup-btn', 'Rezepte sichern', 'Rezepte, Wochenplan und Backlog als Datei, ohne Fotos', 'action')}
       ${link('photos-btn', 'Fotos offline speichern', 'Wird geprüft …', 'action')}`)}
 
-    ${group('Zugang', hasToken
+    ${group('Zugang', activeLibrary().id !== 'main'
+        ? toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
+        : hasToken
         ? toggle('edit-toggle', 'Bearbeitungsmodus', offline
               ? 'Im Offline-Modus deaktiviert, wird danach wiederhergestellt'
               : 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
@@ -3079,7 +3113,7 @@ function openSettings() {
 
     ${group('Hilfe', link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
 
-    <div class="set-footer">Schrödamskis Schlemmerliste<br>
+    <div class="set-footer">Schlemmerliste<br>
       Version vom ${new Date(APP_BUILD_TIME).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}<br>
       ${data.recipes.length} Rezepte · zuletzt aktualisiert: ${lastUpdate}</div>
   </div>`;
@@ -3091,6 +3125,8 @@ function openSettings() {
 
   el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
   el.querySelector('#help-btn').onclick = () => openHelp();
+  el.querySelector('#name-btn').onclick = () => openNameDialog();
+  el.querySelector('#library-select')?.addEventListener('change', ev => switchLibrary(ev.target.value));
   el.querySelector('#backup-btn').onclick = () => exportBackup();
   el.querySelector('#photos-btn').onclick = () => downloadPhotos();
   for (const [id, key] of [['cook-wake', COOK_WAKE_KEY], ['cook-ing', COOK_ING_KEY], ['cook-sound', COOK_SOUND_KEY]]) {
@@ -3441,12 +3477,76 @@ async function checkAppUpdateAvailable() {
   $('#search').addEventListener('focus', () => show(true));
 })();
 
+/* ---------- Nutzer und Bibliotheken ---------- */
+
+// Titel oben = Name der geöffneten Bibliothek (letztes Wort als Akzent);
+// bei mehreren Bibliotheken wechselt ein Tipp darauf
+function renderLibraryTitle() {
+  const words = activeLibrary().name.split(' ');
+  const last = words.pop();
+  $('.h1-text').innerHTML = `${esc(words.join(' '))} <em>${esc(last)}</em>`;
+  if (libraries().length < 2) return;
+  const title = $('.topbar h1');
+  title.classList.add('switchable');
+  title.setAttribute('role', 'button');
+  title.setAttribute('aria-label', 'Bibliothek wechseln');
+  title.onclick = openLibraryPicker;
+}
+
+function openLibraryPicker() {
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay';
+  modal.innerHTML = `<div class="ed-modal"><h3>Bibliothek wechseln</h3>
+    <div class="library-list">${libraries().map(l => `<button type="button" data-id="${esc(l.id)}" class="${l.id === activeLibrary().id ? 'active' : ''}">${esc(l.name)}</button>`).join('')}</div>
+    <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button></div></div>`;
+  document.body.appendChild(modal);
+  for (const b of modal.querySelectorAll('.library-list button')) b.onclick = () => { modal.remove(); switchLibrary(b.dataset.id); };
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+}
+
+async function switchLibrary(id) {
+  if (id === activeLibrary().id || !libraries().some(l => l.id === id)) return;
+  toast('Wechsle Bibliothek …');
+  // Noch nicht hochgeladene Änderungen sichern, solange diese Bibliothek aktiv ist
+  await Promise.allSettled([flushWeekplanUpload(), flushBacklogUpload()]);
+  localStorage.setItem(ACTIVE_LIBRARY_KEY, id);
+  location.replace(location.pathname + '?bib=' + Date.now());
+}
+
+// Namensabfrage beim ersten Start (ohne Abbrechen) und zum späteren Ändern
+function openNameDialog() {
+  const first = !userName();
+  const box = document.createElement('div');
+  box.className = first ? 'setup' : 'ed-modal-overlay';
+  box.innerHTML = `<form class="${first ? 'setup-card' : 'ed-modal'}">
+    <h3>${first ? 'Wie heißt du?' : 'Mein Name'}</h3>
+    <p class="setting-hint">So sehen andere, wer etwas geändert hat.</p>
+    <div class="ed-cat-new"><input name="name" maxlength="30" autocomplete="given-name" placeholder="Dein Name" value="${esc(userName())}"></div>
+    <div class="ed-modal-buttons">${first ? '' : '<button type="button" class="ed-modal-cancel">Abbrechen</button>'}<button type="submit" class="ed-modal-ok">${first ? 'Weiter' : 'Speichern'}</button></div>
+  </form>`;
+  document.body.appendChild(box);
+  box.querySelector('.ed-modal-cancel')?.addEventListener('click', () => box.remove());
+  box.querySelector('form').onsubmit = e => {
+    e.preventDefault();
+    const name = e.target.elements.name.value.trim();
+    if (!name) return toast('Bitte gib einen Namen ein');
+    saveUserName(name);
+    box.remove();
+    const hint = $('#name-btn .set-hint');
+    if (hint) hint.textContent = userName();
+  };
+}
+
 /* ---------- App-Start ---------- */
 
 // Lokale Daten sofort anzeigen — kein automatischer Reload mehr
+renderLibraryTitle();
 renderModeUI();
 loadLocal();
 render();
+// Erster Start auf diesem Gerät (oder nach dem Update): nach dem Namen fragen
+if (!userName()) openNameDialog();
 
 // Rezepte: leichter ISO-Abgleich im Hintergrund (übernimmt Änderungen still)
 checkAndUpdateIfNeeded();
@@ -3548,7 +3648,7 @@ function swipeStart(x, y, time, el) {
   if (swipe) resetSwipe();
   if (x > swipeEdge()) return;
   // Eigene Zieh-/Wisch-Elemente haben Vorrang
-  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay, .lightbox, .cook')) return;
+  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay, .lightbox, .cook, .setup')) return;
   if (scrollableToLeft(el)) return;
   const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
   swipe = { x, y, mode, target: null, under: null, samples: [{ x, t: time }] };

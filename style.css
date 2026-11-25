@@ -2836,3 +2836,38 @@ html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove {
 .cook-sheet-head { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-display); font-size: 22px; font-weight: 600; }
 .cook-sheet-list { overflow-y: auto; }
 .help-row { gap: 4px; }
+
+/* ---------- Nutzer und Bibliotheken ---------- */
+
+.topbar h1.switchable { cursor: pointer; }
+.setup {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 12vh) 20px 20px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.setup-card { width: 100%; max-width: 420px; }
+.setup-card h3 { font-family: var(--font-display); font-size: 30px; font-weight: 600; }
+.setup-card .setting-hint { margin-bottom: 18px; }
+.setup-card .ed-modal-buttons button { width: 100%; min-height: 52px; font-size: 17px; }
+.setup .ed-cat-new input { width: 100%; min-height: 52px; font-size: 18px; }
+.library-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.library-list button {
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.library-list button.active { border-color: var(--accent); color: var(--accent); }
+.changed-by { margin: -4px 0 12px; text-align: center; font-size: 13px; color: var(--muted); }

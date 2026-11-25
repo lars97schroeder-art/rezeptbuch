@@ -8,7 +8,7 @@ const COOK_WAKE_KEY = 'rezeptbuch-cook-wake';
 const COOK_SIZE_KEY = 'rezeptbuch-cook-size';
 const COOK_ING_KEY = 'rezeptbuch-cook-ingredients-first';
 const COOK_SOUND_KEY = 'rezeptbuch-cook-sound';
-const COOK_STATE_KEY = 'rezeptbuch-cook-state';
+const COOK_STATE_KEY = libKey('rezeptbuch-cook-state');
 const TEXT_SIZE_KEY = 'rezeptbuch-text-size';
 const COOK_RESUME_MS = 24 * 60 * 60 * 1000;
 
@@ -338,7 +338,7 @@ async function photoStatus() {
   if (!window.caches) return { wanted, missing: wanted };
   const cache = await caches.open(IMG_CACHE);
   const missing = [];
-  for (const path of wanted) if (!await cache.match(path, { ignoreSearch: true })) missing.push(path);
+  for (const path of wanted) if (!await cache.match(assetURL(path), { ignoreSearch: true })) missing.push(path);
   return { wanted, missing };
 }
 
@@ -364,9 +364,10 @@ async function downloadPhotos() {
       const hint = document.querySelector('#photos-btn .set-hint');
       if (hint) hint.textContent = `Lade Foto ${i + 1} von ${missing.length} …`;
       try {
-        const res = await fetch(missing[i], { cache: 'no-store' });
+        const url = assetURL(missing[i]);
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(res.status);
-        await cache.put(missing[i], res);
+        await cache.put(url, res);
       } catch (e) { failed++; }
     }
     toast(failed ? `${failed} Fotos konnten nicht geladen werden` : 'Alle Fotos gespeichert ✓');
