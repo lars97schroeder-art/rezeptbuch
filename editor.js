@@ -136,10 +136,49 @@ function setAiScanBusy(busy, label) {
   const box = $('.ai-scan-box');
   if (!box) return;
   $('#ai-scan-progress').hidden = !busy;
+  if (busy) $('#ai-scan-error').hidden = true;
   $('#ai-scan-label').textContent = busy ? label : 'Rezept per KI erfassen';
   for (const b of box.querySelectorAll('button')) b.disabled = busy;
   const goBtn = $('.ed-scan-link-go');
   if (goBtn) goBtn.disabled = busy;
+}
+
+// Anfrage an den KI-Dienst; Fehler kommen als verständlicher Satz zurück
+async function askScanService(payload) {
+  let res;
+  try {
+    res = await fetch(SCAN_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // mit dem Token prüft der Dienst den Zugang
+      body: JSON.stringify({ token: ghToken(), ...payload }),
+    });
+  } catch (e) {
+    throw new Error('Der KI-Dienst ist nicht erreichbar. Internet prüfen oder später nochmal versuchen');
+  }
+  const text = await res.text();
+  let body = null;
+  try { body = JSON.parse(text); } catch (e) { /* unvollständige oder fremde Antwort */ }
+  if (!res.ok) throw new Error(readableScanError(body?.error) || 'Fehler ' + res.status);
+  if (!body) throw new Error('Die Antwort der KI war unvollständig. Bitte nochmal versuchen');
+  return body;
+}
+
+// "Anthropic-Fehler: {…}" auf die eigentliche Aussage kürzen
+function readableScanError(error) {
+  if (!error) return '';
+  const raw = error.match(/^Anthropic-Fehler: (\{[\s\S]*\})$/);
+  if (!raw) return error;
+  try { return 'Anthropic meldet: ' + JSON.parse(raw[1]).error.message; }
+  catch (e) { return error; }
+}
+
+// Fehler bleibt im KI-Kasten stehen, bis man es erneut versucht
+function showScanError(message) {
+  const box = $('#ai-scan-error');
+  if (!box) return toast('Auslesen fehlgeschlagen: ' + message);
+  box.textContent = 'Auslesen fehlgeschlagen: ' + message;
+  box.hidden = false;
 }
 
 // Vom Scan-Worker gelieferte Felder in den offenen Editor übernehmen
@@ -165,22 +204,12 @@ async function scanRecipePhotos(files) {
 
   setAiScanBusy(true, dataUrls.length > 1 ? `${dataUrls.length} Fotos werden ausgelesen …` : 'Rezept wird ausgelesen …');
   try {
-    const res = await fetch(SCAN_WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: ghToken(), // der Dienst prüft damit den Zugang
-        images: dataUrls.map(d => ({ data: d.split(',')[1], mediaType: 'image/jpeg' })),
-      }),
-    });
-    if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
-    applyScanResult(await res.json());
-
-    edNeu.push(...dataUrls);
-    renderEdPhotos();
+    applyScanResult(await askScanService({
+      images: dataUrls.map(d => ({ data: d.split(',')[1], mediaType: 'image/jpeg' })),
+    }));
     toast('✓ Rezept ausgelesen — bitte kurz prüfen');
   } catch (err) {
-    toast('Auslesen fehlgeschlagen: ' + err.message);
+    showScanError(err.message);
   } finally {
     setAiScanBusy(false);
   }
@@ -190,16 +219,10 @@ async function scanRecipePhotos(files) {
 async function scanRecipeUrl(url) {
   setAiScanBusy(true, 'Rezept wird von der Seite ausgelesen …');
   try {
-    const res = await fetch(SCAN_WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: ghToken(), url }),
-    });
-    if (!res.ok) throw new Error((await res.json()).error || ('Fehler ' + res.status));
-    applyScanResult(await res.json());
+    applyScanResult(await askScanService({ url }));
     toast('✓ Rezept ausgelesen — bitte kurz prüfen');
   } catch (err) {
-    toast('Auslesen fehlgeschlagen: ' + err.message);
+    showScanError(err.message);
   } finally {
     setAiScanBusy(false);
   }
@@ -290,11 +313,12 @@ function openEditor(id) {
         <button type="button" class="ed-scan-link-btn">Link</button>
       </div>
       <input type="file" id="ed-scan-input" accept="image/*" multiple hidden>
+      <div class="ed-scan-link-row" hidden>
+        <input type="url" id="ed-scan-link-input" placeholder="Link zum Rezept einfügen" autocomplete="off" autocapitalize="off">
+        <button type="button" class="ed-scan-link-go">Los</button>
+      </div>
       <div class="ai-scan-progress" id="ai-scan-progress" hidden><div class="ai-scan-progress-bar"></div></div>
-    </div>
-    <div class="ed-scan-link-row" hidden>
-      <input type="url" id="ed-scan-link-input" placeholder="https://...">
-      <button type="button" class="ed-scan-link-go">Los</button>
+      <div class="ai-scan-error" id="ai-scan-error" role="alert" hidden></div>
     </div>`}
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>

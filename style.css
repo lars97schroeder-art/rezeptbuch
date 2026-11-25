@@ -533,9 +533,10 @@ html.color-rainbow .h1-text em { color: transparent; }
 .ai-scan-label { font-size: calc(14px * var(--fs, 1)); font-weight: 600; color: var(--text); }
 .ai-scan-buttons { display: flex; gap: 8px; flex: 0 0 auto; }
 .ai-scan-buttons button {
-  padding: 9px 16px;
+  min-height: 44px;
+  padding: 9px 18px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   background: var(--accent);
   color: var(--on-accent);
   font-size: calc(13px * var(--fs, 1));
@@ -544,6 +545,8 @@ html.color-rainbow .h1-text em { color: transparent; }
 }
 .ai-scan-buttons button:active { transform: scale(0.95); }
 .ai-scan-buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ai-scan-error { flex: 0 0 100%; font-size: calc(14px * var(--fs, 1)); line-height: 1.45; color: var(--bad); overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }
 
 .ai-scan-progress {
   flex: 0 0 100%;
@@ -1594,11 +1597,15 @@ img.detail-photo { cursor: zoom-in; }
 
 .ed-text { font-size: calc(15px * var(--fs, 1)); line-height: 1.55; color: var(--muted); }
 
-.ed-scan-link-row { display: flex; gap: 8px; margin-top: 8px; }
+.ed-scan-link-row { display: flex; gap: 8px; flex: 0 0 100%; }
 .ed-scan-link-row input {
   flex: 1;
+  min-width: 0;
+  min-height: 48px;
   padding: 11px 14px;
-  font-size: calc(15px * var(--fs, 1));
+  font-family: inherit;
+  /* nicht unter 16px, sonst zoomt das iPhone beim Antippen */
+  font-size: calc(16px * var(--fs, 1));
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--card);
