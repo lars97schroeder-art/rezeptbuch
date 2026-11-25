@@ -1875,7 +1875,6 @@ button.set-row:active { background: var(--wash); }
   mask: var(--i-chevron) center / contain no-repeat;
   transform: rotate(-90deg);
 }
-.set-off .set-title { color: var(--muted); }
 .set-row.action .set-title { color: var(--accent); font-weight: 600; }
 .set-row.danger .set-title { color: var(--bad); }
 
@@ -2914,3 +2913,8 @@ html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove {
 }
 .library-list button.active { border-color: var(--accent); color: var(--accent); }
 .changed-by { margin: -4px 0 12px; text-align: center; font-size: 13px; color: var(--muted); }
+
+.token-share-rights { margin: -4px 0 12px 18px; color: var(--text); font-size: calc(14px * var(--fs, 1)); line-height: 1.55; }
+.token-share-content { max-height: 86vh; overflow-y: auto; }
+/* nur sehr lange Wörter in Bibliotheksnamen dürfen umbrechen */
+.topbar h1 .h1-text.long-word { min-width: 0; overflow-wrap: anywhere; word-break: normal; }

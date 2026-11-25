@@ -7,7 +7,6 @@
 const COOK_WAKE_KEY = 'rezeptbuch-cook-wake';
 const COOK_SIZE_KEY = 'rezeptbuch-cook-size';
 const COOK_ING_KEY = 'rezeptbuch-cook-ingredients-first';
-const COOK_SOUND_KEY = 'rezeptbuch-cook-sound';
 const COOK_STATE_KEY = libKey('rezeptbuch-cook-state');
 const TEXT_SIZE_KEY = 'rezeptbuch-text-size';
 const COOK_RESUME_MS = 24 * 60 * 60 * 1000;
@@ -279,13 +278,11 @@ function startTimer(time, where) {
   } catch (e) { /* ohne Ton */ }
   timers.push({ end: Date.now() + time.seconds * 1000, label: time.label, where, done: false });
   if (!timerTick) timerTick = setInterval(tickTimers, 500);
-  hapticPulse();
   renderCookTimers();
 }
 
 function timerAlarm() {
-  hapticPulse(300);
-  if (!cookFlag(COOK_SOUND_KEY) || !audio) return;
+  if (!audio) return;
   audio.resume();
   for (let i = 0; i < 6; i++) {
     const osc = audio.createOscillator();

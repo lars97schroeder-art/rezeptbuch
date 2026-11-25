@@ -64,6 +64,16 @@ const activeLibrary = (() => {
 // Speicher-Schlüssel je Bibliothek; die erste behält die bisherigen Namen
 const libKey = (key, lib = activeLibrary()) => lib.id === 'main' ? key : `${key}@${lib.id}`;
 
+// Anzeigename: umbenannte Bibliotheken führen ihn in ihren Daten mit
+function libraryName(lib = activeLibrary()) {
+  try {
+    const stored = typeof data !== 'undefined' && lib.id === activeLibrary().id && data.libraryName
+      ? data : JSON.parse(localStorage.getItem(libKey('rezeptbuch-data', lib)));
+    if (stored?.libraryName) return stored.libraryName;
+  } catch (e) { /* noch keine Daten */ }
+  return lib.name;
+}
+
 // Adresse einer Datei (z. B. Foto) aus einer Bibliothek
 function assetURL(path, lib = activeLibrary()) {
   // Nur Daten im App-Speicher liegen unter derselben Adresse wie die App

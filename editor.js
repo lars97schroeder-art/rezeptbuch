@@ -719,7 +719,7 @@ function openTokenSetup() {
     <p class="ed-text">${has
       ? 'Bearbeiten ist auf diesem Gerät <strong>aktiv</strong>. In jeder Rezept-Ansicht gibt es den ✏️-Knopf, in der Übersicht die „＋ Neues Rezept“-Kachel.'
       : 'Damit dieses Gerät Rezepte bearbeiten darf, braucht es einmalig einen GitHub-Schlüssel (Token). Er wird nur hier auf dem Gerät gespeichert.'}</p>
-    ${has ? '' : `<p class="ed-text">Frag Lars nach dem Token für diese Bibliothek.</p>`}
+    ${has ? '' : `<p class="ed-text">Den Token bekommst du von jemandem, der diese Bibliothek schon nutzt.</p>`}
     <div class="ed-field"><label>GitHub-Token</label>
       <input id="ed-token" type="password" placeholder="github_pat_…" value="" autocomplete="off"></div>
     <div class="ed-buttons">

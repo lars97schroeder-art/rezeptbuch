@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-26T23:55:00+01:00';
+const APP_BUILD_TIME = '2026-11-27T12:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -273,6 +273,12 @@ async function checkAndUpdateIfNeeded(opts = {}) {
         // Rezept ist neu oder geändert
         updated.push(newRecipe.id);
       }
+    }
+
+    if ((fresh.libraryName || '') !== (data.libraryName || '')) {
+      data.libraryName = fresh.libraryName;
+      saveLocal();
+      renderLibraryTitle();
     }
 
     if (updated.length > 0) {
@@ -1150,7 +1156,7 @@ async function shareRecipeAsImage(r) {
     ctx.font = `500 24px ${SERIF}`;
     ctx.fillStyle = '#A39588';
     ctx.textAlign = 'right';
-    const watermarkText = 'Made by ' + activeLibrary().name;
+    const watermarkText = 'Made by ' + libraryName();
     ctx.fillText(watermarkText, W - MARGIN, y);
     ctx.textAlign = 'left';
     // Fester Sicherheitsabstand unter dem Wasserzeichen statt gemessener Textbox
@@ -1808,7 +1814,6 @@ function wireBacklogList(el, weekplan) {
       let pressTimer = null;
 
       const activate = (row, startX, startY, pointerId) => {
-        hapticPulse();
         const rect = row.getBoundingClientRect();
         const ghost = row.cloneNode(true);
         ghost.classList.add('backlog-ghost');
@@ -1958,38 +1963,6 @@ function weekplanTagHTML(entry, displayName, dayKey, readonly = false) {
     `</span>`;
 }
 
-// Vibriert kurz, falls das Gerät die Vibration API unterstützt (Android
-// Chrome ja, iOS Safari leider nicht — dort bleibt es einfach stumm/no-op)
-// UND der Nutzer das nicht in den Einstellungen abgeschaltet hat.
-const VIBRATION_KEY = 'rezeptbuch-vibration';
-function vibrationEnabled() { return localStorage.getItem(VIBRATION_KEY) !== 'false'; }
-let hapticSwitchLabel = null;
-function hapticPulse(ms = 40) {
-  if (!vibrationEnabled()) return;
-  // Android/Chrome: Vibration API
-  if (typeof navigator.vibrate === 'function') {
-    try { navigator.vibrate(ms); return; } catch (e) { /* weiter zum Ersatz */ }
-  }
-  // iPhone/Safari (ab iOS 17.4) kennt navigator.vibrate nicht, löst aber beim
-  // Umschalten eines <input switch> einen kurzen Haptik-Tick aus. Dafür liegt
-  // ein unsichtbarer Schalter im Dokument, der bei Bedarf per Skript "angetippt"
-  // wird. Auf älteren Geräten passiert schlicht nichts.
-  try {
-    if (!hapticSwitchLabel) {
-      const label = document.createElement('label');
-      label.setAttribute('aria-hidden', 'true');
-      label.style.display = 'none';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.setAttribute('switch', '');
-      label.appendChild(input);
-      document.body.appendChild(label);
-      hapticSwitchLabel = label;
-    }
-    hapticSwitchLabel.click();
-  } catch (e) { /* kein Haptik-Ersatz verfügbar */ }
-}
-
 const TAG_LONGPRESS_MS = 300; // 0.3 Sekunden gedrückt halten, bevor sich die Pille löst
 
 // Handler pro Tag: X entfernt den Eintrag, Klick auf einen Rezept-Namen
@@ -2086,7 +2059,6 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
 
     // Aktiviert den eigentlichen Ghost-Drag nach abgeschlossenem Long-Press
     function activateDrag(startX, startY) {
-      hapticPulse();
       const rect = tag.getBoundingClientRect();
       const ghost = tag.cloneNode(true);
       ghost.classList.add('weekplan-tag-ghost');
@@ -3017,7 +2989,6 @@ const SETTINGS_TITLES = {
   profil: 'Mein Profil',
   anzeige: 'Anzeige',
   kochen: 'Kochmodus',
-  app: 'App',
   rezepte: 'Rezepte',
   daten: 'Daten und Offline',
   zugang: 'Zugang',
@@ -3052,10 +3023,9 @@ function openSettings(section) {
 
   const pages = {
     '': () => `
-      ${card(link('go-profil', 'Mein Profil', esc([userName() || 'Name fehlt', activeLibrary().name].join(' · '))))}
-      ${card(link('go-anzeige', 'Anzeige', 'Hell oder dunkel, Farben, Textgröße')
-        + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Timer')
-        + link('go-app', 'App', 'Startansicht und Vibration'))}
+      ${card(link('go-profil', 'Mein Profil', esc([userName() || 'Name fehlt', libraryName()].join(' · '))))}
+      ${card(link('go-anzeige', 'Anzeige', 'Farben, Textgröße, Startansicht')
+        + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Zutaten'))}
       ${card(link('go-rezepte', 'Rezepte', 'Verwalten, Kategorien, Food Match')
         + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
         + link('go-zugang', 'Zugang', needsMove ? 'Umzug steht noch aus' : hasToken ? 'Token eingerichtet' : 'Kein Token'))}
@@ -3071,10 +3041,13 @@ function openSettings(section) {
 
     profil: () => card(`
       ${link('name-btn', 'Mein Name', esc(userName() || 'Noch nicht eingetragen'))}
+      ${hasToken && !offline
+        ? link('libname-btn', 'Name der Bibliothek', esc(libraryName()))
+        : `<div class="set-block"><span class="set-title">Name der Bibliothek</span><span class="set-hint">${esc(libraryName())} · ändern geht nur online und mit Token</span></div>`}
       ${libraries().length > 1 ? `<div class="set-block">
         <span class="set-title">Bibliothek</span>
         <span class="set-select-wrap"><select id="library-select" class="set-select">${libraries().map(l =>
-          `<option value="${esc(l.id)}" ${l.id === activeLibrary().id ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></span>
+          `<option value="${esc(l.id)}" ${l.id === activeLibrary().id ? 'selected' : ''}>${esc(libraryName(l))}</option>`).join('')}</select></span>
       </div>` : ''}`),
 
     anzeige: () => card(`
@@ -3095,26 +3068,20 @@ function openSettings(section) {
       <div class="set-block">
         <span class="set-title">Textgröße</span>
         ${segment('textsize', textSize(), [['1', 'Normal'], ['1.12', 'Groß'], ['1.25', 'Sehr groß']])}
-      </div>`),
-
-    kochen: () => card(`
-      ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an, auf jedem iPhone ab iOS 18.4. Nicht gemeint ist das Always-On-Display für den Sperrbildschirm (14 Pro, 15 Pro, 16 Pro, 17, Air und neuer).', cookFlag(COOK_WAKE_KEY))}
-      <div class="set-block">
-        <span class="set-title">Schriftgröße beim Kochen</span>
-        ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
       </div>
-      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}
-      ${toggle('cook-sound', 'Timer-Ton', 'Klingelt, solange die App offen ist. Nicht bei stummgeschaltetem iPhone.', cookFlag(COOK_SOUND_KEY))}`),
-
-    app: () => card(`
       <label class="set-block">
         <span class="set-title">Beim Öffnen anzeigen</span>
         <span class="set-select-wrap"><select id="start-select" class="set-select">${Object.entries(START_OPTIONS).map(([value, label]) =>
           `<option value="${value}" ${startPage() === value ? 'selected' : ''}>${label}</option>`).join('')}</select></span>
-      </label>
-      ${typeof navigator.vibrate === 'function'
-        ? toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst', vibrationEnabled())
-        : `<div class="set-block set-off"><span class="set-title">Vibration</span><span class="set-hint">Am iPhone nicht möglich: Apple lässt Web-Apps seit iOS 26.5 nicht mehr vibrieren.</span></div>`}`),
+      </label>`),
+
+    kochen: () => card(`
+      ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an (ab iOS 18.4)', cookFlag(COOK_WAKE_KEY))}
+      <div class="set-block">
+        <span class="set-title">Schriftgröße beim Kochen</span>
+        ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
+      </div>
+      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}`),
 
     rezepte: () => card(`
       ${hasToken && !offline
@@ -3135,7 +3102,7 @@ function openSettings(section) {
         : hasToken
         ? (needsMove ? link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action') : '')
           + toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)
-          + link('share-token', 'Token teilen')
+          + link('share-token', 'Zugang teilen', 'Anderen Zugriff auf diese Bibliothek geben')
           + link('clear-token', 'Token entfernen', '', 'danger')
         : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren')),
   };
@@ -3160,21 +3127,18 @@ function openSettings(section) {
   on('help-btn', 'click', () => openHelp());
   on('name-btn', 'click', () => openNameDialog());
   on('library-select', 'change', ev => switchLibrary(ev.target.value));
+  on('libname-btn', 'click', () => openLibraryNameDialog());
 
   onChoice('theme', applyTheme);
   onChoice('colorscheme', value => { applyColorScheme(value); render(); });
   onChoice('textsize', applyTextSize);
 
-  for (const [id, key] of [['cook-wake', COOK_WAKE_KEY], ['cook-ing', COOK_ING_KEY], ['cook-sound', COOK_SOUND_KEY]]) {
+  for (const [id, key] of [['cook-wake', COOK_WAKE_KEY], ['cook-ing', COOK_ING_KEY]]) {
     on(id, 'change', ev => localStorage.setItem(key, ev.target.checked ? 'true' : 'false'));
   }
   onChoice('cooksize', value => localStorage.setItem(COOK_SIZE_KEY, value));
 
   on('start-select', 'change', ev => localStorage.setItem(START_KEY, ev.target.value));
-  on('vibration-toggle', 'change', ev => {
-    localStorage.setItem(VIBRATION_KEY, ev.target.checked ? 'true' : 'false');
-    if (ev.target.checked) hapticPulse(); // kurzes Feedback als Bestätigung
-  });
 
   on('lib-recipes-btn', 'click', () => openLibraryRecipes());
   on('lib-cats-btn', 'click', () => openLibraryCategories());
@@ -3211,14 +3175,24 @@ function openSettings(section) {
     // Modal mit Token
     const modal = document.createElement('div');
     modal.className = 'token-share-modal';
+    // Vor dem Umzug ist es noch der alte Token, der mehr darf als diese Bibliothek
+    const wide = activeLibrary().id === 'main' && !mainMoved();
     modal.innerHTML = `
       <div class="token-share-content">
-        <button class="token-share-close">✕</button>
-        <h3>Token für deine Freundin</h3>
-        <p>Teile diesen Token mit deiner Freundin:</p>
+        <button class="token-share-close" aria-label="Schließen">✕</button>
+        <h3>Zugang teilen</h3>
+        <p>Wer diesen Token hat, darf in <strong>${esc(libraryName())}</strong>:</p>
+        <ul class="token-share-rights">
+          <li>Rezepte und Fotos hinzufügen, ändern und löschen</li>
+          <li>Kategorien, Wochenplan und Backlog bearbeiten</li>
+          <li>die Bibliothek umbenennen</li>
+          <li>die KI-Erkennung nutzen</li>
+        </ul>
+        <p>${wide ? 'Achtung: Dieser alte Token darf auch die App selbst ändern. Teile erst nach dem Umzug.'
+          : 'Gib ihn nur Personen, denen du vertraust. Ein Zugang lässt sich nicht für Einzelne zurücknehmen.'}</p>
         <input type="text" readonly value="${esc(token)}" class="token-share-input">
         <button class="token-share-copy">In Zwischenablage kopieren</button>
-        <p class="token-share-hint">Deine Freundin kann den Token dann in den Einstellungen unter "Token einrichten" einfügen</p>
+        <p class="token-share-hint">Eingeben unter Einstellungen → Zugang → Token einrichten.</p>
       </div>
     `;
 
@@ -3496,7 +3470,8 @@ async function checkAppUpdateAvailable() {
 // Titel oben = Name der geöffneten Bibliothek (letztes Wort als Akzent);
 // bei mehreren Bibliotheken wechselt ein Tipp darauf
 function renderLibraryTitle() {
-  const words = activeLibrary().name.split(' ');
+  const words = libraryName().split(' ');
+  $('.h1-text').classList.toggle('long-word', words.some(w => w.length > 15));
   const last = words.pop();
   $('.h1-text').innerHTML = `${esc(words.join(' '))} <em>${esc(last)}</em>`;
   if (libraries().length < 2) return;
@@ -3511,7 +3486,7 @@ function openLibraryPicker() {
   const modal = document.createElement('div');
   modal.className = 'ed-modal-overlay';
   modal.innerHTML = `<div class="ed-modal"><h3>Bibliothek wechseln</h3>
-    <div class="library-list">${libraries().map(l => `<button type="button" data-id="${esc(l.id)}" class="${l.id === activeLibrary().id ? 'active' : ''}">${esc(l.name)}</button>`).join('')}</div>
+    <div class="library-list">${libraries().map(l => `<button type="button" data-id="${esc(l.id)}" class="${l.id === activeLibrary().id ? 'active' : ''}">${esc(libraryName(l))}</button>`).join('')}</div>
     <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button></div></div>`;
   document.body.appendChild(modal);
   for (const b of modal.querySelectorAll('.library-list button')) b.onclick = () => { modal.remove(); switchLibrary(b.dataset.id); };
@@ -3556,6 +3531,32 @@ function openNameDialog() {
 // Gerät noch am alten Speicherort: nach dem neuen Token fragen
 function offerMove() {
   if (localStorage.getItem(OFFLINE_MODE_KEY) !== 'true') openMoveDialog();
+}
+
+// Neuer Name für die Bibliothek: gilt für alle, die sie nutzen
+function openLibraryNameDialog() {
+  const box = document.createElement('div');
+  box.className = 'ed-modal-overlay';
+  box.innerHTML = `<form class="ed-modal">
+    <h3>Name der Bibliothek</h3>
+    <p class="setting-hint">Steht oben in der App, auch bei allen anderen in dieser Bibliothek.</p>
+    <div class="ed-cat-new"><input name="title" maxlength="32" autocomplete="off" value="${esc(libraryName())}"></div>
+    <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Abbrechen</button><button type="submit" class="ed-modal-ok">Speichern</button></div>
+  </form>`;
+  document.body.appendChild(box);
+  box.querySelector('.ed-modal-cancel').onclick = () => box.remove();
+  box.querySelector('form').onsubmit = async e => {
+    e.preventDefault();
+    const name = e.target.elements.title.value.trim().replace(/\s+/g, ' ');
+    if (!name) return toast('Bitte einen Namen eingeben');
+    box.remove();
+    if (name === libraryName()) return;
+    const done = await libCommit(`Bibliothek umbenannt in ${name} (vom Handy)`, remote => { remote.libraryName = name; });
+    if (!done) return;
+    renderLibraryTitle();
+    if (history.state?.page === 'settings-profil') openSettings('profil');
+    toast('Umbenannt ✓');
+  };
 }
 
 /* ---------- App-Start ---------- */
