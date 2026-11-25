@@ -188,11 +188,10 @@ header {
   z-index: 10;
   background: var(--bg);
   padding: calc(env(safe-area-inset-top) + 10px) 16px 0;
-  /* Platz für Suche + Kategorien, die unten an der Kopfzeile hängen */
-  margin-bottom: var(--extra-h, 118px);
-  border-bottom: 1px solid transparent;
+  /* Platz für Kacheln (61px) sowie Suche + Kategorien, die unten an der
+     Kopfzeile hängen. Bleibt beim Scrollen gleich, damit nichts springt */
+  margin-bottom: calc(61px + var(--extra-h, 110px));
 }
-header.extra-hidden { border-bottom-color: var(--border); }
 
 /* Suche + Kategorien liegen über dem Inhalt: so verschiebt das Ein- und
    Ausblenden nichts auf der Seite (kein Ruckeln beim Scrollen) */
@@ -201,10 +200,10 @@ header.extra-hidden { border-bottom-color: var(--border); }
   top: 100%;
   left: 0;
   right: 0;
-  /* schneidet nur oben ab, Menüs dürfen nach unten herausragen */
-  clip-path: inset(0 0 -100vh 0);
   pointer-events: none;
 }
+/* schneidet nur oben ab, Menüs dürfen nach unten herausragen */
+.header-extra-clip { clip-path: inset(0 0 -100vh 0); }
 .header-extra-inner {
   padding: 0 16px 6px;
   background: var(--bg);
@@ -335,8 +334,13 @@ h1 {
 .shortcuts-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 8px;
+  padding: 0 16px 8px;
+  background: var(--bg);
+  border-bottom: 1px solid transparent;
+  pointer-events: auto;
+  transition: padding 0.24s ease;
 }
+header.extra-hidden .shortcuts-row { padding-bottom: 6px; border-bottom-color: var(--border); }
 
 .weekplan-shortcut {
   position: relative;
@@ -355,14 +359,16 @@ h1 {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: height 0.18s ease, transform 0.12s ease;
+  transition: height 0.24s ease, font-size 0.24s ease, transform 0.12s ease;
 }
 .weekplan-shortcut:active { transform: scale(0.97); }
 .weekplan-shortcut svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--accent); }
 .weekplan-shortcut-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.shortcuts-row.compact { margin-bottom: 8px; }
-.shortcuts-row.compact .weekplan-shortcut { height: 44px; font-size: 14px; }
+header.extra-hidden .weekplan-shortcut { height: 30px; font-size: 13px; border-radius: var(--r-sm); }
+header.extra-hidden .weekplan-shortcut svg { width: 15px; height: 15px; }
+/* flach, aber weiterhin gut zu treffen: unsichtbare Fläche ringsum */
+header.extra-hidden .weekplan-shortcut::before { content: ''; position: absolute; inset: -6px 0; }
 
 /* "Frühstück" ist der längste Knopftext: auf normalen Handys weicht das Emoji */
 @media (max-width: 389px) { .topbar.long-mode .h1-emoji { display: none; } }
@@ -502,7 +508,12 @@ html.color-rainbow .h1-text em { color: transparent; }
     padding-right: max(16px, calc((100% - 1100px) / 2 + 16px));
   }
   #mode-menu { right: max(16px, calc((100% - 1100px) / 2 + 16px)); }
-  .shortcuts-row, .search-wrapper { max-width: 520px; }
+  .search-wrapper { max-width: 520px; }
+  .shortcuts-row {
+    padding-left: max(16px, calc((100% - 1100px) / 2 + 16px));
+    padding-right: max(16px, calc((100% - 1100px) / 2 + 16px));
+  }
+  .weekplan-shortcut { max-width: 255px; }
 }
 
 /* ---------- KI-Erfassen ---------- */

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T19:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T20:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -3233,30 +3233,14 @@ async function checkAppUpdateAvailable() {
   return !!remoteBuild && new Date(remoteBuild).getTime() > new Date(APP_BUILD_TIME).getTime();
 }
 
-// Wochenplan/Food-Match-Kacheln: beim Herunterscrollen nebeneinander statt
-// untereinander (spart Platz, da die Kopfzeile sticky ist und sonst dauerhaft
-// stehen bleibt). passive:true, da nichts preventDefault() braucht.
-(() => {
-  const row = document.getElementById('shortcuts-row');
-  if (!row) return;
-  const THRESHOLD = 12;
-  let compact = false;
-  window.addEventListener('scroll', () => {
-    const shouldBeCompact = window.scrollY > THRESHOLD;
-    if (shouldBeCompact !== compact) {
-      compact = shouldBeCompact;
-      row.classList.toggle('compact', compact);
-    }
-  }, { passive: true });
-})();
-
-// Suche + Kategorien: beim Runterscrollen weg, beim Hochscrollen wieder da
+// Beim Runterscrollen: Wochenplan/Food Match flach, Suche + Kategorien weg.
+// Beim Hochscrollen kommt alles zurück
 (() => {
   const header = document.querySelector('header');
-  const extra = $('#header-extra');
-  if (!extra) return; // alte index.html aus dem Zwischenspeicher
-  new ResizeObserver(() => header.style.setProperty('--extra-h', extra.firstElementChild.offsetHeight + 'px'))
-    .observe(extra.firstElementChild);
+  const inner = document.querySelector('.header-extra-clip > .header-extra-inner');
+  if (!inner) return; // alte index.html aus dem Zwischenspeicher
+  new ResizeObserver(() => header.style.setProperty('--extra-h', inner.offsetHeight + 'px'))
+    .observe(inner);
 
   const STEP = 14; // so weit muss man in eine Richtung scrollen
   let anchor = window.scrollY;

@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Schlemmerliste">
 <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20261125-16">
+<link rel="stylesheet" href="style.css?v=20261125-17">
 <script>
 // Version-Check: entfernt kaputte oder uralte Rezeptdaten VOR app.js.
 // WICHTIG: NIEMALS localStorage.clear() — das würde den GitHub-Token und
@@ -64,18 +64,20 @@ console.log('✅ Version-Check abgeschlossen');
     </div>
   </div>
   <div id="mode-menu" hidden></div>
-  <div class="shortcuts-row" id="shortcuts-row">
-    <button id="btn-weekplan" title="Wochenplan" aria-label="Wochenplan" class="weekplan-shortcut">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-      <span class="weekplan-shortcut-label">Wochenplan</span>
-    </button>
-    <button id="btn-tinder" title="Food Match" aria-label="Food Match" class="weekplan-shortcut">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
-      <span class="weekplan-shortcut-label">Food Match</span>
-    </button>
-  </div>
-  <!-- Suche + Kategorien: verschwinden beim Runterscrollen, kommen beim Hochscrollen -->
+  <!-- Hängt unter der Kopfzeile. Beim Runterscrollen werden die Kacheln flach
+       und Suche + Kategorien verschwinden, beim Hochscrollen kommt alles zurück -->
   <div class="header-extra" id="header-extra">
+    <div class="shortcuts-row" id="shortcuts-row">
+      <button id="btn-weekplan" title="Wochenplan" aria-label="Wochenplan" class="weekplan-shortcut">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+        <span class="weekplan-shortcut-label">Wochenplan</span>
+      </button>
+      <button id="btn-tinder" title="Food Match" aria-label="Food Match" class="weekplan-shortcut">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
+        <span class="weekplan-shortcut-label">Food Match</span>
+      </button>
+    </div>
+    <div class="header-extra-clip">
     <div class="header-extra-inner">
         <div class="search-wrapper">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
@@ -91,6 +93,7 @@ console.log('✅ Version-Check abgeschlossen');
             <div id="sort-menu" hidden></div>
           </div>
         </div>
+    </div>
     </div>
   </div>
 </header>
