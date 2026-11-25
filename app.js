@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T10:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T11:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1004,10 +1004,28 @@ async function shareRecipeAsImage(r) {
 
 const navDepth = () => history.state?.depth || 0;
 
+// Abbilder der verlassenen Seiten (je Verlaufstiefe): sie liegen während der
+// Zurück-Geste unter der aktuellen Seite, damit man die vorherige schon sieht
+const underlays = [];
+function snapshotView() {
+  const depth = navDepth();
+  const editor = $('#editor');
+  const top = editor.hidden ? $('#detail') : editor;
+  if (!depth || top.hidden) return;
+  const node = top.cloneNode(true);
+  node.removeAttribute('id');
+  node.removeAttribute('style');
+  node.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+  node.className = 'nav-underlay';
+  underlays[depth] = { node, scroll: top.scrollTop, isEditor: top === editor };
+}
+
 // Scroll-Position der aktuellen Ansicht merken, damit Zurück dort wieder landet
 function rememberScroll() {
-  if (history.state && !$('#detail').hidden) {
-    history.replaceState({ ...history.state, scroll: $('#detail').scrollTop }, '');
+  snapshotView();
+  const top = $('#editor').hidden ? $('#detail') : $('#editor');
+  if (history.state && !top.hidden) {
+    history.replaceState({ ...history.state, scroll: top.scrollTop }, '');
   }
 }
 function pushView(state) { history.pushState({ ...state, depth: navDepth() + 1 }, ''); }
@@ -1062,10 +1080,14 @@ function renderOverlayPage(page) {
 // Zurück-Navigation: null = Übersicht, sonst die jeweilige Ansicht wiederherstellen
 window.addEventListener('popstate', e => {
   lastBackAt = Date.now();
-  cancelSwipe();
+  resetSwipe();
   document.querySelectorAll('.ed-modal-overlay, .token-share-modal').forEach(m => m.remove());
   const s = e.state;
-  if (s?.view === 'overlay') return renderOverlayPage(s.page);
+  if (s?.view === 'overlay') {
+    renderOverlayPage(s.page);
+    $('#editor').scrollTop = s.scroll || 0;
+    return;
+  }
   const detail = $('#detail');
   if (!$('#editor').hidden) {
     closeEditor();
@@ -3238,73 +3260,187 @@ function clearWeekplanUpdateDot() {
 // nachträgliches Zurücksetzen mehr nötig.
 
 // Wisch-Gesten vom linken Rand nach rechts:
-//  - in einer Ansicht (#detail/#editor): zurück
+//  - in einer Ansicht (#detail/#editor): zurück, die Seite folgt dem Finger
+//    über die ganze Breite, darunter erscheint die vorherige Seite
 //  - auf der Rezeptübersicht: Einstellungen öffnen ("nach vorne")
-// Erst wenn die Bewegung klar waagerecht ist, "greift" die Geste; Scrollen,
-// Abbruch durch den Browser (pointercancel) und Seitenwechsel setzen alles
-// zurück, damit nie eine halb verschobene, durchscheinende Seite stehen bleibt.
-let swipe = null; // { id, x, y, mode: 'back'|'settings', target }
+//
+// Wischen oder Scrollen? Erst nach SWIPE_SLOP px wird entschieden: nur eine
+// klar waagerechte Bewegung nach rechts (|dx| > 1,5·|dy|, ca. 34°) ist ein
+// Wisch, alles andere bleibt Scrollen. Touch-Ereignisse statt Pointer-Events,
+// weil iOS Pointer-Events abbricht, sobald es selbst scrollen möchte; ein
+// preventDefault() auf touchmove hält die Geste bei uns.
+const SWIPE_SLOP = 10;        // px bis zur Entscheidung
+const SWIPE_RATIO = 1.5;      // so viel waagerechter als senkrecht
+const SWIPE_FLING = 0.4;      // px/ms: schneller Wisch reicht auch bei kurzem Weg
+const SWIPE_DISTANCE = 0.4;   // Anteil der Breite, ab dem langsames Wischen zählt
+const swipeEdge = () => Math.max(48, window.innerWidth * 0.16);
+
+let swipe = null;    // laufende Berührung
+let swipeAnim = null; // laufende Abschluss-/Zurückfeder-Animation
+
 // Das oberste Fenster zählt: Editor/Einstellungen liegen ÜBER der Rezeptansicht
 const swipeTarget = () => $('#editor').hidden ? $('#detail') : $('#editor');
 
-function resetSwipeStyles(t) {
-  if (!t) return;
-  t.classList.remove('swiping');
-  t.style.transform = '';
-  t.style.opacity = '';
-}
-function cancelSwipe() {
-  resetSwipeStyles(swipe?.target);
+// Alle Spuren der Geste entfernen (nach Abschluss, Abbruch oder Seitenwechsel)
+function resetSwipe() {
+  if (swipeAnim) { clearTimeout(swipeAnim); swipeAnim = null; }
+  for (const el of [$('#detail'), $('#editor')]) {
+    el.classList.remove('swiping');
+    el.style.transform = '';
+    el.style.transition = '';
+    el.style.removeProperty('--swipe-scroll');
+  }
+  document.querySelectorAll('.nav-underlay').forEach(n => n.remove());
   swipe = null;
 }
 
-document.addEventListener('pointerdown', (e) => {
-  cancelSwipe();
-  if (e.clientX >= 40 || e.isPrimary === false) return;
-  // Eigene Zieh-/Wisch-Elemente haben Vorrang
-  if (e.target.closest('input, textarea, .backlog-drag, .weekplan-tag-drag, .detail-photos, .tinder')) return;
-  const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
-  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, mode, target: null };
-});
+// Liegt unter dem Start ein Element, das selbst noch nach links zurückscrollen
+// kann (z. B. Fotogalerie ab Bild 2, Kategorien-Leiste), gehört die Geste ihm
+function scrollableToLeft(el) {
+  for (; el && el !== document.body; el = el.parentElement) {
+    if (el.scrollLeft > 2 && el.scrollWidth > el.clientWidth
+        && !['detail', 'editor'].includes(el.id)) return true;
+  }
+  return false;
+}
 
-document.addEventListener('pointermove', (e) => {
-  if (!swipe || e.pointerId !== swipe.id) return;
-  const dx = e.clientX - swipe.x;
-  const dy = Math.abs(e.clientY - swipe.y);
+function swipeStart(x, y, time, el) {
+  if (swipeAnim) return;
+  if (swipe) resetSwipe();
+  if (x > swipeEdge()) return;
+  // Eigene Zieh-/Wisch-Elemente haben Vorrang
+  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay')) return;
+  if (scrollableToLeft(el)) return;
+  const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
+  swipe = { x, y, mode, target: null, under: null, samples: [{ x, t: time }] };
+}
+
+// Gibt true zurück, wenn die Geste uns gehört (dann nicht scrollen lassen)
+function swipeMove(x, y, time) {
+  if (!swipe) return false;
+  const dx = x - swipe.x;
+  const dy = y - swipe.y;
+  swipe.samples.push({ x, t: time });
+  if (swipe.samples.length > 12) swipe.samples.shift();
 
   if (!swipe.target) {
-    // Richtung entscheiden: senkrecht oder nach links = keine Wisch-Geste
-    if ((dy > 12 && dy > dx) || dx < -10) { swipe = null; return; }
+    const horizontal = dx > Math.abs(dy) * SWIPE_RATIO;
+    if (Math.abs(dx) < SWIPE_SLOP && Math.abs(dy) < SWIPE_SLOP) {
+      return horizontal && dx > 4; // klare Tendenz: Browser noch nicht scrollen lassen
+    }
+    if (!horizontal) { swipe = null; return false; } // Scrollen oder nach links
     if (swipe.mode === 'settings') {
-      if (dx > 80 && dy < 60) { swipe = null; openSettings(); }
-      return;
+      if (dx > 70) { swipe = null; openSettings(); }
+      return true;
     }
-    if (dx < 14 || dx < dy * 1.5) return;
-    const target = swipeTarget();
-    const closeBtn = target.querySelector('.detail-close');
-    // Nur wenn ein sichtbarer Zurück-Knopf da ist (nicht beim Food Match)
-    if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) {
-      swipe = null;
-      return;
-    }
-    swipe.target = target;
-    target.classList.add('swiping');
+    if (!beginBackSwipe()) { swipe = null; return false; }
   }
-  swipe.target.style.transform = `translateX(${Math.max(0, Math.min(dx, 120))}px)`;
-  swipe.target.style.opacity = Math.max(0.65, 1 - dx / 400);
-});
+  drawSwipe(Math.max(0, Math.min(dx, window.innerWidth)));
+  return true;
+}
 
-document.addEventListener('pointerup', (e) => {
-  if (!swipe || e.pointerId !== swipe.id) return;
-  const { target } = swipe;
-  const dx = e.clientX - swipe.x;
-  cancelSwipe();
-  // Erst beim Loslassen auslösen — wer zurückzieht, bleibt auf der Seite
-  if (target && dx > 90) closeOverlay();
-});
-document.addEventListener('pointercancel', cancelSwipe);
+function beginBackSwipe() {
+  const target = swipeTarget();
+  const closeBtn = target.querySelector('.detail-close');
+  // Nur wenn ein sichtbarer Zurück-Knopf da ist (nicht beim Food Match)
+  if (!closeBtn || getComputedStyle(closeBtn).display === 'none' || closeBtn.classList.contains('tinder-close')) return false;
+  swipe.target = target;
+  target.style.setProperty('--swipe-scroll', target.scrollTop + 'px');
+  target.classList.add('swiping');
+  // Vorherige Seite darunterlegen. Übersicht bzw. Rezept unter dem Editor sind
+  // ohnehin noch da; sonst das gemerkte Abbild der vorherigen Seite
+  const prev = underlays[navDepth() - 1];
+  const isEditor = target.id === 'editor';
+  if (prev && prev.isEditor === isEditor && navDepth() >= 2) {
+    const under = prev.node.cloneNode(true);
+    under.classList.add(isEditor ? 'under-editor' : 'under-detail');
+    under.style.setProperty('--swipe-scroll', prev.scroll + 'px');
+    document.body.appendChild(under);
+    under.scrollTop = prev.scroll;
+    swipe.under = under;
+  }
+  return true;
+}
 
-// Während die Geste läuft, darf der Browser sie nicht als Scrollen übernehmen
-document.addEventListener('touchmove', (e) => { if (swipe?.target) e.preventDefault(); }, { passive: false });
+function drawSwipe(dx) {
+  swipe.dx = dx;
+  swipe.target.style.transform = `translateX(${dx}px)`;
+  if (swipe.under) {
+    const rest = 1 - dx / window.innerWidth;
+    swipe.under.style.transform = `translateX(${-28 * rest}%)`;
+  }
+}
+
+function swipeEnd(x, time) {
+  if (!swipe) return;
+  if (!swipe.target) { swipe = null; return; }
+  const width = window.innerWidth;
+  const dx = Math.max(0, Math.min(x - swipe.x, width));
+  swipe.samples.push({ x, t: time });
+  // Geschwindigkeit aus den letzten 100 ms (wer vor dem Loslassen verharrt, hat ~0)
+  const recent = swipe.samples.filter(p => time - p.t <= 100);
+  const first = recent[0];
+  const v = recent.length > 1 && time > first.t ? (x - first.x) / (time - first.t) : 0;
+  const commit = (v > SWIPE_FLING && dx > 24) || (dx > width * SWIPE_DISTANCE && v > -0.15);
+  finishSwipe(commit, dx, v);
+}
+
+// Restweg flüssig zu Ende animieren: vorwärts zur vorherigen Seite oder zurück
+function finishSwipe(commit, dx, v) {
+  const { target, under } = swipe;
+  const width = window.innerWidth;
+  const rest = commit ? width - dx : dx;
+  const duration = Math.round(Math.max(140, Math.min(300, rest / Math.max(Math.abs(v), 1.1))));
+  const ease = `transform ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+  target.classList.remove('swiping');
+  target.classList.add('swipe-settling');
+  target.style.transition = ease;
+  target.style.transform = commit ? `translateX(${width}px)` : 'translateX(0px)';
+  if (under) {
+    under.style.transition = ease;
+    under.style.transform = commit ? 'translateX(0%)' : 'translateX(-28%)';
+  }
+  swipe = null;
+  swipeAnim = setTimeout(() => {
+    swipeAnim = null;
+    target.classList.remove('swipe-settling');
+    if (!commit) return resetSwipe();
+    lastBackAt = Date.now();
+    if (history.state) {
+      history.back(); // popstate zeichnet die vorherige Seite und ruft resetSwipe()
+      swipeAnim = setTimeout(resetSwipe, 700); // Sicherheitsnetz
+    } else {
+      closeEditor(); hideDetail(); resetSwipe();
+    }
+  }, duration + 20);
+}
+
+function swipeCancel() {
+  if (!swipe) return;
+  if (swipe.target) finishSwipe(false, swipe.dx || 0, 0);
+  else swipe = null;
+}
+
+// Finger
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) return swipeCancel();
+  const t = e.touches[0];
+  swipeStart(t.clientX, t.clientY, e.timeStamp, e.target);
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+  const t = e.touches[0];
+  if (swipeMove(t.clientX, t.clientY, e.timeStamp) && e.cancelable) e.preventDefault();
+}, { passive: false });
+document.addEventListener('touchend', (e) => {
+  const t = e.changedTouches[0];
+  swipeEnd(t.clientX, e.timeStamp);
+});
+document.addEventListener('touchcancel', swipeCancel);
+
+// Maus (Desktop)
+document.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button === 0) swipeStart(e.clientX, e.clientY, e.timeStamp, e.target); });
+document.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') swipeMove(e.clientX, e.clientY, e.timeStamp); });
+document.addEventListener('pointerup', (e) => { if (e.pointerType === 'mouse') swipeEnd(e.clientX, e.timeStamp); });
+
 // Der schmale Randstreifen gehört ganz uns (verhindert die iPhone-Browsergeste)
 document.getElementById('edge-swipe-guard')?.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });

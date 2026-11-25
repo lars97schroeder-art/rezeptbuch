@@ -620,7 +620,6 @@ h1 {
   background: var(--bg);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  transition: transform 0.2s ease-out;
 }
 
 .detail-photo {
@@ -1445,7 +1444,6 @@ h1 {
   background: var(--bg);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  transition: transform 0.2s ease-out;
 }
 
 .ed-body {
@@ -1911,8 +1909,31 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .app-update-buttons .app-update-now { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
-/* Während der Zurück-Geste folgt die Seite direkt dem Finger (ohne Nachlauf) */
+/* Zurück-Geste: die Seite folgt direkt dem Finger und wirft einen Schatten auf
+   die vorherige Seite darunter */
 #detail.swiping, #editor.swiping { transition: none !important; }
+.swiping, .swipe-settling { box-shadow: -14px 0 36px rgba(0, 0, 0, 0.18); }
+
+/* Abbild der vorherigen Seite während der Geste */
+.nav-underlay {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  pointer-events: none;
+}
+.nav-underlay.under-detail { z-index: 19; }
+.nav-underlay.under-editor { z-index: 24; }
+
+/* Eine verschobene Seite wird zum Bezugsrahmen ihrer "fixed"-Knöpfe — um die
+   Scroll-Position nachführen, damit sie während der Geste an Ort und Stelle
+   bleiben */
+.swiping .detail-close, .swiping .detail-actions-right, .swiping .detail-home, .swiping .detail-edit, .swiping .lib-bar,
+.swipe-settling .detail-close, .swipe-settling .detail-actions-right, .swipe-settling .detail-home, .swipe-settling .detail-edit, .swipe-settling .lib-bar,
+.nav-underlay .detail-close, .nav-underlay .detail-actions-right, .nav-underlay .detail-home, .nav-underlay .detail-edit, .nav-underlay .lib-bar {
+  translate: 0 var(--swipe-scroll, 0px);
+}
+.detail-actions-right .detail-home { translate: none !important; }
 
 /* ---------- Rezeptbibliothek ---------- */
 
