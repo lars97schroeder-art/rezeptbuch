@@ -774,8 +774,13 @@ img.detail-photo { cursor: zoom-in; }
   inset: 0;
   z-index: 900;
   background: #0C0A09;
-  touch-action: pan-x pinch-zoom;
+  touch-action: pan-x;
 }
+/* Vergrößert: ein Finger verschiebt das Foto statt zu blättern */
+.lightbox.zoomed, .lightbox.zoomed .lightbox-strip { touch-action: none; }
+.lightbox.zoomed .lightbox-strip { overflow: hidden; }
+.lightbox.zoomed .lightbox-nav, .lightbox.zoomed .lightbox-count { visibility: hidden; }
+.lightbox-close, .lightbox-nav { z-index: 1; }
 .lightbox-strip {
   display: flex;
   width: 100%;
@@ -2227,6 +2232,20 @@ body:has(.app-update-dialog) #toast { top: calc(env(safe-area-inset-top) + 16px)
   text-align: center;
   line-height: 1.4;
 }
+
+.toast-undo {
+  margin-left: 14px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+#toast:has(.toast-undo) { display: flex; align-items: center; white-space: nowrap; padding: 8px 8px 8px 18px; }
 
 /* iOS: 16px+ auf Eingabefeldern verhindert das Auto-Zoom beim Fokus */
 @media (max-width: 480px) {

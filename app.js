@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T22:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T23:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -784,17 +784,107 @@ function openLightbox(index) {
   box.querySelector('.prev')?.addEventListener('click', () => strip.scrollBy({ left: -strip.clientWidth, behavior: 'smooth' }));
   box.querySelector('.next')?.addEventListener('click', () => strip.scrollBy({ left: strip.clientWidth, behavior: 'smooth' }));
 
+  const zoom = wireZoom(box, strip);
   let start = null;
   box.addEventListener('touchstart', e => {
-    start = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+    start = e.touches.length === 1 && !zoom.active() ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
   }, { passive: true });
   box.addEventListener('touchend', e => {
-    if (!start) return;
+    if (!start || zoom.active()) return;
     const dx = e.changedTouches[0].clientX - start.x;
     const dy = e.changedTouches[0].clientY - start.y;
     start = null;
     if (dy > 90 && dy > Math.abs(dx) * 1.5) close();
   });
+}
+
+// Zoomen in der großen Ansicht: zwei Finger spreizen, doppelt tippen, im
+// vergrößerten Foto mit einem Finger verschieben. (Eigene Logik, weil die App
+// das Zoomen der Seite insgesamt sperrt.)
+function wireZoom(box, strip) {
+  const MAX = 5;
+  let img = null, s = 1, x = 0, y = 0;
+  let pinch = null, pan = null, lastTap = null, moved = false;
+
+  const centre = () => { const r = img.parentElement.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; };
+  // So weit verschieben, wie das sichtbare Bild (nicht der schwarze Rand) reicht
+  function apply() {
+    const c = centre();
+    const ratio = Math.min(c.w / (img.naturalWidth || c.w), c.h / (img.naturalHeight || c.h));
+    const maxX = Math.max(0, ((img.naturalWidth || c.w) * ratio * s - c.w) / 2);
+    const maxY = Math.max(0, ((img.naturalHeight || c.h) * ratio * s - c.h) / 2);
+    x = Math.max(-maxX, Math.min(maxX, x));
+    y = Math.max(-maxY, Math.min(maxY, y));
+    img.style.transform = s > 1 ? `translate(${x}px, ${y}px) scale(${s})` : '';
+    box.classList.toggle('zoomed', s > 1);
+  }
+  const reset = () => { s = 1; x = 0; y = 0; if (img) apply(); };
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  const mid = t => ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 });
+  const current = () => strip.children[Math.round(strip.scrollLeft / strip.clientWidth) || 0]?.querySelector('img');
+
+  box.addEventListener('touchstart', e => {
+    if (e.target.closest('button')) return;
+    const now = current();
+    if (now !== img) { if (img) img.style.transform = ''; img = now; s = 1; x = 0; y = 0; }
+    if (!img) return;
+    const t = e.touches;
+    if (t.length === 2) {
+      const c = centre(), m = mid(t);
+      // Bildpunkt unter den Fingern merken, damit er beim Spreizen dort bleibt
+      pinch = { d: dist(t) || 1, s, px: (m.x - c.x - x) / s, py: (m.y - c.y - y) / s };
+      pan = null; moved = true;
+    } else if (t.length === 1) {
+      moved = false;
+      pan = { sx: t[0].clientX, sy: t[0].clientY, x, y };
+    }
+  }, { passive: true });
+
+  box.addEventListener('touchmove', e => {
+    const t = e.touches;
+    if (pinch && t.length === 2) {
+      e.preventDefault();
+      const c = centre(), m = mid(t);
+      s = Math.max(1, Math.min(MAX, pinch.s * dist(t) / pinch.d));
+      x = m.x - c.x - pinch.px * s;
+      y = m.y - c.y - pinch.py * s;
+      apply();
+    } else if (pan && t.length === 1) {
+      const dx = t[0].clientX - pan.sx, dy = t[0].clientY - pan.sy;
+      if (Math.hypot(dx, dy) > 8) moved = true;
+      if (s > 1) { e.preventDefault(); x = pan.x + dx; y = pan.y + dy; apply(); }
+    }
+  }, { passive: false });
+
+  box.addEventListener('touchend', e => {
+    if (e.target.closest('button') || !img) return;
+    if (e.touches.length) {
+      // ein Finger bleibt liegen: nahtlos mit Verschieben weitermachen
+      pinch = null;
+      pan = { sx: e.touches[0].clientX, sy: e.touches[0].clientY, x, y };
+      return;
+    }
+    pinch = null; pan = null;
+    if (s < 1.05) reset();
+    if (moved) { lastTap = null; return; }
+    const p = e.changedTouches[0];
+    if (lastTap && e.timeStamp - lastTap.t < 320 && Math.hypot(p.clientX - lastTap.x, p.clientY - lastTap.y) < 40) {
+      lastTap = null;
+      e.preventDefault();
+      if (s > 1) return reset();
+      const c = centre();
+      s = 2.5; x = (c.x - p.clientX) * 1.5; y = (c.y - p.clientY) * 1.5;
+      img.style.transition = 'transform 0.2s ease';
+      apply();
+      setTimeout(() => { img.style.transition = ''; }, 220);
+    } else {
+      lastTap = { t: e.timeStamp, x: p.clientX, y: p.clientY };
+    }
+  }, { passive: false });
+  box.addEventListener('touchcancel', () => { pinch = null; pan = null; });
+  box.addEventListener('gesturestart', e => e.preventDefault());
+
+  return { active: () => s > 1 || !!pinch };
 }
 
 // Schließen und die kleine Galerie auf das zuletzt gesehene Foto stellen
@@ -1554,9 +1644,15 @@ function wireBacklogList(el, weekplan) {
         e.preventDefault();
         const row = removeBtn.closest('.backlog-row');
         const i = Number(row.dataset.i);
-        items.splice(i, 1);
+        const [removed] = items.splice(i, 1);
         saveBacklogDebounced(items);
         rerender();
+        toastUndo('Eintrag entfernt', () => {
+          const current = getBacklogItems();
+          current.splice(Math.min(i, current.length), 0, removed);
+          saveBacklogDebounced(current);
+          refreshOpenWeekplan();
+        });
       };
     }
 
@@ -1883,6 +1979,15 @@ function attachTagHandlers(selectedDiv, weekplan, backlogCtl) {
         saveWeekplan(weekplan);
         weekplanUploadDebounced();
         removeBtn.closest('.weekplan-tag').remove();
+        const week = weekplanViewKey; // auch nach Wochenwechsel in die richtige Woche
+        toastUndo('Eintrag entfernt', () => {
+          const plan = getWeekplanFor(week);
+          const list = plan[dayKey] || (plan[dayKey] = []);
+          list.splice(Math.min(idx, list.length), 0, entry);
+          saveWeekplanFor(week, plan);
+          weekplanUploadDebounced();
+          refreshOpenWeekplan();
+        });
       }
     };
   }
@@ -2777,6 +2882,29 @@ function toast(msg) {
   t.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
+}
+
+// Hinweis mit "Rückgängig"-Knopf (6 Sekunden)
+function toastUndo(msg, undo) {
+  toast(msg);
+  const t = $('#toast');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'toast-undo';
+  btn.textContent = 'Rückgängig';
+  btn.onclick = () => { t.hidden = true; clearTimeout(toastTimer); undo(); };
+  t.appendChild(btn);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+// Nach "Rückgängig": offenen Wochenplan neu zeichnen, ohne die Position zu verlieren
+function refreshOpenWeekplan() {
+  const el = $('#detail');
+  if (el.hidden || !el.querySelector('.weekplan-container')) return;
+  const top = el.scrollTop;
+  renderWeekplan(true);
+  el.scrollTop = top;
 }
 
 function showToastWithoutTimeout(msg) {
