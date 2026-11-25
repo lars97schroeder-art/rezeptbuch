@@ -366,10 +366,10 @@ header.extra-hidden .shortcuts-row { padding-bottom: 10px; border-bottom-color: 
 .weekplan-shortcut svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--accent); }
 .weekplan-shortcut-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-header.extra-hidden .weekplan-shortcut { height: 30px; font-size: 13px; border-radius: var(--r-sm); }
-header.extra-hidden .weekplan-shortcut svg { width: 15px; height: 15px; }
-/* flach, aber weiterhin gut zu treffen: unsichtbare Fläche ringsum */
-header.extra-hidden .weekplan-shortcut::before { content: ''; position: absolute; inset: -6px 0; }
+header.extra-hidden .weekplan-shortcut { height: 38px; font-size: 14px; border-radius: var(--r-sm); }
+header.extra-hidden .weekplan-shortcut svg { width: 17px; height: 17px; }
+/* flacher, aber weiterhin gut zu treffen: unsichtbare Fläche ringsum */
+header.extra-hidden .weekplan-shortcut::before { content: ''; position: absolute; inset: -4px 0; }
 
 /* "Frühstück" ist der längste Knopftext: auf normalen Handys weicht das Emoji */
 @media (max-width: 389px) { .topbar.long-mode .h1-emoji { display: none; } }
