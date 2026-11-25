@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T12:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T13:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -28,8 +28,22 @@ const MODES = {
 let data = { version: 0, updated: '', recipes: [] };
 let activeCategory = 'Alle';
 let query = '';
-let mode = localStorage.getItem(MODE_KEY) || 'kochen';
-if (!MODES[mode]) mode = 'kochen';
+// Was beim Öffnen der App erscheint (Einstellungen → App)
+const START_KEY = 'rezeptbuch-start';
+const START_OPTIONS = {
+  kochen: 'Startseite Kochen',
+  backen: 'Startseite Backen',
+  fruehstueck: 'Startseite Frühstück',
+  weekplan: 'Wochenplan',
+  tinder: 'Food Match',
+};
+const startPage = () => {
+  const v = localStorage.getItem(START_KEY);
+  return Object.hasOwn(START_OPTIONS, v) ? v : 'kochen';
+};
+// Wochenplan und Food Match liegen über der Kochen-Startseite
+let mode = MODES[startPage()] ? startPage() : 'kochen';
+localStorage.setItem(MODE_KEY, mode);
 
 function recipeMode(r) {
   return r.bereich || 'kochen';
@@ -258,6 +272,9 @@ async function checkAndUpdateIfNeeded(opts = {}) {
 
     if (updated.length > 0) {
       // Update: ganze recipes ersetzen und Ansicht auffrischen
+      // version mitspeichern, sonst verwirft der Versions-Check in index.html
+      // die lokalen Rezepte beim nächsten Start (offline: leere Liste)
+      data.version = fresh.version;
       data.recipes = fresh.recipes;
       data.updated = fresh.updated;
       saveLocal();
@@ -2798,6 +2815,11 @@ function openSettings() {
       </div>`)}
 
     ${group('App', `
+      <label class="set-block">
+        <span class="set-title">Beim Öffnen anzeigen</span>
+        <span class="set-select-wrap"><select id="start-select" class="set-select">${Object.entries(START_OPTIONS).map(([value, label]) =>
+          `<option value="${value}" ${startPage() === value ? 'selected' : ''}>${label}</option>`).join('')}</select></span>
+      </label>
       ${toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst. Am iPhone ab iOS 17.4.', vibrationEnabled())}
       ${toggle('offline-toggle', 'Offline-Modus', 'Keine Abgleiche mit dem Server, nur Lesen möglich', offline)}
       ${link('refresh-btn', 'Nach Updates suchen', 'Rezepte und App-Funktionen', 'action')}
@@ -2836,6 +2858,8 @@ function openSettings() {
       render();
     };
   }
+
+  el.querySelector('#start-select').onchange = (ev) => localStorage.setItem(START_KEY, ev.target.value);
 
   const vibrationToggle = el.querySelector('#vibration-toggle');
   if (vibrationToggle) {
@@ -3389,3 +3413,8 @@ document.addEventListener('pointerup', (e) => { if (e.pointerType === 'mouse') s
 
 // Der schmale Randstreifen gehört ganz uns (verhindert die iPhone-Browsergeste)
 document.getElementById('edge-swipe-guard')?.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
+// Gewählte Startansicht öffnen (steht bewusst ganz am Ende: alles ist definiert).
+// "Zurück" führt von dort auf die Startseite
+if (startPage() === 'weekplan') openWeekplan();
+else if (startPage() === 'tinder' && filtered().length >= 2) openTinder();

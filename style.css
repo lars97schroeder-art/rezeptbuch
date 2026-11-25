@@ -1744,6 +1744,34 @@ button.set-row:active { background: var(--wash); }
 .set-row.action .set-title { color: var(--accent); font-weight: 600; }
 .set-row.danger .set-title { color: var(--bad); }
 
+.set-select {
+  width: 100%;
+  padding: 12px 36px 12px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background-color: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* ab 16px zoomt das iPhone beim Antippen nicht */
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.set-select-wrap { position: relative; display: flex; }
+.set-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  background: var(--muted);
+  -webkit-mask: var(--i-chevron) center / contain no-repeat;
+  mask: var(--i-chevron) center / contain no-repeat;
+  pointer-events: none;
+}
+
 /* Auswahl-Leiste (Erscheinungsbild, Farbschema) */
 .set-segment { display: flex; gap: 4px; padding: 4px; background: var(--field); border-radius: var(--r-md); }
 .set-segment label { flex: 1 1 0; min-width: 0; display: flex; position: relative; cursor: pointer; user-select: none; }
