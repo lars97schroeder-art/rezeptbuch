@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T16:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T17:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -2463,6 +2463,9 @@ function swipeTinder(dir) {
 
 function superlike(recipe) {
   const el = $('#detail');
+  const card = el.querySelector('.t-card.top');
+  if (!card || card.dataset.flying) return;
+  card.dataset.flying = '1';
   const overlay = document.createElement('div');
   overlay.className = 'superlike-overlay';
   overlay.innerHTML = '<div class="superlike-text">Superlike</div>';
@@ -2470,13 +2473,17 @@ function superlike(recipe) {
 
   setTimeout(() => {
     overlay.remove();
+    if (!card.isConnected) return; // Food Match inzwischen verlassen
     tinder.deck.shift();
     renderDetail(recipe.id);
     replaceView({ view: 'recipe', id: recipe.id });
-  }, 2500);
+  }, 1300);
 }
 
 function flyOut(card, dir) {
+  // Doppeltes Tippen während des Wegfliegens darf keine Karte überspringen
+  if (card.dataset.flying) return;
+  card.dataset.flying = '1';
   // Passenden Stempel groß mittig einblenden, dann Karte rausfliegen lassen.
   // Nur das innere <span> dreht/skaliert, die äußere Box bleibt zentriert
   // und fliegt automatisch als Kind der Karte mit deren transform mit.
@@ -2489,12 +2496,15 @@ function flyOut(card, dir) {
 
   // Verzögerte Animation für Karte
   setTimeout(() => {
-    card.style.transition = 'transform 1.0s ease, opacity 1.0s ease';
+    card.style.transition = 'transform 0.35s ease-in, opacity 0.35s ease-in';
     card.style.transform = `translate(${dir * 120}vw, -40px) rotate(${dir * 30}deg)`;
     card.style.opacity = '0';
-  }, 400);
+  }, 150); // Stempel kurz zeigen
 
-  setTimeout(() => swipeTinder(dir), 1400);
+  setTimeout(() => {
+    // Nur weitermachen, wenn die Karte noch da ist (nicht inzwischen verlassen)
+    if (card.isConnected) swipeTinder(dir);
+  }, 500);
 }
 
 function attachSwipe(card, onSwipe) {

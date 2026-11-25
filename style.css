@@ -463,6 +463,15 @@ h1 {
 }
 #sort-btn svg { width: 22px; height: 22px; }
 
+/* Farbakzente der Startseite — folgen dem gewählten Farbschema */
+.h1-text em { color: var(--accent); font-style: italic; font-weight: 500; }
+html.color-rainbow .h1-text em { color: transparent; }
+#mode-btn { color: var(--accent); }
+#mode-btn::after { color: var(--accent); }
+.weekplan-shortcut { background: var(--accent-soft); border-color: transparent; }
+.chip.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.search-icon, #sort-btn { color: var(--accent); }
+
 /* Große Bildschirme: Kopfzeile am Raster ausrichten, Bedienelemente nicht endlos strecken */
 @media (min-width: 700px) {
   header {
@@ -1258,7 +1267,7 @@ img.detail-photo { cursor: zoom-in; }
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0);
-  animation: superlikeBgDim 2.5s ease-in-out forwards;
+  animation: superlikeBgDim 1.3s ease-in-out forwards;
 }
 @keyframes superlikeBgDim {
   0% { background: rgba(0, 0, 0, 0); }
@@ -1276,7 +1285,7 @@ img.detail-photo { cursor: zoom-in; }
   padding: 6px 28px;
   border-radius: 18px;
   transform: rotate(-8deg);
-  animation: superlikeSwing 2.5s ease-in-out forwards;
+  animation: superlikeSwing 1.3s ease-in-out forwards;
 }
 @keyframes superlikeSwing {
   0% { opacity: 0; transform: rotate(-8deg) translateX(-150vw) translateY(-50vh) scale(0.5); }
