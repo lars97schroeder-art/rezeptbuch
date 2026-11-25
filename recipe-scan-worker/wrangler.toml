@@ -2,5 +2,9 @@ name = "rezeptbuch-scan"
 main = "worker.js"
 compatibility_date = "2026-01-01"
 
+# Gratis-KI von Cloudflare für Rezept-Links
+[ai]
+binding = "AI"
+
 # ANTHROPIC_API_KEY wird NICHT hier eingetragen, sondern als Secret gesetzt:
 #   wrangler secret put ANTHROPIC_API_KEY

@@ -1,9 +1,13 @@
 'use strict';
 
-// Cloudflare Worker: nimmt ein Rezeptfoto ODER einen Rezept-Link entgegen,
-// lässt Claude den Inhalt auslesen und gibt Titel/Zutaten/Zubereitung als
-// JSON zurück. Der Anthropic-API-Key liegt als Secret
-// (wrangler secret put ANTHROPIC_API_KEY) und wird dem Browser nie sichtbar.
+// Cloudflare Worker: nimmt Rezeptfotos ODER einen Rezept-Link entgegen und
+// gibt Titel/Zutaten/Zubereitung als JSON zurück.
+//  - Links: kostenlos (siehe link.js)
+//  - Fotos: Claude Haiku (kostet etwas). Der Anthropic-API-Key liegt als
+//    Secret (wrangler secret put ANTHROPIC_API_KEY) und wird dem Browser nie
+//    sichtbar.
+
+import { readRecipeFromLink, LinkError } from './link.js';
 
 // Zugang: Nur wer in einen dieser Daten-Speicher schreiben darf, darf die KI
 // benutzen (jede Anfrage kostet Geld). Neue Bibliotheken hier ergänzen.
@@ -101,46 +105,41 @@ export default {
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    const anthropicBody = imageList.length
-      ? {
-          model: MODEL,
-          max_tokens: MAX_TOKENS,
-          output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
-          messages: [{
-            role: 'user',
-            content: [
-              ...imageList.map(img => ({
-                type: 'image',
-                source: { type: 'base64', media_type: img.mediaType || 'image/jpeg', data: img.data },
-              })),
-              {
-                type: 'text',
-                text: (imageList.length > 1
-                  ? `Das sind ${imageList.length} Fotos EINES zusammenhängenden Rezepts (z.B. mehrere Seiten ` +
-                    'oder Ausschnitte). Kombiniere den Inhalt aller Fotos zu einem Rezept und gib '
-                  : 'Lies dieses abfotografierte Rezept aus und gib ') +
-                  'Titel, Zutaten (eine pro Zeile, mit Menge falls angegeben), Zubereitungsschritte ' +
-                  '(ein Schritt pro Zeile), Portionen und Zubereitungszeit (falls erkennbar, sonst leer ' +
-                  'lassen) auf Deutsch zurück. Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
-              },
-            ],
-          }],
-        }
-      : {
-          model: MODEL,
-          max_tokens: MAX_TOKENS,
-          output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
-          // einfache Variante (Haiku); die Seitengröße ist gedeckelt (Kosten)
-          tools: [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 3, max_content_tokens: 40000 }],
-          messages: [{
-            role: 'user',
-            content: `Ruf diese Seite ab und lies das Rezept aus: ${url}\n\n` +
-              'Gib Titel, Zutaten (eine pro Zeile, mit Menge falls angegeben), ' +
-              'Zubereitungsschritte (ein Schritt pro Zeile), Portionen und Zubereitungszeit ' +
-              '(falls erkennbar, sonst leer lassen) auf Deutsch zurück. ' +
-              'Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
-          }],
-        };
+    if (!imageList.length) {
+      const json = { ...headers, 'Content-Type': 'application/json' };
+      try {
+        return new Response(JSON.stringify(await readRecipeFromLink(url, env, SCHEMA)), { headers: json });
+      } catch (err) {
+        if (!(err instanceof LinkError)) console.error(err);
+        const message = err instanceof LinkError ? err.message : 'Rezept konnte nicht ausgelesen werden';
+        return new Response(JSON.stringify({ error: message }), { status: 422, headers: json });
+      }
+    }
+
+    const anthropicBody = {
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
+      messages: [{
+        role: 'user',
+        content: [
+          ...imageList.map(img => ({
+            type: 'image',
+            source: { type: 'base64', media_type: img.mediaType || 'image/jpeg', data: img.data },
+          })),
+          {
+            type: 'text',
+            text: (imageList.length > 1
+              ? `Das sind ${imageList.length} Fotos EINES zusammenhängenden Rezepts (z.B. mehrere Seiten ` +
+                'oder Ausschnitte). Kombiniere den Inhalt aller Fotos zu einem Rezept und gib '
+              : 'Lies dieses abfotografierte Rezept aus und gib ') +
+              'Titel, Zutaten (eine pro Zeile, mit Menge falls angegeben), Zubereitungsschritte ' +
+              '(ein Schritt pro Zeile), Portionen und Zubereitungszeit (falls erkennbar, sonst leer ' +
+              'lassen) auf Deutsch zurück. Wähle außerdem ein passendes einzelnes Emoji für das Gericht.',
+          },
+        ],
+      }],
+    };
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -169,9 +168,6 @@ export default {
         { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    // Bei Link-Modus kommen vor der finalen JSON-Antwort ggf. weitere
-    // Text-Blöcke (Zwischenkommentare zum web_fetch) — daher den LETZTEN
-    // Text-Block nehmen, nicht den ersten.
     const textBlocks = result.content.filter(b => b.type === 'text');
     const textBlock = textBlocks[textBlocks.length - 1];
     if (!textBlock) {
