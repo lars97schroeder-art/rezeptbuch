@@ -31,6 +31,12 @@ async function hasAccess(token) {
   return false;
 }
 
+// Haiku ist das günstigste Modell und reicht zum Abschreiben von Rezepten.
+// Es denkt vor der Antwort kurz nach ("effort: low"); dafür braucht
+// max_tokens Reserve, sonst bricht die Antwort ab.
+const MODEL = 'claude-haiku-5-5';
+const MAX_TOKENS = 8000;
+
 const ALLOWED_ORIGINS = [
   'https://lars97schroeder-art.github.io',
   'http://localhost:8123',
@@ -97,9 +103,9 @@ export default {
 
     const anthropicBody = imageList.length
       ? {
-          model: 'claude-opus-4-8',
-          max_tokens: 2048,
-          output_config: { format: { type: 'json_schema', schema: SCHEMA } },
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
           messages: [{
             role: 'user',
             content: [
@@ -121,10 +127,11 @@ export default {
           }],
         }
       : {
-          model: 'claude-opus-4-8',
-          max_tokens: 2048,
-          output_config: { format: { type: 'json_schema', schema: SCHEMA } },
-          tools: [{ type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 3 }],
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
+          // einfache Variante (Haiku); die Seitengröße ist gedeckelt (Kosten)
+          tools: [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 3, max_content_tokens: 40000 }],
           messages: [{
             role: 'user',
             content: `Ruf diese Seite ab und lies das Rezept aus: ${url}\n\n` +
@@ -154,6 +161,11 @@ export default {
     const result = await anthropicRes.json();
     if (result.stop_reason === 'refusal') {
       return new Response(JSON.stringify({ error: 'Anfrage wurde abgelehnt' }),
+        { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
+
+    if (result.stop_reason === 'max_tokens') {
+      return new Response(JSON.stringify({ error: 'Das Rezept war zu lang, um es vollständig auszulesen' }),
         { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
