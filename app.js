@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T11:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T12:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -2763,118 +2763,63 @@ function openSettings() {
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
   const currentColor = localStorage.getItem(COLOR_KEY) || 'orange';
 
+  // Bausteine: Auswahl-Leiste, Schalter-Zeile und antippbare Zeile
+  const segment = (name, current, options) => `<div class="set-segment">${options.map(([value, label]) => `
+    <label><input type="radio" name="${name}" value="${value}" ${current === value ? 'checked' : ''}><span>${label}</span></label>`).join('')}</div>`;
+  const toggle = (id, title, hint, checked, disabled = false) => `<label class="set-row">
+    <span class="set-text"><span class="set-title">${title}</span><span class="set-hint">${hint}</span></span>
+    <span class="toggle-slider"><input type="checkbox" id="${id}" ${checked ? 'checked' : ''}${disabled ? ' disabled' : ''}><span class="slider"></span></span>
+  </label>`;
+  const link = (id, title, hint = '', cls = 'nav') => `<button type="button" class="set-row ${cls}" id="${id}">
+    <span class="set-text"><span class="set-title">${title}</span>${hint ? `<span class="set-hint">${hint}</span>` : ''}</span>
+  </button>`;
+  const group = (title, rows, attrs = '') => `<section class="set-group"${attrs}><h3>${title}</h3><div class="set-card">${rows}</div></section>`;
+
   const el = $('#editor'); // Reuse editor div für Modal
   el.innerHTML = `
   <button class="detail-close" aria-label="Zurück">←</button>
   <div class="ed-body settings-body">
     <h2>Einstellungen</h2>
 
-    <div class="settings-section">
-      <h3>Anzeige</h3>
-      <div class="settings-row">
-        <label class="setting-radio">
-          <input type="radio" name="theme" value="light" ${currentTheme === 'light' ? 'checked' : ''}>
-          <span>Annika (Hell)</span>
-        </label>
-        <label class="setting-radio">
-          <input type="radio" name="theme" value="dark" ${currentTheme === 'dark' ? 'checked' : ''}>
-          <span>Lars (Dunkel)</span>
-        </label>
-        <label class="setting-radio">
-          <input type="radio" name="theme" value="auto" ${currentTheme === 'auto' ? 'checked' : ''}>
-          <span>Systemvorgabe</span>
-        </label>
+    ${group('Anzeige', `
+      <div class="set-block">
+        <span class="set-title">Erscheinungsbild</span>
+        ${segment('theme', currentTheme, [
+          ['light', 'Annika<small>Hell</small>'],
+          ['dark', 'Lars<small>Dunkel</small>'],
+          ['auto', 'System<small>Automatisch</small>']])}
       </div>
-    </div>
+      <div class="set-block">
+        <span class="set-title">Farbschema</span>
+        ${segment('colorscheme', currentColor, [
+          ['orange', '<i class="swatch swatch-orange"></i>Orange'],
+          ['blue', '<i class="swatch swatch-blue"></i>Blau'],
+          ['rainbow', '<i class="swatch swatch-rainbow"></i>Rainbow']])}
+      </div>`)}
 
-    <div class="settings-section">
-      <h3>Farbschema</h3>
-      <div class="settings-row">
-        <label class="setting-radio">
-          <input type="radio" name="colorscheme" value="orange" ${currentColor === 'orange' ? 'checked' : ''}>
-          <span><i class="swatch swatch-orange"></i>Orange</span>
-        </label>
-        <label class="setting-radio">
-          <input type="radio" name="colorscheme" value="blue" ${currentColor === 'blue' ? 'checked' : ''}>
-          <span><i class="swatch swatch-blue"></i>Blau</span>
-        </label>
-        <label class="setting-radio">
-          <input type="radio" name="colorscheme" value="rainbow" ${currentColor === 'rainbow' ? 'checked' : ''}>
-          <span><i class="swatch swatch-rainbow"></i>Rainbow</span>
-        </label>
-      </div>
-    </div>
+    ${group('App', `
+      ${toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst. Am iPhone ab iOS 17.4.', vibrationEnabled())}
+      ${toggle('offline-toggle', 'Offline-Modus', 'Keine Abgleiche mit dem Server, nur Lesen möglich', offline)}
+      ${link('refresh-btn', 'Nach Updates suchen', 'Rezepte und App-Funktionen', 'action')}
+      <div class="update-status"></div>`)}
 
-    <div class="settings-section">
-      <h3>Bedienung</h3>
-      <div class="settings-row">
-        <label class="setting-label">
-          <div class="toggle-slider">
-            <input type="checkbox" id="vibration-toggle" ${vibrationEnabled() ? 'checked' : ''}>
-            <span class="slider"></span>
-          </div>
-          <span>Vibration beim Ziehen</span>
-        </label>
-        <div class="setting-hint">Kurzes haptisches Feedback, wenn sich eine Kachel/Pille zum Verschieben löst. Am iPhone ab iOS 17.4.</div>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Verbindung</h3>
-      <div class="settings-row">
-        <label class="setting-label">
-          <div class="toggle-slider">
-            <input type="checkbox" id="offline-toggle" ${localStorage.getItem(OFFLINE_MODE_KEY) === 'true' ? 'checked' : ''}>
-            <span class="slider"></span>
-          </div>
-          <span>Offline-Modus</span>
-        </label>
-        <div class="setting-hint">Keine Abgleiche mit Server, nur Lesen möglich</div>
-      </div>
-    </div>
-
-    <div class="settings-section"${offline ? ' style="opacity: 0.4; pointer-events: none;"' : ''}>
-      <h3>Bearbeiten</h3>
-      ${hasToken
-        ? `<div class="settings-row">
-            <label class="setting-label">
-              <div class="toggle-slider">
-                <input type="checkbox" id="edit-toggle" ${editEnabled && !offline ? 'checked' : ''}${offline ? ' disabled' : ''}>
-                <span class="slider"></span>
-              </div>
-              <span>Bearbeitungsmodus</span>
-            </label>
-            <div class="setting-hint">${offline
-              ? 'Im Offline-Modus deaktiviert – wird beim Ausschalten wiederhergestellt'
-              : 'Token ist gespeichert – schalte Bearbeiten an/aus'}</div>
-          </div>
-          <button class="setting-btn" id="clear-token">Token entfernen</button>
-          <button class="setting-btn" id="share-token">Token teilen</button>`
-        : `<button class="setting-btn" id="setup-token">Token einrichten</button>`}
-    </div>
-
-    <div class="settings-section">
-      <h3>Rezeptbibliothek</h3>
+    ${group('Bibliothek', `
       ${hasToken && !offline
-        ? `<div class="setting-hint">Mehrere Rezepte auf einmal löschen und Kategorien umbenennen oder entfernen</div>
-          <button class="setting-btn" id="lib-recipes-btn">Rezepte verwalten</button>
-          <button class="setting-btn" id="lib-cats-btn">Kategorien verwalten</button>`
-        : `<div class="setting-hint">${offline ? 'Im Offline-Modus nicht möglich' : 'Braucht einen eingerichteten Token (siehe Bearbeiten)'}</div>`}
-    </div>
+        ? link('lib-recipes-btn', 'Rezepte verwalten', 'Mehrere auf einmal löschen')
+          + link('lib-cats-btn', 'Kategorien verwalten', 'Umbenennen, zusammenführen, entfernen')
+        : `<div class="set-block"><span class="set-hint">Rezepte und Kategorien verwalten: ${offline ? 'im Offline-Modus nicht möglich' : 'braucht einen Token (siehe Zugang)'}</span></div>`}
+      ${link('tinder-cats-btn', 'Food Match', 'Kategorien vom Tindern ausschließen')}`)}
 
-    <div class="settings-section">
-      <h3>Food Match</h3>
-      <div class="setting-hint">Kategorien, die beim Tindern nicht als eigene Karte vorkommen sollen (z.B. Saucen, Beilagen)</div>
-      <button class="setting-btn" id="tinder-cats-btn">Kategorien auswählen</button>
-    </div>
+    ${group('Zugang', hasToken
+        ? toggle('edit-toggle', 'Bearbeitungsmodus', offline
+              ? 'Im Offline-Modus deaktiviert, wird danach wiederhergestellt'
+              : 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
+          + link('share-token', 'Token teilen')
+          + link('clear-token', 'Token entfernen', '', 'danger')
+        : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren'),
+      offline ? ' style="opacity: 0.4; pointer-events: none;"' : '')}
 
-    <button class="setting-btn primary" id="refresh-btn">⟳ Update</button>
-    <div class="update-status"></div>
-
-    <div class="setting-info">
-      <div><strong>Rezepte:</strong> ${data.recipes.length}</div>
-      <div><strong>Zuletzt aktualisiert:</strong> ${lastUpdate}</div>
-    </div>
+    <div class="set-footer">${data.recipes.length} Rezepte<br>Zuletzt aktualisiert: ${lastUpdate}</div>
   </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();

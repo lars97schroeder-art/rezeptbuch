@@ -116,7 +116,6 @@ html.color-rainbow .topbar h1 .h1-text {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 html.color-rainbow .chip.active,
-html.color-rainbow .setting-btn.primary,
 html.color-rainbow .app-update-now,
 html.color-rainbow .weekplan-tag {
   background: linear-gradient(90deg, #e53935, #fb8c00, #43a047, #1e88e5, #8e24aa) !important;
@@ -1687,99 +1686,98 @@ h1 {
 
 /* ---------- Einstellungen ---------- */
 
-.settings-body { gap: 30px; }
+.settings-body { gap: 28px; }
 
+/* Überschrift für Gruppen (auch in der Kategorien-Verwaltung) */
 .settings-section { display: flex; flex-direction: column; }
-
-.settings-section h3 {
+.settings-section h3, .set-group h3 {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.settings-row { margin-bottom: 4px; }
-
-.setting-label {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 16px;
-  padding: 4px 0;
-}
-.setting-label .toggle-slider { margin: 0; flex: 0 0 auto; }
-
-.setting-radio {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 16px;
-  margin-bottom: 8px;
+.set-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  overflow: hidden;
+}
+.set-card > :not(:first-child) { border-top: 1px solid var(--border); }
+
+.set-block { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; }
+
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 16px;
+  margin: 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   user-select: none;
-  font-size: 16px;
-  transition: border-color 0.15s;
 }
-.setting-radio:has(input:checked) { border-color: var(--accent); }
-.setting-radio input[type="radio"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+button.set-row:active { background: var(--wash); }
+.set-row .toggle-slider { margin: 0; flex: 0 0 auto; }
+.set-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.set-title { font-size: 16px; }
+.set-hint { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.set-row.nav::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  background: var(--muted);
+  -webkit-mask: var(--i-chevron) center / contain no-repeat;
+  mask: var(--i-chevron) center / contain no-repeat;
+  transform: rotate(-90deg);
+}
+.set-row.action .set-title { color: var(--accent); font-weight: 600; }
+.set-row.danger .set-title { color: var(--bad); }
 
-.swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  margin-right: 10px;
-  vertical-align: -2px;
+/* Auswahl-Leiste (Erscheinungsbild, Farbschema) */
+.set-segment { display: flex; gap: 4px; padding: 4px; background: var(--field); border-radius: var(--r-md); }
+.set-segment label { flex: 1 1 0; min-width: 0; display: flex; position: relative; cursor: pointer; user-select: none; }
+.set-segment input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.set-segment span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--r-md) - 4px);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
 }
+.set-segment small { font-size: 11px; font-weight: 500; color: var(--muted); }
+.set-segment input:checked + span { background: var(--card); border-color: var(--accent); }
+.set-segment input:focus-visible + span { outline: 2px solid var(--accent); }
+
+.swatch { display: block; width: 14px; height: 14px; border-radius: 50%; margin-bottom: 4px; }
 .swatch-orange { background: #B8470F; }
 .swatch-blue { background: #1F5FA8; }
 .swatch-rainbow { background: conic-gradient(#e53935, #fb8c00, #fdd835, #43a047, #1e88e5, #8e24aa, #e53935); }
 
 .setting-hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; line-height: 1.45; }
 
-.setting-btn {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  margin: 8px 0;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--card);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.setting-btn:active { transform: scale(0.99); }
-.setting-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
-  font-size: 16px;
-  margin: 0 0 10px 0;
-}
-
 .update-status { text-align: center; font-size: 14px; }
+.update-status:empty { display: none; }
+.update-status > div { margin: 0 !important; padding: 12px; }
 
-.setting-info {
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text);
-  margin-top: 8px;
-}
-.setting-info div { display: flex; justify-content: space-between; margin-bottom: 4px; }
-.setting-info strong { color: var(--muted); font-weight: 500; }
+.set-footer { text-align: center; font-size: 13px; line-height: 1.7; color: var(--muted); }
 
 /* Token-Dialog */
 .token-share-modal {
