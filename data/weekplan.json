@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-25T20:42:09.036Z",
+  "updated": "2026-11-25T20:42:25.284Z",
   "by": "Lars",
   "weeks": {
     "2026-W28": {
@@ -329,7 +329,9 @@
       "di": [
         "gemuese-lasagne"
       ],
-      "mi": [],
+      "mi": [
+        "TEXT:Burger kinggggg"
+      ],
       "do": [
         "kokosmilch-gemuese-mit-sojasosse",
         "TEXT:Reis"
