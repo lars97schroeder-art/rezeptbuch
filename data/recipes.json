@@ -1,6 +1,6 @@
 {
   "version": "5.5",
-  "updated": "2026-11-25T08:25:16.363Z",
+  "updated": "2026-11-25T09:54:00.235Z",
   "recipes": [
     {
       "id": "kaesespaetzle",
@@ -1501,6 +1501,7 @@
       "id": "chicken-wings-2",
       "title": "Chicken Wings",
       "category": [
+        "Airfryer",
         "Streetfood"
       ],
       "time": "",
@@ -1516,7 +1517,7 @@
       "notes": "",
       "bereich": "kochen",
       "created": "2026-07-08T07:53:34.859Z",
-      "updated": "2026-07-08T07:54:04.347Z"
+      "updated": "2026-11-25T09:54:00.234Z"
     },
     {
       "id": "weihnachtsgans",
