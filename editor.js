@@ -13,9 +13,15 @@ const SCAN_WORKER_URL = 'https://rezeptbuch-scan.schlemmerliste.workers.dev';
 const ghToken = () => localStorage.getItem(TOKEN_KEY) || '';
 
 window.clearToken = () => {
+  const old = ghToken();
   localStorage.removeItem(TOKEN_KEY);
   render();
-  toast('Token entfernt');
+  toastUndo('Token entfernt', () => {
+    localStorage.setItem(TOKEN_KEY, old);
+    render();
+    if (!edEl().hidden && history.state?.page === 'settings') openSettings();
+    toast('Token wiederhergestellt');
+  }, { ms: 8000 });
 };
 
 /* ---------- GitHub-API ---------- */
@@ -198,6 +204,7 @@ let edNeu = [];    // neue Fotos (data:-URLs)
 let edBusy = false;
 
 function closeEditor() {
+  if ($('#toast').dataset.scope === 'editor') $('#toast').hidden = true;
   edEl().hidden = true;
   if ($('#detail').hidden) document.body.style.overflow = '';
 }
@@ -219,12 +226,25 @@ function edPhotoListHTML() {
     + edNeu.map((d, i) => thumb(d, 'neu', i)).join('');
 }
 
+// "Rückgängig" für etwas, das im Formular entfernt wurde (nur solange es offen ist)
+function edUndo(label, container, restore) {
+  toastUndo(label, () => { if (container.isConnected) restore(); }, { scope: 'editor' });
+}
+
 function renderEdPhotos() {
   $('#ed-photos').innerHTML = edPhotoListHTML();
   for (const b of $('#ed-photos').querySelectorAll('.ed-x')) {
     b.onclick = () => {
-      (b.dataset.typ === 'keep' ? edKeep : edNeu).splice(Number(b.dataset.i), 1);
+      const keep = b.dataset.typ === 'keep';
+      const list = keep ? edKeep : edNeu;
+      const i = Number(b.dataset.i);
+      const [removed] = list.splice(i, 1);
       renderEdPhotos();
+      edUndo('Foto entfernt', $('#ed-photos'), () => {
+        if (list !== (keep ? edKeep : edNeu)) return;
+        list.splice(i, 0, removed);
+        renderEdPhotos();
+      });
     };
   }
 }
@@ -502,11 +522,11 @@ async function deleteFromEditor(id) {
   try {
     toast('Lösche …');
     const { sha, json: remote } = await freshRemoteData();
-    const target = remote.recipes.find(x => x.id === id);
+    const index = remote.recipes.findIndex(x => x.id === id);
+    const target = remote.recipes[index];
     if (target) {
-      remote.recipes.splice(remote.recipes.indexOf(target), 1);
+      remote.recipes.splice(index, 1);
       await commitRemoteData(remote, sha, `${r.title} gelöscht (vom Handy)`);
-      for (const p of imagesOf(target)) ghDeleteFile(p, `Foto entfernt: ${r.title}`);
     }
     data = remote;
     saveLocal();
@@ -516,7 +536,8 @@ async function deleteFromEditor(id) {
     if (steps) history.go(-steps);
     else hideDetail();
     render();
-    toast('Gelöscht ✓');
+    if (target) offerRecipeUndo('Rezept gelöscht', { items: [{ recipe: target, index }], links: [] });
+    else toast('Gelöscht ✓');
   } catch (e) {
     toast('Fehler: ' + e.message);
   } finally {
@@ -560,10 +581,8 @@ function openTokenSetup() {
   };
   const del = el.querySelector('.ed-delete');
   if (del) del.onclick = () => {
-    localStorage.removeItem(TOKEN_KEY);
     leaveEditorPage();
-    render();
-    toast('Token entfernt');
+    window.clearToken();
   };
   el.hidden = false;
   el.scrollTop = 0;
@@ -608,8 +627,13 @@ function renderCategoriesContainer() {
     btn.onclick = (e) => {
       e.preventDefault();
       const cat = btn.dataset.cat;
+      const i = window.edSelectedCategories.indexOf(cat);
       window.edSelectedCategories = window.edSelectedCategories.filter(c => c !== cat);
       renderCategoriesContainer();
+      edUndo('Kategorie entfernt', container, () => {
+        if (!window.edSelectedCategories.includes(cat)) window.edSelectedCategories.splice(i, 0, cat);
+        renderCategoriesContainer();
+      });
     };
   }
 
@@ -674,8 +698,13 @@ function renderGroupsContainer() {
   if (removeBtn) {
     removeBtn.onclick = (e) => {
       e.preventDefault();
+      const group = window.edSelectedGroup;
       window.edSelectedGroup = '';
       renderGroupsContainer();
+      edUndo('Gruppe entfernt', container, () => {
+        window.edSelectedGroup = group;
+        renderGroupsContainer();
+      });
     };
   }
 
@@ -734,8 +763,14 @@ function renderRelatedContainer() {
   for (const btn of container.querySelectorAll('.ed-related-remove')) {
     btn.onclick = (e) => {
       e.preventDefault();
-      window.edSelectedRelated = window.edSelectedRelated.filter(id => id !== btn.dataset.id);
+      const id = btn.dataset.id;
+      const i = window.edSelectedRelated.indexOf(id);
+      window.edSelectedRelated = window.edSelectedRelated.filter(x => x !== id);
       renderRelatedContainer();
+      edUndo('Verknüpfung entfernt', container, () => {
+        if (!window.edSelectedRelated.includes(id)) window.edSelectedRelated.splice(i, 0, id);
+        renderRelatedContainer();
+      });
     };
   }
 
@@ -946,26 +981,51 @@ async function libDeleteRecipes() {
   if (!confirm(`${label} wirklich löschen?\n\n${names}`)) return;
   const ids = new Set(chosen.map(r => r.id));
   const done = await libCommit(`${label} gelöscht (vom Handy)`, remote => {
-    const removed = remote.recipes.filter(r => ids.has(r.id));
+    // Position und Verknüpfungen merken, damit sich alles zurückholen lässt
+    const items = remote.recipes.map((recipe, index) => ({ recipe, index })).filter(x => ids.has(x.recipe.id));
     remote.recipes = remote.recipes.filter(r => !ids.has(r.id));
+    const links = [];
     for (const r of remote.recipes) {
-      if (r.related) r.related = r.related.filter(id => !ids.has(id));
+      const lost = (r.related || []).filter(id => ids.has(id));
+      if (!lost.length) continue;
+      links.push({ id: r.id, related: lost });
+      r.related = r.related.filter(id => !ids.has(id));
     }
-    return removed;
+    return { items, links };
   });
   if (!done) return;
   libSelected = new Set();
   renderLibRecipeList();
-  toast(`${label} gelöscht ✓`);
-  // Nicht mehr benutzte Fotos nacheinander aufräumen (parallel gäbe Konflikte)
-  const stillUsed = new Set(done.remote.recipes.flatMap(imagesOf));
-  (async () => {
-    for (const r of done.result) {
-      for (const p of imagesOf(r)) {
-        if (!stillUsed.has(p)) await ghDeleteFile(p, `Foto entfernt: ${r.title}`);
+  offerRecipeUndo(`${label} gelöscht`, done.result);
+}
+
+// Nach dem Löschen 8 Sekunden "Rückgängig" anbieten. Die Fotos werden erst
+// danach aus dem Repo entfernt, vorher wäre nichts mehr zurückzuholen
+function offerRecipeUndo(label, snapshot) {
+  const cleanup = setTimeout(async () => {
+    // nacheinander (parallel gäbe Konflikte) und nur, was niemand mehr benutzt
+    for (const { recipe } of snapshot.items) {
+      for (const p of imagesOf(recipe)) {
+        if (!data.recipes.some(r => imagesOf(r).includes(p))) await ghDeleteFile(p, `Foto entfernt: ${recipe.title}`);
       }
     }
-  })();
+  }, 9000);
+  const offer = text => toastUndo(text, async () => {
+    clearTimeout(cleanup);
+    const done = await libCommit(`${snapshot.items.length === 1 ? snapshot.items[0].recipe.title : snapshot.items.length + ' Rezepte'} wiederhergestellt (vom Handy)`, remote => {
+      for (const { recipe, index } of [...snapshot.items].sort((a, b) => a.index - b.index)) {
+        if (!remote.recipes.some(r => r.id === recipe.id)) remote.recipes.splice(Math.min(index, remote.recipes.length), 0, recipe);
+      }
+      for (const link of snapshot.links) {
+        const r = remote.recipes.find(x => x.id === link.id);
+        if (r) r.related = [...new Set([...(r.related || []), ...link.related])];
+      }
+    });
+    if (!done) return offer('Nicht wiederhergestellt');
+    renderLibRecipeList();
+    toast('Wiederhergestellt ✓');
+  }, { ms: 8000 });
+  offer(label);
 }
 
 // Kategorien je Bereich mit Anzahl der Rezepte
@@ -1032,13 +1092,18 @@ function updateLibCategoryBar() {
 
 // Ersetzt die Kategorien "from" durch "to" (null = entfernen), ohne Doppelte
 async function libApplyCategories(modeKey, from, to, message, doneText) {
+  const excludedBefore = localStorage.getItem(TINDER_EXCLUDED_KEY);
   const done = await libCommit(message, remote => {
+    const changed = [];
     for (const r of remote.recipes) {
       if ((r.bereich || 'kochen') !== modeKey) continue;
       const cats = recipeCategories(r);
       if (!cats.some(c => from.includes(c))) continue;
+      const before = r.category;
       r.category = [...new Set(cats.map(c => from.includes(c) ? to : c).filter(Boolean))];
+      changed.push({ id: r.id, before, after: JSON.stringify(r.category) });
     }
+    return changed;
   });
   if (!done) return;
   // Gemerkte Auswahlen mitziehen: Food-Match-Ausschlüsse und aktiver Filter
@@ -1053,7 +1118,25 @@ async function libApplyCategories(modeKey, from, to, message, doneText) {
   libSelected = new Set();
   render();
   renderLibCategoryList();
-  toast(doneText);
+  offerCategoryUndo(doneText, done.result, excludedBefore);
+}
+
+function offerCategoryUndo(label, changed, excludedBefore) {
+  const offer = text => toastUndo(text, async () => {
+    const done = await libCommit('Kategorien wiederhergestellt (vom Handy)', remote => {
+      for (const c of changed) {
+        const r = remote.recipes.find(x => x.id === c.id);
+        // inzwischen anders bearbeitete Rezepte nicht überschreiben
+        if (r && JSON.stringify(r.category) === c.after) r.category = c.before;
+      }
+    });
+    if (!done) return offer('Nicht wiederhergestellt');
+    if (excludedBefore === null) localStorage.removeItem(TINDER_EXCLUDED_KEY);
+    else localStorage.setItem(TINDER_EXCLUDED_KEY, excludedBefore);
+    renderLibCategoryList();
+    toast('Wiederhergestellt ✓');
+  }, { ms: 8000 });
+  offer(label.replace(' ✓', ''));
 }
 
 // Kleiner Dialog mit Namensfeld (und optionalen Vorschlägen)

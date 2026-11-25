@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T23:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T23:30:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -1533,6 +1533,15 @@ function backlogListHTML(items) {
 // können Rezept-IDs oder TEXT:... Freitext sein. Gibt ein Controller-Objekt
 // mit refresh() zurück, damit ein Remote-Sync die Liste von außen neu
 // einlesen kann.
+function offerBacklogUndo(entry, index) {
+  toastUndo('Eintrag entfernt', () => {
+    const current = getBacklogItems();
+    current.splice(Math.min(index, current.length), 0, entry);
+    saveBacklogDebounced(current);
+    refreshOpenWeekplan();
+  });
+}
+
 function wireBacklogList(el, weekplan) {
   const list = el.querySelector('#backlog-list');
   const autocompleteDiv = el.querySelector('.backlog-autocomplete');
@@ -1647,12 +1656,7 @@ function wireBacklogList(el, weekplan) {
         const [removed] = items.splice(i, 1);
         saveBacklogDebounced(items);
         rerender();
-        toastUndo('Eintrag entfernt', () => {
-          const current = getBacklogItems();
-          current.splice(Math.min(i, current.length), 0, removed);
-          saveBacklogDebounced(current);
-          refreshOpenWeekplan();
-        });
+        offerBacklogUndo(removed, i);
       };
     }
 
@@ -1678,8 +1682,9 @@ function wireBacklogList(el, weekplan) {
               saveBacklogDebounced(items);
             } else {
               // leer gelassen → Eintrag entfernen
-              items.splice(i, 1);
+              const [removed] = items.splice(i, 1);
               saveBacklogDebounced(items);
+              offerBacklogUndo(removed, i);
             }
           }
           rerender();
@@ -2877,6 +2882,7 @@ function spinSlot(winners) {
 let toastTimer;
 function toast(msg) {
   const t = $('#toast');
+  t.dataset.scope = '';
   // Führende Emojis weglassen — die Bedienung kommt ohne Emoji-Schmuck aus
   t.textContent = String(msg).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '');
   t.hidden = false;
@@ -2884,10 +2890,12 @@ function toast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 4500);
 }
 
-// Hinweis mit "Rückgängig"-Knopf (6 Sekunden)
-function toastUndo(msg, undo) {
+// Hinweis mit "Rückgängig"-Knopf. scope 'editor': verschwindet, sobald der
+// Editor zugeht (dort gelöschte Dinge lassen sich nur darin zurückholen)
+function toastUndo(msg, undo, { ms = 6000, scope = '' } = {}) {
   toast(msg);
   const t = $('#toast');
+  t.dataset.scope = scope;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'toast-undo';
@@ -2895,7 +2903,7 @@ function toastUndo(msg, undo) {
   btn.onclick = () => { t.hidden = true; clearTimeout(toastTimer); undo(); };
   t.appendChild(btn);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
+  toastTimer = setTimeout(() => { t.hidden = true; }, ms);
 }
 
 // Nach "Rückgängig": offenen Wochenplan neu zeichnen, ohne die Position zu verlieren
