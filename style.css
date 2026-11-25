@@ -1821,7 +1821,6 @@ img.detail-photo { cursor: zoom-in; }
 
 /* ---------- Einstellungen ---------- */
 
-.settings-body { gap: 28px; }
 
 /* Überschrift für Gruppen (auch in der Kategorien-Verwaltung) */
 .settings-section { display: flex; flex-direction: column; }
@@ -1940,6 +1939,20 @@ button.set-row:active { background: var(--wash); }
 .update-status { text-align: center; font-size: calc(14px * var(--fs, 1)); }
 .update-status:empty { display: none; }
 .update-status > div { margin: 0 !important; padding: 12px; }
+
+.set-bottom { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.set-update {
+  min-height: 52px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: calc(16px * var(--fs, 1));
+  font-weight: 700;
+  cursor: pointer;
+}
+.settings-body { gap: 18px; }
 
 .set-footer { text-align: center; font-size: calc(13px * var(--fs, 1)); line-height: 1.7; color: var(--muted); }
 

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-26T23:30:00+01:00';
+const APP_BUILD_TIME = '2026-11-26T23:55:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -1257,7 +1257,7 @@ function goHome() {
 }
 
 function renderOverlayPage(page) {
-  if (page === 'settings') openSettings();
+  if (page === 'settings' || page.startsWith('settings-')) openSettings(page.slice('settings-'.length));
   else if (page === 'library-recipes') openLibraryRecipes();
   else if (page === 'library-categories') openLibraryCategories();
   else if (page === 'token') openTokenSetup();
@@ -3011,15 +3011,30 @@ function applyColorScheme(scheme) {
   applyColorScheme(localStorage.getItem(COLOR_KEY) || 'orange');
 })();
 
-function openSettings() {
-  enterOverlay('settings');
-  const hasToken = ghToken && ghToken();
+/* Einstellungen: eine kurze Hauptseite, alles Weitere auf Unterseiten.
+   Jede Unterseite ist ein eigener Verlaufseintrag (Zurück führt zur Hauptseite) */
+const SETTINGS_TITLES = {
+  profil: 'Mein Profil',
+  anzeige: 'Anzeige',
+  kochen: 'Kochmodus',
+  app: 'App',
+  rezepte: 'Rezepte',
+  daten: 'Daten und Offline',
+  zugang: 'Zugang',
+};
+
+function openSettings(section) {
+  // Aufruf auch als Klick-Handler: dann kommt ein Ereignis statt eines Namens
+  const page = Object.hasOwn(SETTINGS_TITLES, section) ? section : '';
+  enterOverlay(page ? 'settings-' + page : 'settings');
+  const hasToken = !!ghToken();
   const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY) || '—';
   const offline = localStorage.getItem(OFFLINE_MODE_KEY) === 'true';
   // Gemerkte Einstellung bleibt unangetastet — offline wird sie nur überlagert
   const editEnabled = localStorage.getItem(EDIT_ENABLED_KEY) !== 'false' && hasToken;
   const currentTheme = localStorage.getItem(THEME_KEY) || 'auto';
   const currentColor = localStorage.getItem(COLOR_KEY) || 'orange';
+  const needsMove = activeLibrary().id === 'main' && hasToken && !mainMoved();
 
   // Bausteine: Auswahl-Leiste, Schalter-Zeile und antippbare Zeile
   const segment = (name, current, options) => `<div class="set-segment">${options.map(([value, label]) => `
@@ -3033,21 +3048,36 @@ function openSettings() {
   </button>`;
   const group = (title, rows, attrs = '') => `<section class="set-group"${attrs}><h3>${title}</h3><div class="set-card">${rows}</div></section>`;
 
-  const el = $('#editor'); // Reuse editor div für Modal
-  el.innerHTML = `
-  <button class="detail-close" aria-label="Zurück">←</button>
-  <div class="ed-body settings-body">
-    <h2>Einstellungen</h2>
+  const card = rows => `<div class="set-card">${rows}</div>`;
 
-    ${group('Ich', `
+  const pages = {
+    '': () => `
+      ${card(link('go-profil', 'Mein Profil', esc([userName() || 'Name fehlt', activeLibrary().name].join(' · '))))}
+      ${card(link('go-anzeige', 'Anzeige', 'Hell oder dunkel, Farben, Textgröße')
+        + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Timer')
+        + link('go-app', 'App', 'Startansicht und Vibration'))}
+      ${card(link('go-rezepte', 'Rezepte', 'Verwalten, Kategorien, Food Match')
+        + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
+        + link('go-zugang', 'Zugang', needsMove ? 'Umzug steht noch aus' : hasToken ? 'Token eingerichtet' : 'Kein Token'))}
+      ${card(link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
+
+      <div class="set-bottom">
+        <button type="button" class="set-update" id="refresh-btn">Nach Updates suchen</button>
+        <div class="update-status"></div>
+        <div class="set-footer">Schlemmerliste<br>
+          Version vom ${new Date(APP_BUILD_TIME).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}<br>
+          ${data.recipes.length} Rezepte · zuletzt aktualisiert: ${lastUpdate}</div>
+      </div>`,
+
+    profil: () => card(`
       ${link('name-btn', 'Mein Name', esc(userName() || 'Noch nicht eingetragen'))}
       ${libraries().length > 1 ? `<div class="set-block">
         <span class="set-title">Bibliothek</span>
         <span class="set-select-wrap"><select id="library-select" class="set-select">${libraries().map(l =>
           `<option value="${esc(l.id)}" ${l.id === activeLibrary().id ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></span>
-      </div>` : ''}`)}
+      </div>` : ''}`),
 
-    ${group('Anzeige', `
+    anzeige: () => card(`
       <div class="set-block">
         <span class="set-title">Erscheinungsbild</span>
         ${segment('theme', currentTheme, [
@@ -3065,18 +3095,18 @@ function openSettings() {
       <div class="set-block">
         <span class="set-title">Textgröße</span>
         ${segment('textsize', textSize(), [['1', 'Normal'], ['1.12', 'Groß'], ['1.25', 'Sehr groß']])}
-      </div>`)}
+      </div>`),
 
-    ${group('Kochmodus', `
+    kochen: () => card(`
       ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an, auf jedem iPhone ab iOS 18.4. Nicht gemeint ist das Always-On-Display für den Sperrbildschirm (14 Pro, 15 Pro, 16 Pro, 17, Air und neuer).', cookFlag(COOK_WAKE_KEY))}
       <div class="set-block">
         <span class="set-title">Schriftgröße beim Kochen</span>
         ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
       </div>
       ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}
-      ${toggle('cook-sound', 'Timer-Ton', 'Klingelt, solange die App offen ist. Nicht bei stummgeschaltetem iPhone.', cookFlag(COOK_SOUND_KEY))}`)}
+      ${toggle('cook-sound', 'Timer-Ton', 'Klingelt, solange die App offen ist. Nicht bei stummgeschaltetem iPhone.', cookFlag(COOK_SOUND_KEY))}`),
 
-    ${group('App', `
+    app: () => card(`
       <label class="set-block">
         <span class="set-title">Beim Öffnen anzeigen</span>
         <span class="set-select-wrap"><select id="start-select" class="set-select">${Object.entries(START_OPTIONS).map(([value, label]) =>
@@ -3084,103 +3114,94 @@ function openSettings() {
       </label>
       ${typeof navigator.vibrate === 'function'
         ? toggle('vibration-toggle', 'Vibration beim Ziehen', 'Kurzes Feedback, wenn sich eine Kachel löst', vibrationEnabled())
-        : `<div class="set-block set-off"><span class="set-title">Vibration</span><span class="set-hint">Am iPhone nicht möglich: Apple lässt Web-Apps seit iOS 26.5 nicht mehr vibrieren.</span></div>`}
-      ${toggle('offline-toggle', 'Offline-Modus', 'Keine Abgleiche mit dem Server, nur Lesen möglich', offline)}
-      ${link('refresh-btn', 'Nach Updates suchen', 'Rezepte und App-Funktionen', 'action')}
-      <div class="update-status"></div>`)}
+        : `<div class="set-block set-off"><span class="set-title">Vibration</span><span class="set-hint">Am iPhone nicht möglich: Apple lässt Web-Apps seit iOS 26.5 nicht mehr vibrieren.</span></div>`}`),
 
-    ${group('Bibliothek', `
+    rezepte: () => card(`
       ${hasToken && !offline
         ? link('lib-recipes-btn', 'Rezepte verwalten', 'Mehrere auf einmal löschen')
           + link('lib-cats-btn', 'Kategorien verwalten', 'Umbenennen, zusammenführen, entfernen')
         : `<div class="set-block"><span class="set-hint">Rezepte und Kategorien verwalten: ${offline ? 'im Offline-Modus nicht möglich' : 'braucht einen Token (siehe Zugang)'}</span></div>`}
-      ${link('tinder-cats-btn', 'Food Match', 'Kategorien vom Tindern ausschließen')}`)}
+      ${link('tinder-cats-btn', 'Food Match', 'Kategorien vom Tindern ausschließen')}`),
 
-    ${group('Daten', `
+    daten: () => card(`
+      ${toggle('offline-toggle', 'Offline-Modus', 'Keine Abgleiche mit dem Server, nur Lesen möglich', offline)}
       ${link('backup-btn', 'Rezepte sichern', 'Rezepte, Wochenplan und Backlog als Datei, ohne Fotos', 'action')}
-      ${link('photos-btn', 'Fotos offline speichern', 'Wird geprüft …', 'action')}`)}
+      ${link('photos-btn', 'Fotos offline speichern', 'Wird geprüft …', 'action')}`),
 
-    ${group('Zugang', activeLibrary().id !== 'main'
-        ? toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
+    zugang: () => offline
+      ? card('<div class="set-block"><span class="set-hint">Im Offline-Modus nicht möglich (siehe Daten und Offline).</span></div>')
+      : card(activeLibrary().id !== 'main'
+        ? toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)
         : hasToken
-        ? (mainMoved() ? '' : link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action'))
-          + toggle('edit-toggle', 'Bearbeitungsmodus', offline
-              ? 'Im Offline-Modus deaktiviert, wird danach wiederhergestellt'
-              : 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
+        ? (needsMove ? link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action') : '')
+          + toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)
           + link('share-token', 'Token teilen')
           + link('clear-token', 'Token entfernen', '', 'danger')
-        : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren'),
-      offline ? ' style="opacity: 0.4; pointer-events: none;"' : '')}
+        : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren')),
+  };
 
-    ${group('Hilfe', link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
-
-    <div class="set-footer">Schlemmerliste<br>
-      Version vom ${new Date(APP_BUILD_TIME).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}<br>
-      ${data.recipes.length} Rezepte · zuletzt aktualisiert: ${lastUpdate}</div>
+  const el = $('#editor'); // Reuse editor div für Modal
+  el.innerHTML = `
+  <button class="detail-close" aria-label="Zurück">←</button>
+  <div class="ed-body settings-body">
+    <h2>${page ? SETTINGS_TITLES[page] : 'Einstellungen'}</h2>
+    ${pages[page]()}
   </div>`;
 
+  // Jede Seite hat nur einen Teil der Elemente
+  const on = (id, event, handler) => el.querySelector('#' + id)?.addEventListener(event, handler);
+  const onChoice = (name, handler) => {
+    for (const radio of el.querySelectorAll(`input[name="${name}"]`)) radio.onchange = () => handler(radio.value);
+  };
+
   el.querySelector('.detail-close').onclick = () => closeOverlay();
+  for (const key of Object.keys(SETTINGS_TITLES)) on('go-' + key, 'click', () => openSettings(key));
 
-  el.querySelector('#lib-recipes-btn')?.addEventListener('click', () => openLibraryRecipes());
-  el.querySelector('#lib-cats-btn')?.addEventListener('click', () => openLibraryCategories());
+  on('help-btn', 'click', () => openHelp());
+  on('name-btn', 'click', () => openNameDialog());
+  on('library-select', 'change', ev => switchLibrary(ev.target.value));
 
-  el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
-  el.querySelector('#help-btn').onclick = () => openHelp();
-  el.querySelector('#name-btn').onclick = () => openNameDialog();
-  el.querySelector('#move-btn')?.addEventListener('click', () => openMoveDialog());
-  el.querySelector('#library-select')?.addEventListener('change', ev => switchLibrary(ev.target.value));
-  el.querySelector('#backup-btn').onclick = () => exportBackup();
-  el.querySelector('#photos-btn').onclick = () => downloadPhotos();
+  onChoice('theme', applyTheme);
+  onChoice('colorscheme', value => { applyColorScheme(value); render(); });
+  onChoice('textsize', applyTextSize);
+
   for (const [id, key] of [['cook-wake', COOK_WAKE_KEY], ['cook-ing', COOK_ING_KEY], ['cook-sound', COOK_SOUND_KEY]]) {
-    el.querySelector('#' + id).onchange = ev => localStorage.setItem(key, ev.target.checked ? 'true' : 'false');
+    on(id, 'change', ev => localStorage.setItem(key, ev.target.checked ? 'true' : 'false'));
   }
-  for (const radio of el.querySelectorAll('input[name="cooksize"]')) {
-    radio.onchange = () => localStorage.setItem(COOK_SIZE_KEY, radio.value);
-  }
-  for (const radio of el.querySelectorAll('input[name="textsize"]')) {
-    radio.onchange = () => applyTextSize(radio.value);
-  }
+  onChoice('cooksize', value => localStorage.setItem(COOK_SIZE_KEY, value));
 
-  const editToggle = el.querySelector('#edit-toggle');
-  if (editToggle) {
-    editToggle.onchange = () => {
-      localStorage.setItem(EDIT_ENABLED_KEY, editToggle.checked ? 'true' : 'false');
-      render();
-    };
-  }
-
-  el.querySelector('#start-select').onchange = (ev) => localStorage.setItem(START_KEY, ev.target.value);
-
-  const vibrationToggle = el.querySelector('#vibration-toggle');
-  if (vibrationToggle) {
-    vibrationToggle.onchange = () => {
-      localStorage.setItem(VIBRATION_KEY, vibrationToggle.checked ? 'true' : 'false');
-      if (vibrationToggle.checked) hapticPulse(); // kurzes Feedback als Bestätigung
-    };
-  }
-
-  const offlineToggle = el.querySelector('#offline-toggle');
-  if (offlineToggle) {
-    offlineToggle.onchange = () => {
-      localStorage.setItem(OFFLINE_MODE_KEY, offlineToggle.checked ? 'true' : 'false');
-      const message = offlineToggle.checked
-        ? '🔒 Offline-Modus aktiviert (keine Online-Abgleiche)'
-        : '🌐 Online-Modus aktiviert (Auto-Abgleiche aktiv)';
-      toast(message);
-      // Bearbeiten-Bereich ausgrauen bzw. wiederherstellen und Grid auffrischen
-      openSettings();
-      render();
-    };
-  }
-
-  el.querySelector('#clear-token')?.addEventListener('click', () => {
-    if (window.clearToken && confirm('⚠️ Token wirklich entfernen? Dann kann die App keine Daten mehr synchronisieren.')) {
-      window.clearToken();
-      openSettings();
-    }
+  on('start-select', 'change', ev => localStorage.setItem(START_KEY, ev.target.value));
+  on('vibration-toggle', 'change', ev => {
+    localStorage.setItem(VIBRATION_KEY, ev.target.checked ? 'true' : 'false');
+    if (ev.target.checked) hapticPulse(); // kurzes Feedback als Bestätigung
   });
 
-  el.querySelector('#share-token')?.addEventListener('click', () => {
+  on('lib-recipes-btn', 'click', () => openLibraryRecipes());
+  on('lib-cats-btn', 'click', () => openLibraryCategories());
+  on('tinder-cats-btn', 'click', () => openTinderCategoryFilter());
+
+  on('offline-toggle', 'change', ev => {
+    localStorage.setItem(OFFLINE_MODE_KEY, ev.target.checked ? 'true' : 'false');
+    toast(ev.target.checked
+      ? '🔒 Offline-Modus aktiviert (keine Online-Abgleiche)'
+      : '🌐 Online-Modus aktiviert (Auto-Abgleiche aktiv)');
+    render();
+  });
+  on('backup-btn', 'click', () => exportBackup());
+  on('photos-btn', 'click', () => downloadPhotos());
+
+  on('move-btn', 'click', () => openMoveDialog());
+  on('edit-toggle', 'change', ev => {
+    localStorage.setItem(EDIT_ENABLED_KEY, ev.target.checked ? 'true' : 'false');
+    render();
+  });
+  on('clear-token', 'click', () => {
+    if (window.clearToken && confirm('⚠️ Token wirklich entfernen? Dann kann die App keine Daten mehr synchronisieren.')) {
+      window.clearToken();
+      openSettings('zugang');
+    }
+  });
+  on('share-token', 'click', () => {
     const token = ghToken();
     if (!token) {
       toast('❌ Kein Token vorhanden');
@@ -3217,9 +3238,9 @@ function openSettings() {
     });
   });
 
-  el.querySelector('#setup-token')?.addEventListener('click', () => openTokenSetup());
+  on('setup-token', 'click', () => openTokenSetup());
 
-  el.querySelector('#refresh-btn').onclick = async () => {
+  on('refresh-btn', 'click', async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
     try {
       // 1. DATEN-CHECK: Rezept-ISO-Timestamp vergleichen und ggf. direkt übernehmen
@@ -3238,22 +3259,13 @@ function openSettings() {
       console.error('Update-Fehler:', err);
       toast('❌ Fehler: ' + err.message);
     }
-  };
-
-  // Theme-Switcher
-  for (const radio of el.querySelectorAll('input[name="theme"]')) {
-    radio.onchange = () => applyTheme(radio.value);
-  }
-
-  // Farbschema-Switcher
-  for (const radio of el.querySelectorAll('input[name="colorscheme"]')) {
-    radio.onchange = () => { applyColorScheme(radio.value); render(); };
-  }
+  });
 
   el.hidden = false;
   el.scrollTop = 0;
   document.body.style.overflow = 'hidden';
-  updatePhotoRow();
+  if (page === 'daten') updatePhotoRow();
+  if (page) return;
 
   // Auto-Check für Updates beim Öffnen der Settings
   (async () => {

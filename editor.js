@@ -27,7 +27,8 @@ window.clearToken = () => {
   toastUndo('Token entfernt', () => {
     localStorage.setItem(TOKEN_KEY, old);
     render();
-    if (!edEl().hidden && history.state?.page === 'settings') openSettings();
+    const page = history.state?.page || '';
+    if (!edEl().hidden && page.startsWith('settings')) openSettings(page.slice('settings-'.length));
     toast('Token wiederhergestellt');
   }, { ms: 8000 });
 };
