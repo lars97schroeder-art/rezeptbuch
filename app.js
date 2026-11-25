@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T23:30:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T23:59:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -913,6 +913,7 @@ function renderDetail(id, opts = {}) {
     <div class="detail-body">
       <h2>${titleWithEmoji(r)}</h2>
       ${meta ? `<div class="detail-meta">${esc(meta)}</div>` : ''}
+      ${typeof canCook === 'function' && canCook(r) ? '<button type="button" class="cook-start">Kochen starten</button>' : ''}
       ${(r.ingredients || []).length ? `<h3>Zutaten</h3>
         ${ingredientsHTML(r.ingredients)}` : ''}
       ${(r.steps || []).length ? `<h3>Zubereitung</h3>
@@ -945,6 +946,7 @@ function renderDetail(id, opts = {}) {
     };
   }
   wirePhotoDots(el);
+  el.querySelector('.cook-start')?.addEventListener('click', () => openCook(id));
   el.querySelectorAll('img.detail-photo').forEach((img, i) => { img.onclick = () => openLightbox(i); });
   if (window.editorEnhanceDetail) window.editorEnhanceDetail(el, id);
   el.hidden = false;
@@ -1244,6 +1246,7 @@ function renderOverlayPage(page) {
   else if (page === 'library-recipes') openLibraryRecipes();
   else if (page === 'library-categories') openLibraryCategories();
   else if (page === 'token') openTokenSetup();
+  else if (page === 'help') openHelp();
   else closeEditor();
 }
 
@@ -1255,6 +1258,8 @@ window.addEventListener('popstate', e => {
   // War ein Foto groß offen, schließt Zurück nur das: die Ansicht bleibt stehen
   const lightbox = $('.lightbox');
   if (lightbox) return closeLightbox(lightbox);
+  // Ebenso der Kochmodus
+  if ($('.cook')) return closeCook();
   const s = e.state;
   if (s?.view === 'overlay') {
     renderOverlayPage(s.page);
@@ -3024,7 +3029,20 @@ function openSettings() {
           ['orange', '<i class="swatch swatch-orange"></i>Orange'],
           ['blue', '<i class="swatch swatch-blue"></i>Blau'],
           ['rainbow', '<i class="swatch swatch-rainbow"></i>Rainbow']])}
+      </div>
+      <div class="set-block">
+        <span class="set-title">Textgröße</span>
+        ${segment('textsize', textSize(), [['1', 'Normal'], ['1.12', 'Groß'], ['1.25', 'Sehr groß']])}
       </div>`)}
+
+    ${group('Kochmodus', `
+      ${toggle('cook-wake', 'Always on', 'Bildschirm bleibt beim Kochen an. Verfügbar am iPhone ab iOS 18.4.', cookFlag(COOK_WAKE_KEY))}
+      <div class="set-block">
+        <span class="set-title">Schriftgröße beim Kochen</span>
+        ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
+      </div>
+      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}
+      ${toggle('cook-sound', 'Timer-Ton', 'Klingelt, solange die App offen ist. Nicht bei stummgeschaltetem iPhone.', cookFlag(COOK_SOUND_KEY))}`)}
 
     ${group('App', `
       <label class="set-block">
@@ -3044,6 +3062,10 @@ function openSettings() {
         : `<div class="set-block"><span class="set-hint">Rezepte und Kategorien verwalten: ${offline ? 'im Offline-Modus nicht möglich' : 'braucht einen Token (siehe Zugang)'}</span></div>`}
       ${link('tinder-cats-btn', 'Food Match', 'Kategorien vom Tindern ausschließen')}`)}
 
+    ${group('Daten', `
+      ${link('backup-btn', 'Rezepte sichern', 'Rezepte, Wochenplan und Backlog als Datei, ohne Fotos', 'action')}
+      ${link('photos-btn', 'Fotos offline speichern', 'Wird geprüft …', 'action')}`)}
+
     ${group('Zugang', hasToken
         ? toggle('edit-toggle', 'Bearbeitungsmodus', offline
               ? 'Im Offline-Modus deaktiviert, wird danach wiederhergestellt'
@@ -3053,7 +3075,11 @@ function openSettings() {
         : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren'),
       offline ? ' style="opacity: 0.4; pointer-events: none;"' : '')}
 
-    <div class="set-footer">${data.recipes.length} Rezepte<br>Zuletzt aktualisiert: ${lastUpdate}</div>
+    ${group('Hilfe', link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
+
+    <div class="set-footer">Schrödamskis Schlemmerliste<br>
+      Version vom ${new Date(APP_BUILD_TIME).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}<br>
+      ${data.recipes.length} Rezepte · zuletzt aktualisiert: ${lastUpdate}</div>
   </div>`;
 
   el.querySelector('.detail-close').onclick = () => closeOverlay();
@@ -3062,6 +3088,18 @@ function openSettings() {
   el.querySelector('#lib-cats-btn')?.addEventListener('click', () => openLibraryCategories());
 
   el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
+  el.querySelector('#help-btn').onclick = () => openHelp();
+  el.querySelector('#backup-btn').onclick = () => exportBackup();
+  el.querySelector('#photos-btn').onclick = () => downloadPhotos();
+  for (const [id, key] of [['cook-wake', COOK_WAKE_KEY], ['cook-ing', COOK_ING_KEY], ['cook-sound', COOK_SOUND_KEY]]) {
+    el.querySelector('#' + id).onchange = ev => localStorage.setItem(key, ev.target.checked ? 'true' : 'false');
+  }
+  for (const radio of el.querySelectorAll('input[name="cooksize"]')) {
+    radio.onchange = () => localStorage.setItem(COOK_SIZE_KEY, radio.value);
+  }
+  for (const radio of el.querySelectorAll('input[name="textsize"]')) {
+    radio.onchange = () => applyTextSize(radio.value);
+  }
 
   const editToggle = el.querySelector('#edit-toggle');
   if (editToggle) {
@@ -3175,6 +3213,7 @@ function openSettings() {
   el.hidden = false;
   el.scrollTop = 0;
   document.body.style.overflow = 'hidden';
+  updatePhotoRow();
 
   // Auto-Check für Updates beim Öffnen der Settings
   (async () => {
@@ -3334,7 +3373,8 @@ async function performAppUpdate() {
   try {
     if ('caches' in window) {
       const names = await caches.keys();
-      await Promise.all(names.map(n => caches.delete(n)));
+      // Offline gespeicherte Fotos bleiben erhalten
+      await Promise.all(names.filter(n => n !== IMG_CACHE).map(n => caches.delete(n)));
     }
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -3506,7 +3546,7 @@ function swipeStart(x, y, time, el) {
   if (swipe) resetSwipe();
   if (x > swipeEdge()) return;
   // Eigene Zieh-/Wisch-Elemente haben Vorrang
-  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay, .lightbox')) return;
+  if (el.closest?.('input, textarea, select, .backlog-drag, .weekplan-tag-drag, .tinder, .lib-bar, .ed-modal-overlay, .lightbox, .cook')) return;
   if (scrollableToLeft(el)) return;
   const mode = ($('#detail').hidden && $('#editor').hidden) ? 'settings' : 'back';
   swipe = { x, y, mode, target: null, under: null, samples: [{ x, t: time }] };

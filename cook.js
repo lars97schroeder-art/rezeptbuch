@@ -1,0 +1,406 @@
+'use strict';
+
+/* Kochmodus (ein Schritt pro Seite, Zutaten abhaken, Timer, Bildschirm an)
+   sowie Textgröße, Datensicherung, Offline-Fotos und Hilfe.
+   Nutzt zur Laufzeit die Funktionen und Daten aus app.js. */
+
+const COOK_WAKE_KEY = 'rezeptbuch-cook-wake';
+const COOK_SIZE_KEY = 'rezeptbuch-cook-size';
+const COOK_ING_KEY = 'rezeptbuch-cook-ingredients-first';
+const COOK_SOUND_KEY = 'rezeptbuch-cook-sound';
+const COOK_STATE_KEY = 'rezeptbuch-cook-state';
+const TEXT_SIZE_KEY = 'rezeptbuch-text-size';
+const COOK_RESUME_MS = 24 * 60 * 60 * 1000;
+
+const cookFlag = key => localStorage.getItem(key) !== 'false'; // Standard: an
+const cookSize = () => ['normal', 'large', 'xl'].includes(localStorage.getItem(COOK_SIZE_KEY))
+  ? localStorage.getItem(COOK_SIZE_KEY) : 'large';
+
+/* ---------- Textgröße der App ---------- */
+
+const TEXT_SIZES = ['1', '1.12', '1.25'];
+const textSize = () => TEXT_SIZES.includes(localStorage.getItem(TEXT_SIZE_KEY)) ? localStorage.getItem(TEXT_SIZE_KEY) : '1';
+function applyTextSize(value = textSize()) {
+  localStorage.setItem(TEXT_SIZE_KEY, value);
+  document.documentElement.style.setProperty('--fs', value);
+}
+applyTextSize();
+
+/* ---------- Kochmodus ---------- */
+
+let cook = null; // { recipe, ingredients, steps, pages, page, checked, box, afterClose }
+
+const cookIngredients = r => (r.ingredients || []).map(x => String(x).trim()).filter(Boolean);
+const cookSteps = r => (r.steps || []).map(x => String(x).trim()).filter(Boolean);
+const canCook = r => cookIngredients(r).length > 0 || cookSteps(r).length > 0;
+
+function cookStates() {
+  try { return JSON.parse(localStorage.getItem(COOK_STATE_KEY)) || {}; } catch (e) { return {}; }
+}
+function saveCookState() {
+  if (!cook) return;
+  const all = cookStates();
+  const done = cook.pages[cook.page].type === 'done';
+  if (done) delete all[cook.recipe.id];
+  else all[cook.recipe.id] = { page: cook.page, checked: [...cook.checked], ts: Date.now() };
+  localStorage.setItem(COOK_STATE_KEY, JSON.stringify(all));
+}
+
+function openCook(id) {
+  const recipe = data.recipes.find(r => r.id === id);
+  if (!recipe || cook || !canCook(recipe)) return;
+  const ingredients = cookIngredients(recipe);
+  const steps = cookSteps(recipe);
+  const pages = [];
+  if (ingredients.length && (cookFlag(COOK_ING_KEY) || !steps.length)) pages.push({ type: 'ing' });
+  steps.forEach((text, i) => pages.push({ type: 'step', text, i }));
+  pages.push({ type: 'done' });
+
+  const saved = cookStates()[id];
+  const resume = saved && Date.now() - saved.ts < COOK_RESUME_MS;
+
+  const box = document.createElement('div');
+  box.className = 'cook cook-' + cookSize();
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'Kochmodus');
+  box.innerHTML = `
+    <div class="cook-head">
+      <button type="button" class="cook-icon cook-close" aria-label="Kochmodus schließen">✕</button>
+      <div class="cook-where"></div>
+      <button type="button" class="cook-icon cook-list" aria-label="Zutaten anzeigen">☰</button>
+    </div>
+    <div class="cook-progress"><span></span></div>
+    <div class="cook-timers"></div>
+    <div class="cook-body"></div>
+    <div class="cook-foot">
+      <button type="button" class="cook-back" aria-label="Zurück">←</button>
+      <button type="button" class="cook-next"></button>
+    </div>
+    <div class="cook-sheet" hidden>
+      <div class="cook-sheet-panel">
+        <div class="cook-sheet-head"><span>Zutaten</span><button type="button" class="cook-icon cook-sheet-close" aria-label="Schließen">✕</button></div>
+        <div class="cook-sheet-list"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+  history.pushState({ ...history.state, view: 'cook', depth: navDepth() + 1 }, '');
+
+  cook = {
+    recipe, ingredients, steps, pages, box,
+    page: resume ? Math.min(saved.page, pages.length - 1) : 0,
+    checked: new Set(resume ? saved.checked : []),
+    afterClose: null,
+  };
+
+  const q = s => box.querySelector(s);
+  q('.cook-close').onclick = () => history.back();
+  q('.cook-back').onclick = () => cookGo(-1);
+  q('.cook-next').onclick = () => cookGo(1);
+  q('.cook-list').onclick = () => { renderCookIngredients(q('.cook-sheet-list')); q('.cook-sheet').hidden = false; };
+  q('.cook-sheet-close').onclick = () => { q('.cook-sheet').hidden = true; renderCook(); };
+  q('.cook-sheet').onclick = e => { if (e.target === q('.cook-sheet')) q('.cook-sheet-close').click(); };
+
+  // Seitlich wischen blättert
+  let start = null;
+  box.addEventListener('touchstart', e => {
+    start = e.touches.length === 1 && q('.cook-sheet').hidden && !e.target.closest('.cook-timers')
+      ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  box.addEventListener('touchend', e => {
+    if (!start) return;
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    start = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) cookGo(dx < 0 ? 1 : -1, true);
+  });
+
+  renderCook();
+  renderCookTimers();
+  keepScreenOn();
+  if (resume && cook.page > 0) toast('Weiter, wo du aufgehört hast');
+}
+
+// Wird von popstate aufgerufen (✕, Zurück-Geste)
+function closeCook() {
+  if (!cook) return;
+  const { box, afterClose } = cook;
+  saveCookState();
+  cook = null;
+  box.remove();
+  releaseScreen();
+  if (afterClose) setTimeout(afterClose, 0);
+}
+
+function cookGo(direction, swiped = false) {
+  const next = cook.page + direction;
+  if (next < 0) return;
+  if (next >= cook.pages.length) { if (!swiped) history.back(); return; }
+  cook.page = next;
+  renderCook();
+}
+
+function renderCookIngredients(container) {
+  container.innerHTML = cook.ingredients.map((text, i) => {
+    // Zwischenüberschrift: "*Teig" oder eine reine GROSSBUCHSTABEN-Zeile
+    const heading = text.match(/^\*\s*(.+)/) || (/^[A-ZÄÖÜ][A-ZÄÖÜ .:&()-]{3,}$/.test(text) ? [text, text] : null);
+    if (heading) return `<div class="cook-heading">${esc(heading[1])}</div>`;
+    return `<label class="cook-ing"><input type="checkbox" data-i="${i}" ${cook.checked.has(i) ? 'checked' : ''}><span>${esc(text)}</span></label>`;
+  }).join('') || '<p class="cook-note">Keine Zutaten eingetragen.</p>';
+  for (const input of container.querySelectorAll('input')) {
+    input.onchange = () => {
+      const i = Number(input.dataset.i);
+      if (input.checked) cook.checked.add(i); else cook.checked.delete(i);
+      saveCookState();
+    };
+  }
+}
+
+function renderCook() {
+  const q = s => cook.box.querySelector(s);
+  const page = cook.pages[cook.page];
+  const body = q('.cook-body');
+  q('.cook-where').textContent = page.type === 'ing' ? 'Zutaten'
+    : page.type === 'step' ? `Schritt ${page.i + 1} von ${cook.steps.length}` : 'Fertig';
+  q('.cook-progress span').style.width = (cook.page / (cook.pages.length - 1) * 100) + '%';
+  q('.cook-list').style.visibility = page.type === 'step' && cook.ingredients.length ? 'visible' : 'hidden';
+  q('.cook-back').style.visibility = cook.page > 0 ? 'visible' : 'hidden';
+  const nextPage = cook.pages[cook.page + 1];
+  q('.cook-next').textContent = page.type === 'done' ? 'Schließen'
+    : page.type === 'ing' && nextPage.type === 'step' ? 'Los geht’s'
+    : nextPage.type === 'done' ? 'Fertig' : 'Weiter';
+
+  if (page.type === 'ing') {
+    body.innerHTML = `<h2>${esc(cook.recipe.title)}</h2><div></div>
+      ${cook.steps.length ? '' : '<p class="cook-note">Für dieses Rezept sind noch keine Zubereitungsschritte eingetragen.</p>'}`;
+    renderCookIngredients(body.querySelector('div'));
+  } else if (page.type === 'step') {
+    const times = stepTimes(page.text);
+    body.innerHTML = `<p class="cook-step">${esc(page.text)}</p>
+      <div class="cook-timer-buttons">${times.map((t, i) => `<button type="button" data-i="${i}">Timer ${esc(t.label)} starten</button>`).join('')}</div>`;
+    for (const b of body.querySelectorAll('.cook-timer-buttons button')) {
+      b.onclick = () => startTimer(times[Number(b.dataset.i)], `Schritt ${page.i + 1}`);
+    }
+  } else {
+    const mayEdit = isEditModeEnabled();
+    body.innerHTML = `<div class="cook-done"><div class="cook-done-emoji">${emojiFor(cook.recipe)}</div>
+      <h2>Guten Appetit</h2>
+      ${mayEdit ? '<p class="cook-note">Lust, ein Foto vom Ergebnis hinzuzufügen?</p><button type="button" class="cook-photo">Foto hinzufügen</button>' : ''}</div>`;
+    const photo = body.querySelector('.cook-photo');
+    if (photo) photo.onclick = () => { const id = cook.recipe.id; cook.afterClose = () => openEditor(id); history.back(); };
+  }
+  body.scrollTop = 0;
+  saveCookState();
+}
+
+/* ---------- Bildschirm anlassen ---------- */
+
+let wakeLock = null;
+async function keepScreenOn() {
+  if (!cook || !cookFlag(COOK_WAKE_KEY) || !navigator.wakeLock) return;
+  try {
+    const lock = await navigator.wakeLock.request('screen');
+    if (!cook) return lock.release();
+    wakeLock = lock;
+  } catch (e) { /* z. B. Stromsparmodus: Kochmodus läuft trotzdem */ }
+}
+function releaseScreen() {
+  wakeLock?.release().catch(() => {});
+  wakeLock = null;
+}
+// Das System gibt die Sperre frei, sobald die App in den Hintergrund geht
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { keepScreenOn(); tickTimers(); }
+});
+
+/* ---------- Timer ---------- */
+
+// Zeitangaben im Schritt finden: "10 Minuten", "20-25 Min.", "1,5 Stunden"
+function stepTimes(text) {
+  const pattern = /(\d+\s*\/\s*\d+|\d+(?:[.,]\d+)?|½)(?:\s*(?:-|–|bis)\s*\d+(?:[.,]\d+)?)?\s*(stunden?|std\b\.?|h\b|minuten?|min\b\.?|sekunden?|sek\b\.?)/gi;
+  const found = [];
+  for (const m of text.matchAll(pattern)) {
+    const raw = m[1].replace(/\s/g, '');
+    const value = raw === '½' ? 0.5 : raw.includes('/') ? raw.split('/')[0] / raw.split('/')[1] : Number(raw.replace(',', '.'));
+    const unit = m[2].toLowerCase();
+    const factor = unit.startsWith('se') ? 1 : unit.startsWith('mi') ? 60 : 3600;
+    const seconds = Math.round(value * factor);
+    if (seconds > 0 && seconds <= 24 * 3600 && !found.some(f => f.seconds === seconds)) {
+      found.push({ seconds, label: `${String(value).replace('.', ',')} ${factor === 1 ? 'Sek' : factor === 60 ? 'Min' : 'Std'}` });
+    }
+  }
+  return found;
+}
+
+let timers = [];
+let timerTick = null;
+let audio = null;
+
+function startTimer(time, where) {
+  // Ton darf auf dem iPhone nur nach einem Antippen vorbereitet werden
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    audio.resume();
+  } catch (e) { /* ohne Ton */ }
+  timers.push({ end: Date.now() + time.seconds * 1000, label: time.label, where, done: false });
+  if (!timerTick) timerTick = setInterval(tickTimers, 500);
+  hapticPulse();
+  renderCookTimers();
+}
+
+function timerAlarm() {
+  hapticPulse(300);
+  if (!cookFlag(COOK_SOUND_KEY) || !audio) return;
+  audio.resume();
+  for (let i = 0; i < 6; i++) {
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    const at = audio.currentTime + i * 0.35;
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.4, at + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.25);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(at);
+    osc.stop(at + 0.27);
+  }
+}
+
+function tickTimers() {
+  for (const t of timers) {
+    if (t.done || Date.now() < t.end) continue;
+    t.done = true;
+    timerAlarm();
+    toast(`Timer fertig: ${t.label} (${t.where})`);
+  }
+  if (!timers.some(t => !t.done)) { clearInterval(timerTick); timerTick = null; }
+  renderCookTimers();
+}
+
+function renderCookTimers() {
+  const row = cook?.box.querySelector('.cook-timers');
+  if (!row) return;
+  const clock = ms => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = String(s % 60).padStart(2, '0');
+    return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+  };
+  // Knöpfe nur neu bauen, wenn sich die Anzahl ändert (sonst verpufft ein Antippen)
+  if (row.children.length !== timers.length) {
+    row.innerHTML = timers.map((t, i) => `<button type="button" class="cook-timer" data-i="${i}"><small></small><strong></strong><span aria-hidden="true">✕</span></button>`).join('');
+    for (const b of row.children) {
+      b.onclick = () => {
+        const [removed] = timers.splice(Number(b.dataset.i), 1);
+        renderCookTimers();
+        if (!removed.done) toastUndo('Timer gestoppt', () => {
+          timers.push(removed);
+          if (!timerTick) timerTick = setInterval(tickTimers, 500);
+          tickTimers();
+        });
+      };
+    }
+  }
+  timers.forEach((t, i) => {
+    const b = row.children[i];
+    b.classList.toggle('done', t.done);
+    b.querySelector('small').textContent = t.where;
+    b.querySelector('strong').textContent = t.done ? 'Fertig' : clock(t.end - Date.now());
+  });
+}
+
+/* ---------- Datensicherung ---------- */
+
+// Alles außer dem Token als eine Datei speichern/teilen
+async function exportBackup() {
+  const content = JSON.stringify({
+    exported: new Date().toISOString(),
+    recipes: data,
+    weekplan: getAllWeekplans(),
+    backlog: getBacklogItems(),
+  }, null, 2);
+  const name = `schlemmerliste-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
+  const file = new File([content], name, { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(file);
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+  toast('Sicherung gespeichert');
+}
+
+/* ---------- Fotos offline ---------- */
+
+async function photoStatus() {
+  const wanted = [...new Set(data.recipes.flatMap(imagesOf))];
+  if (!window.caches) return { wanted, missing: wanted };
+  const cache = await caches.open(IMG_CACHE);
+  const missing = [];
+  for (const path of wanted) if (!await cache.match(path, { ignoreSearch: true })) missing.push(path);
+  return { wanted, missing };
+}
+
+let photoLoading = false;
+async function updatePhotoRow() {
+  const hint = document.querySelector('#photos-btn .set-hint');
+  if (!hint || photoLoading) return;
+  const { wanted, missing } = await photoStatus();
+  hint.textContent = missing.length
+    ? `${wanted.length - missing.length} von ${wanted.length} auf diesem Handy · antippen zum Laden`
+    : `Alle ${wanted.length} Fotos sind auf diesem Handy`;
+}
+
+async function downloadPhotos() {
+  if (photoLoading) return;
+  if (localStorage.getItem(OFFLINE_MODE_KEY) === 'true') return toast('Im Offline-Modus nicht möglich');
+  photoLoading = true;
+  let failed = 0;
+  try {
+    const { missing } = await photoStatus();
+    const cache = await caches.open(IMG_CACHE);
+    for (let i = 0; i < missing.length; i++) {
+      const hint = document.querySelector('#photos-btn .set-hint');
+      if (hint) hint.textContent = `Lade Foto ${i + 1} von ${missing.length} …`;
+      try {
+        const res = await fetch(missing[i], { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.status);
+        await cache.put(missing[i], res);
+      } catch (e) { failed++; }
+    }
+    toast(failed ? `${failed} Fotos konnten nicht geladen werden` : 'Alle Fotos gespeichert ✓');
+  } finally {
+    photoLoading = false;
+    updatePhotoRow();
+  }
+}
+
+/* ---------- Hilfe ---------- */
+
+function openHelp() {
+  enterOverlay('help');
+  const topic = (title, rows) => `<section class="set-group"><h3>${title}</h3><div class="set-card">${rows.map(([what, effect]) =>
+    `<div class="set-block help-row"><span class="set-title">${what}</span><span class="set-hint">${effect}</span></div>`).join('')}</div></section>`;
+  const el = $('#editor');
+  el.innerHTML = `
+    <button class="detail-close" aria-label="Zurück">←</button>
+    <div class="ed-body settings-body">
+      <h2>Hilfe und Gesten</h2>
+      ${topic('Überall', [
+        ['Vom linken Rand nach rechts wischen', 'Eine Seite zurück. Auf der Startseite öffnen sich die Einstellungen.'],
+        ['Rückgängig', 'Erscheint nach jedem Löschen für ein paar Sekunden.']])}
+      ${topic('Rezepte', [
+        ['Foto antippen', 'Groß ansehen. Zwei Finger oder doppelt tippen zum Zoomen, nach unten wischen zum Schließen.'],
+        ['Kochen starten', 'Zutaten abhaken, dann Schritt für Schritt. Zeitangaben werden zu Timern.']])}
+      ${topic('Wochenplan', [
+        ['Griff links gedrückt halten', 'Eintrag auf einen anderen Tag oder ins Backlog ziehen.'],
+        ['Minus am Tag', 'Tag für diese Woche ausblenden.']])}
+      ${topic('Food Match', [
+        ['Rechts, links, Stern', 'Will ich, nö, oder sofort dieses Gericht. Nach drei Treffern wird gelost.']])}
+    </div>`;
+  el.querySelector('.detail-close').onclick = () => closeOverlay();
+  el.hidden = false;
+  el.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}

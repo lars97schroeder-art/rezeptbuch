@@ -10,6 +10,7 @@ const SHELL_FILES = [
   'index.html',
   'app.js',
   'editor.js',
+  'cook.js',
   'style.css',
   'fonts/fraunces-latin.woff2',
   'fonts/fraunces-italic-latin.woff2',
