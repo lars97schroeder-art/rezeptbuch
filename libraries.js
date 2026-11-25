@@ -3,17 +3,31 @@
 /* Nutzer (nur auf diesem Gerät) und Bibliotheken.
    Eine Bibliothek ist ein Daten-Speicher auf GitHub mit eigenen Rezepten,
    Wochenplan und Backlog. Es ist immer genau eine geöffnet; beim Wechseln lädt
-   die App neu. Die erste ("main") liegt im App-Repository selbst.
+   die App neu. Die erste ("main") ist die von Lars und Annika.
    Wird VOR editor.js, cook.js und app.js geladen. */
 
 const USER_KEY = 'rezeptbuch-user';
 const LIBRARIES_KEY = 'rezeptbuch-libraries';       // weitere Bibliotheken
 const ACTIVE_LIBRARY_KEY = 'rezeptbuch-active-library';
 
+/* Umzug der ersten Bibliothek: ihre Daten liegen jetzt in einem eigenen
+   Speicher, getrennt von der App. Ein Gerät mit dem alten Token bleibt so lange
+   beim alten Ort, bis dort der neue Token eingegeben wurde; Geräte ohne Token
+   lesen gleich vom neuen Ort. */
+const APP_REPO = 'lars97schroeder-art/rezeptbuch';
+const DATA_REPO = 'lars97schroeder-art/schlemmer-daten-lars-annika';
+const MAIN_MOVED_KEY = 'rezeptbuch-main-moved';
+
+const mainMoved = (() => {
+  const moved = localStorage.getItem(MAIN_MOVED_KEY) === 'true' || !localStorage.getItem('rezeptbuch-token');
+  if (moved) localStorage.setItem(MAIN_MOVED_KEY, 'true');
+  return () => moved; // bleibt bis zum Neuladen gleich
+})();
+
 const MAIN_LIBRARY = {
   id: 'main',
   name: 'Schrödamskis Schlemmerliste',
-  repo: 'lars97schroeder-art/rezeptbuch',
+  repo: mainMoved() ? DATA_REPO : APP_REPO,
 };
 
 /* ---------- Nutzer ---------- */
@@ -52,6 +66,7 @@ const libKey = (key, lib = activeLibrary()) => lib.id === 'main' ? key : `${key}
 
 // Adresse einer Datei (z. B. Foto) aus einer Bibliothek
 function assetURL(path, lib = activeLibrary()) {
-  if (!path || lib.id === 'main' || /^(data:|blob:|https?:)/.test(path)) return path;
+  // Nur Daten im App-Speicher liegen unter derselben Adresse wie die App
+  if (!path || lib.repo === APP_REPO || /^(data:|blob:|https?:)/.test(path)) return path;
   return `https://raw.githubusercontent.com/${lib.repo}/main/${path}`;
 }

@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-26T15:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-26T17:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -3103,7 +3103,8 @@ function openSettings() {
     ${group('Zugang', activeLibrary().id !== 'main'
         ? toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
         : hasToken
-        ? toggle('edit-toggle', 'Bearbeitungsmodus', offline
+        ? (mainMoved() ? '' : link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action'))
+          + toggle('edit-toggle', 'Bearbeitungsmodus', offline
               ? 'Im Offline-Modus deaktiviert, wird danach wiederhergestellt'
               : 'Rezepte hinzufügen und ändern', editEnabled && !offline, offline)
           + link('share-token', 'Token teilen')
@@ -3126,6 +3127,7 @@ function openSettings() {
   el.querySelector('#tinder-cats-btn').onclick = () => openTinderCategoryFilter();
   el.querySelector('#help-btn').onclick = () => openHelp();
   el.querySelector('#name-btn').onclick = () => openNameDialog();
+  el.querySelector('#move-btn')?.addEventListener('click', () => openMoveDialog());
   el.querySelector('#library-select')?.addEventListener('change', ev => switchLibrary(ev.target.value));
   el.querySelector('#backup-btn').onclick = () => exportBackup();
   el.querySelector('#photos-btn').onclick = () => downloadPhotos();
@@ -3535,7 +3537,13 @@ function openNameDialog() {
     box.remove();
     const hint = $('#name-btn .set-hint');
     if (hint) hint.textContent = userName();
+    if (first) offerMove();
   };
+}
+
+// Gerät noch am alten Speicherort: nach dem neuen Token fragen
+function offerMove() {
+  if (localStorage.getItem(OFFLINE_MODE_KEY) !== 'true') openMoveDialog();
 }
 
 /* ---------- App-Start ---------- */
@@ -3547,6 +3555,13 @@ loadLocal();
 render();
 // Erster Start auf diesem Gerät (oder nach dem Update): nach dem Namen fragen
 if (!userName()) openNameDialog();
+else offerMove();
+
+// Nach dem Umzug liegen die Fotos unter neuer Adresse: einmal offline sichern
+if (mainMoved() && activeLibrary().id === 'main' && data.recipes.length
+    && localStorage.getItem('rezeptbuch-main-precached') !== 'true' && localStorage.getItem(OFFLINE_MODE_KEY) !== 'true') {
+  precacheImages(data.recipes).then(() => localStorage.setItem('rezeptbuch-main-precached', 'true'));
+}
 
 // Rezepte: leichter ISO-Abgleich im Hintergrund (übernimmt Änderungen still)
 checkAndUpdateIfNeeded();

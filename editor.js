@@ -559,7 +559,85 @@ async function deleteFromEditor(id) {
   }
 }
 
-/* ---------- Token-Einrichtung ---------- */
+/* ---------- Token-Einrichtung und Umzug ---------- */
+
+// Prüft echtes Schreibrecht: legt einen losen Datenblock an, der in keiner
+// Datei und keinem Stand auftaucht (öffentliche Speicher lesen darf jeder)
+async function tokenCanWrite(repo, token) {
+  const res = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+    method: 'POST',
+    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
+    body: JSON.stringify({ content: 'Schreibtest', encoding: 'utf-8' }),
+  });
+  return res.ok;
+}
+
+// Stand der Rezepte beim Kopieren in den neuen Speicher
+const MOVE_BASELINE = '2026-11-25T09:58:22.410Z';
+
+async function readRepoJSON(repo, path, token) {
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=main&t=${Date.now()}`,
+    { headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }, cache: 'no-store' });
+  if (!res.ok) throw new Error(ghErrorMessage(res.status, path));
+  const file = await res.json();
+  return { sha: file.sha, json: JSON.parse(utf8b64(file.content)) };
+}
+
+// Wechselt dieses Gerät auf den eigenen Daten-Speicher
+async function moveToDataRepo(token) {
+  if (!await tokenCanWrite(DATA_REPO, token)) throw new Error('Dieser Token darf im neuen Speicher nicht schreiben');
+  if (await tokenCanWrite(APP_REPO, token)) throw new Error('Dieser Token darf auch die App ändern. Bitte den neuen nehmen');
+  // Rezepte, die nach dem Kopieren noch am alten Ort landeten, gingen sonst verloren
+  const old = await readRepoJSON(APP_REPO, 'data/recipes.json', token);
+  if (new Date(old.json.updated).getTime() > new Date(MOVE_BASELINE).getTime()) {
+    throw new Error('Am alten Ort wurde seit dem Kopieren etwas geändert. Sag Lars Bescheid');
+  }
+  await Promise.allSettled([flushWeekplanUpload(), flushBacklogUpload()]);
+  // Wochenplan und Backlog: falls am alten Ort neuer, mitnehmen
+  for (const path of ['data/weekplan.json', 'data/backlog.json']) {
+    const before = await readRepoJSON(APP_REPO, path, token);
+    const target = await readRepoJSON(DATA_REPO, path, token);
+    if (new Date(before.json.updated).getTime() <= new Date(target.json.updated).getTime()) continue;
+    const res = await fetch(`https://api.github.com/repos/${DATA_REPO}/contents/${path}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify({ message: signMessage('Beim Umzug übernommen'), sha: target.sha, branch: 'main',
+        content: b64utf8(JSON.stringify(before.json, null, 2)) }),
+    });
+    if (!res.ok) throw new Error(ghErrorMessage(res.status, path));
+  }
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(MAIN_MOVED_KEY, 'true');
+}
+
+function openMoveDialog() {
+  if (mainMoved() || activeLibrary().id !== 'main' || document.querySelector('.move-dialog')) return;
+  const box = document.createElement('div');
+  box.className = 'ed-modal-overlay move-dialog';
+  box.innerHTML = `<form class="ed-modal">
+    <h3>Eure Rezepte ziehen um</h3>
+    <p class="setting-hint">Sie bekommen einen eigenen Speicher. Gib dafür einmal den neuen Token ein, den Lars erstellt hat.</p>
+    <div class="ed-cat-new"><input name="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+    <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Später</button><button type="submit" class="ed-modal-ok">Umziehen</button></div>
+  </form>`;
+  document.body.appendChild(box);
+  box.querySelector('.ed-modal-cancel').onclick = () => box.remove();
+  const ok = box.querySelector('.ed-modal-ok');
+  box.querySelector('form').onsubmit = async ev => {
+    ev.preventDefault();
+    const token = ev.target.elements.token.value.trim();
+    if (!token) return toast('Bitte den neuen Token einfügen');
+    ok.disabled = true;
+    toast('Ziehe um …');
+    try {
+      await moveToDataRepo(token);
+      location.replace(location.pathname + '?umzug=' + Date.now());
+    } catch (err) {
+      ok.disabled = false;
+      toast(err.message);
+    }
+  };
+}
 
 function openTokenSetup() {
   enterOverlay('token');
@@ -571,9 +649,9 @@ function openTokenSetup() {
     <p class="ed-text">${has
       ? 'Bearbeiten ist auf diesem Gerät <strong>aktiv</strong>. In jeder Rezept-Ansicht gibt es den ✏️-Knopf, in der Übersicht die „＋ Neues Rezept“-Kachel.'
       : 'Damit dieses Gerät Rezepte bearbeiten darf, braucht es einmalig einen GitHub-Schlüssel (Token). Er wird nur hier auf dem Gerät gespeichert.'}</p>
-    ${has ? '' : `<p class="ed-text">Token erstellen: <strong>github.com → Settings → Developer settings → Tokens (classic) → Generate new token</strong>, Haken bei „repo", ohne Ablaufdatum. Oder frag Lars nach dem bestehenden Token. 😉</p>`}
+    ${has ? '' : `<p class="ed-text">Frag Lars nach dem Token für diese Bibliothek.</p>`}
     <div class="ed-field"><label>GitHub-Token</label>
-      <input id="ed-token" type="password" placeholder="ghp_…" value=""></div>
+      <input id="ed-token" type="password" placeholder="github_pat_…" value="" autocomplete="off"></div>
     <div class="ed-buttons">
       <button type="button" class="ed-cancel">Schließen</button>
       <button type="button" class="ed-save">Speichern & testen</button>
@@ -585,9 +663,7 @@ function openTokenSetup() {
     const t = $('#ed-token').value.trim();
     if (!t) return toast('Bitte Token einfügen');
     toast('Prüfe Token …');
-    const res = await fetch(`https://api.github.com/repos/${GH_REPO}`,
-      { headers: { 'Authorization': 'token ' + t, 'Accept': 'application/vnd.github+json' } });
-    if (!res.ok) return toast('Token funktioniert nicht (Fehler ' + res.status + ')');
+    if (!await tokenCanWrite(GH_REPO, t)) return toast('Dieser Token darf hier nicht schreiben');
     localStorage.setItem(TOKEN_KEY, t);
     leaveEditorPage();
     render();
