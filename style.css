@@ -2251,6 +2251,7 @@ input:checked + .slider:before { transform: translateX(20px); }
   justify-content: center;
   padding-bottom: 2px;
 }
+.weekplan-day-toggle::after { content: ''; position: absolute; inset: -8px; }
 .weekplan-day.day-off .weekplan-day-toggle { background: var(--accent-soft); color: var(--accent); }
 
 /* Wochentag als Serifen-Überschrift */
@@ -2280,7 +2281,8 @@ input:checked + .slider:before { transform: translateX(20px); }
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: 12px 48px 12px 14px;
+  min-height: 50px;
+  padding: 12px 54px 12px 14px;
   border: 1px solid transparent;
   border-radius: var(--r-md);
   background: var(--field);
@@ -2298,11 +2300,11 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .weekplan-add-btn, .backlog-add-btn {
   position: absolute;
-  right: 5px;
+  right: 2px;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0 0 2px;
   border: none;
   border-radius: 10px;
@@ -2341,89 +2343,76 @@ input:checked + .slider:before { transform: translateX(20px); }
 .weekplan-suggestion:hover, .backlog-suggestion:hover,
 .weekplan-suggestion:active, .backlog-suggestion:active { background: var(--accent-soft); }
 
-.weekplan-selected { display: flex; flex-wrap: wrap; gap: 8px; }
+.weekplan-selected { display: flex; flex-direction: column; gap: 8px; }
 /* Einträge stehen oben — Abstand nur, wenn welche da sind */
 .weekplan-selected:not(:empty) { margin-bottom: 10px; }
 
 /* Vergangene Wochen: nur ansehen */
 .weekplan-body.readonly .weekplan-day { opacity: 0.55; }
 
-/* Pille: Ziehgriff links als eigenes Segment, Text, Entfernen */
+/* Eintrag als Zeile über die volle Breite mit drei großen Trefferflächen:
+   Ziehgriff | Name (öffnet das Rezept) | Entfernen */
 .weekplan-tag {
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
-  gap: 4px;
-  padding: 0 8px 0 0;
+  width: 100%;
+  min-height: 56px;
   background: var(--accent-soft);
   color: var(--text);
-  /* feste Rundung statt 999px: einzeilige Pillen bleiben komplett rund,
-     mehrzeilige werden abgerundete Rechtecke statt einem riesigen Halbkreis */
-  border-radius: 10px 20px 20px 10px;
-  font-size: 14px;
+  border-radius: var(--r-md);
+  font-size: 16px;
   font-weight: 500;
-  max-width: 100%;
+  line-height: 1.3;
   overflow: hidden;
-  /* Sonst erkennt v.a. iOS Safari eine Fingerbewegung auf dem Tag als
-     eigene Scroll-Geste, bevor unser Zieh-Handler überhaupt zum Zug kommt. */
-  touch-action: none;
-}
-
-/* Ausgeblendete/vergangene Tage haben keinen Ziehgriff (nur zum Ansehen) —
-   dann eine ganz normale, komplett runde Pille. */
-.weekplan-tag.no-drag {
-  border-radius: 20px;
-  padding-left: 14px;
 }
 
 /* Ziehgriff: nur DORT gilt das Gedrückthalten als Zieh-Wunsch — auf dem
    Text selbst würde ein Handy das sonst als "Text markieren"-Geste deuten.
-   align-items:stretch am Elternelement + min-Maße = große Trefferfläche. */
+   touch-action nur hier, damit man über dem Rest der Zeile scrollen kann. */
 .weekplan-tag-drag {
-  flex-shrink: 0;
+  flex: 0 0 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 4px;
   color: var(--muted);
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1;
   cursor: grab;
   background: var(--wash);
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
 
 .weekplan-tag-text {
+  flex: 1;
   display: flex;
   align-items: center;
   overflow-wrap: anywhere;
   min-width: 0;
-  padding: 8px 0;
+  padding: 10px 4px 10px 14px;
   -webkit-touch-callout: none;
 }
+.weekplan-tag.no-drag .weekplan-tag-text { padding: 10px 16px; }
 .weekplan-tag-text.clickable { cursor: pointer; }
+.weekplan-tag-text.clickable:active { background: var(--wash); }
 
 .weekplan-tag-remove {
-  align-self: center;
-  background: var(--wash);
+  flex: 0 0 52px;
+  background: none;
   border: none;
   color: var(--muted);
   cursor: pointer;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
   padding: 0;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
-.weekplan-tag-remove:active { background: var(--border); }
+.weekplan-tag-remove:active { background: var(--wash); color: var(--accent); }
+html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove { color: inherit; }
 
 /* Geist-Kopie einer Pille, die während des Ziehens exakt dem Finger folgt
    (position:fixed, unabhängig vom Flex-Layout der Pillen-Reihe) */
@@ -2485,6 +2474,9 @@ input:checked + .slider:before { transform: translateX(20px); }
   color: var(--text);
   font-size: 16px;
   line-height: 1.35;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
   padding: 8px 0;
   word-break: break-word;
 }
@@ -2508,8 +2500,8 @@ input:checked + .slider:before { transform: translateX(20px); }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 40px;
+  width: 48px;
+  height: 52px;
   padding: 0;
   border: none;
   background: transparent;
@@ -2524,14 +2516,14 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .backlog-remove {
   flex: 0 0 auto;
-  width: 36px;
-  height: 40px;
+  width: 48px;
+  height: 52px;
   padding: 0;
   border: none;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
 }
 .backlog-remove:active { color: var(--accent); }
 
