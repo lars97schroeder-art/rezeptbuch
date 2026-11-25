@@ -227,7 +227,8 @@ h1 {
 .actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
 
 .btn-pill, .btn-icon {
-  height: 40px;
+  height: 48px;
+  border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
@@ -241,9 +242,8 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px 0 16px;
-  border-radius: 999px;
-  font-size: 14px;
+  padding: 0 14px 0 16px;
+  font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -258,11 +258,10 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 52px;
   padding: 0;
-  border-radius: 50%;
 }
-#btn-settings svg { width: 20px; height: 20px; }
+#btn-settings svg { width: 24px; height: 24px; }
 
 /* Roter Hinweis-Punkt am Wochenplan-Knopf: Plan wurde vom anderen Gerät geändert */
 .has-update-dot::after {
@@ -295,12 +294,13 @@ h1 {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-height: 54px;
   padding: 14px 18px;
   border: none;
   border-bottom: 1px solid var(--border);
   background: none;
   text-align: left;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text);
   cursor: pointer;
 }
@@ -327,13 +327,13 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 42px;
+  height: 52px;
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--card);
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: height 0.18s ease, transform 0.12s ease;
@@ -343,7 +343,21 @@ h1 {
 .weekplan-shortcut-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .shortcuts-row.compact { margin-bottom: 8px; }
-.shortcuts-row.compact .weekplan-shortcut { height: 36px; font-size: 13px; }
+.shortcuts-row.compact .weekplan-shortcut { height: 44px; font-size: 14px; }
+
+/* "Frühstück" ist der längste Knopftext: auf normalen Handys weicht das Emoji */
+@media (max-width: 389px) { .topbar.long-mode .h1-emoji { display: none; } }
+
+/* Schmale Handys: Platz für die großen Knöpfe schaffen */
+@media (max-width: 359px) {
+  .topbar { gap: 8px; }
+  .actions { gap: 6px; }
+  h1 { font-size: clamp(15px, 4.9vw, 19px); }
+  .h1-emoji { display: none; }
+  #mode-btn { padding: 0 10px 0 12px; gap: 4px; }
+  #btn-settings { width: 48px; }
+  .weekplan-shortcut { padding: 0 6px; gap: 6px; }
+}
 
 /* Suche */
 .search-wrapper {
@@ -362,8 +376,8 @@ h1 {
 
 #search {
   width: 100%;
-  height: 42px;
-  padding: 0 42px 0 42px;
+  height: 48px;
+  padding: 0 48px 0 42px;
   /* fest 16px, nicht kleiner: iOS würde sonst beim Fokussieren reinzoomen */
   font-size: 16px;
   font-family: inherit;
@@ -383,8 +397,8 @@ h1 {
 .search-clear {
   position: absolute;
   right: 8px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 50%;
   background: var(--wash);
@@ -404,7 +418,7 @@ h1 {
 
 #chips {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
   padding: 8px 0 4px;
   -webkit-overflow-scrolling: touch;
@@ -414,11 +428,13 @@ h1 {
 
 .chip {
   flex: 0 0 auto;
-  padding: 7px 14px;
-  font-size: 13px;
+  min-height: 44px;
+  min-width: 52px;
+  padding: 0 16px;
+  font-size: 15px;
   font-weight: 500;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--r-md);
   background: transparent;
   color: var(--text);
   cursor: pointer;
@@ -437,15 +453,15 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 44px;
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: var(--r-md);
   background: transparent;
   color: var(--text);
   cursor: pointer;
 }
-#sort-btn svg { width: 18px; height: 18px; }
+#sort-btn svg { width: 22px; height: 22px; }
 
 /* Große Bildschirme: Kopfzeile am Raster ausrichten, Bedienelemente nicht endlos strecken */
 @media (min-width: 700px) {

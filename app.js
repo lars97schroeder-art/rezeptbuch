@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-25T14:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-25T15:00:00+01:00';
 
 const DATA_KEY = 'rezeptbuch-data';
 const IMG_CACHE = 'rezept-bilder-v1';
@@ -3051,6 +3051,7 @@ $('#search-clear').onclick = () => {
 
 function renderModeUI() {
   $('#mode-btn').textContent = MODES[mode].label;
+  $('.topbar').classList.toggle('long-mode', mode === 'fruehstueck');
   const menu = $('#mode-menu');
   menu.innerHTML = '';
   for (const [key, m] of Object.entries(MODES)) {
