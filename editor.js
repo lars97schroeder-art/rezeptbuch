@@ -569,7 +569,14 @@ async function tokenCanWrite(repo, token) {
     headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
     body: JSON.stringify({ content: 'Schreibtest', encoding: 'utf-8' }),
   });
+  lastWriteStatus = res.status;
   return res.ok;
+}
+let lastWriteStatus = 0; // für eine verständliche Fehlermeldung
+
+function writeProblem() {
+  if (lastWriteStatus === 401) return 'Token ungültig oder unvollständig eingefügt (401)';
+  return `Dem Token fehlt „Contents: Read and write“ für den neuen Speicher (${lastWriteStatus})`;
 }
 
 // Stand der Rezepte beim Kopieren in den neuen Speicher
@@ -585,7 +592,7 @@ async function readRepoJSON(repo, path, token) {
 
 // Wechselt dieses Gerät auf den eigenen Daten-Speicher
 async function moveToDataRepo(token) {
-  if (!await tokenCanWrite(DATA_REPO, token)) throw new Error('Dieser Token darf im neuen Speicher nicht schreiben');
+  if (!await tokenCanWrite(DATA_REPO, token)) throw new Error(writeProblem());
   if (await tokenCanWrite(APP_REPO, token)) throw new Error('Dieser Token darf auch die App ändern. Bitte den neuen nehmen');
   // Rezepte, die nach dem Kopieren noch am alten Ort landeten, gingen sonst verloren
   const old = await readRepoJSON(APP_REPO, 'data/recipes.json', token);
