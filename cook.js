@@ -473,11 +473,6 @@ function openHelp() {
           ['Verschieben', 'Den Griff links kurz gedrückt halten, dann auf einen anderen Tag oder ins Backlog ziehen.'],
           ['Tag ausblenden', 'Das Minus am Tag, falls ihr nicht kocht.'],
           ['Wochen wechseln', 'Mit den Pfeilen oben. Alle in der Bibliothek sehen denselben Plan.']]]])}
-
-      ${helpTopic('Überall', 'Gesten und Sicherheitsnetz', [
-        ['', [
-          ['Zurück', 'Vom linken Rand nach rechts wischen. Auf der Startseite öffnen sich so die Einstellungen.'],
-          ['Rückgängig', 'Nach jedem Löschen erscheint der Knopf für ein paar Sekunden.']]]])}
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.hidden = false;
