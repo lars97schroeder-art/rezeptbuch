@@ -675,8 +675,8 @@ function openMoveDialog() {
   box.className = 'ed-modal-overlay move-dialog';
   box.innerHTML = `<form class="ed-modal">
     <h3>Eure Rezepte ziehen um</h3>
-    <p class="setting-hint">Sie bekommen einen eigenen Speicher. Gib dafür einmal den neuen Token ein, den Lars erstellt hat.</p>
-    <div class="ed-cat-new"><input name="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+    <p class="setting-hint">Sie bekommen einen eigenen Speicher. Gib dafür einmal den neuen Code oder Token ein, den Lars dir schickt.</p>
+    <div class="ed-cat-new"><input name="token" type="password" placeholder="Code oder Token" autocomplete="off"></div>
     <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Später</button><button type="submit" class="ed-modal-ok">Umziehen</button></div>
   </form>`;
   document.body.appendChild(box);
@@ -684,8 +684,10 @@ function openMoveDialog() {
   const ok = box.querySelector('.ed-modal-ok');
   box.querySelector('form').onsubmit = async ev => {
     ev.preventDefault();
-    const token = ev.target.elements.token.value.trim();
-    if (!token) return toast('Bitte den neuen Token einfügen');
+    const input = ev.target.elements.token.value.trim();
+    if (!input) return toast('Bitte den Code oder Token einfügen');
+    // auch ein verschickter Code (aus "Zugang teilen") ist hier richtig
+    const token = decodeLibraryCode(input)?.token || input;
     ok.disabled = true;
     toast('Ziehe um …');
     try {
