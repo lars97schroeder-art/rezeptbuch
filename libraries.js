@@ -51,13 +51,17 @@ function saveUserName(name) {
 function libraries() {
   let more = [];
   try { more = JSON.parse(localStorage.getItem(LIBRARIES_KEY)) || []; } catch (e) { /* leer */ }
-  return [MAIN_LIBRARY, ...more.filter(l => l && /^[\w-]+$/.test(l.id) && l.id !== 'main'
+  // Ohne Code ist keine Bibliothek da, auch die erste nicht
+  return [...(localStorage.getItem('rezeptbuch-token') ? [MAIN_LIBRARY] : []), ...more.filter(l => l && /^[\w-]+$/.test(l.id) && l.id !== 'main'
     && /^[\w.-]+\/[\w.-]+$/.test(l.repo) && l.name)];
 }
 
+// Platzhalter, solange das Gerät noch keinen Code hat
+const NO_LIBRARY = { id: 'none', name: 'Schlemmerliste', repo: null };
+
 const activeLibrary = (() => {
   const all = libraries();
-  const chosen = all.find(l => l.id === localStorage.getItem(ACTIVE_LIBRARY_KEY)) || all[0];
+  const chosen = all.find(l => l.id === localStorage.getItem(ACTIVE_LIBRARY_KEY)) || all[0] || NO_LIBRARY;
   return () => chosen; // bleibt bis zum Neuladen gleich
 })();
 
@@ -77,6 +81,6 @@ function libraryName(lib = activeLibrary()) {
 // Adresse einer Datei (z. B. Foto) aus einer Bibliothek
 function assetURL(path, lib = activeLibrary()) {
   // Nur Daten im App-Speicher liegen unter derselben Adresse wie die App
-  if (!path || lib.repo === APP_REPO || /^(data:|blob:|https?:)/.test(path)) return path;
+  if (!path || !lib.repo || lib.repo === APP_REPO || /^(data:|blob:|https?:)/.test(path)) return path;
   return `https://raw.githubusercontent.com/${lib.repo}/main/${path}`;
 }

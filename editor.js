@@ -20,19 +20,6 @@ function signMessage(message) {
   return `${message.replace(/ \((vom Handy|aus der App)\)$/, '')} (von ${userName()})`;
 }
 
-window.clearToken = () => {
-  const old = ghToken();
-  localStorage.removeItem(TOKEN_KEY);
-  render();
-  toastUndo('Token entfernt', () => {
-    localStorage.setItem(TOKEN_KEY, old);
-    render();
-    const page = history.state?.page || '';
-    if (!edEl().hidden && page.startsWith('settings')) openSettings(page.slice('settings-'.length));
-    toast('Token wiederhergestellt');
-  }, { ms: 8000 });
-};
-
 /* ---------- GitHub-API ---------- */
 
 function ghHeaders() {
@@ -152,7 +139,7 @@ async function askScanService(payload) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // mit dem Token prüft der Dienst den Zugang
-      body: JSON.stringify({ token: ghToken(), ...payload }),
+      body: JSON.stringify({ token: ghToken(), repo: GH_REPO, ...payload }),
     });
   } catch (e) {
     throw new Error('Der KI-Dienst ist nicht erreichbar. Internet prüfen oder später nochmal versuchen');
@@ -320,7 +307,8 @@ function openEditor(id) {
       </div>
       <div class="ai-scan-progress" id="ai-scan-progress" hidden><div class="ai-scan-progress-bar"></div></div>
       <div class="ai-scan-error" id="ai-scan-error" role="alert" hidden></div>
-    </div>`}
+    </div>
+    <button type="button" class="ed-bulk-link">Mehrere auf einmal hinzufügen</button>`}
     <div class="ed-field"><label>Titel *</label>
       <input id="ed-title" value="${r ? esc(r.title) : ''}"></div>
     <div class="ed-row">
@@ -398,6 +386,7 @@ function openEditor(id) {
     };
   }
 
+  el.querySelector('.ed-bulk-link')?.addEventListener('click', () => openBulkAdd());
   const scanLinkBtn = el.querySelector('.ed-scan-link-btn');
   if (scanLinkBtn) {
     const linkRow = el.querySelector('.ed-scan-link-row');
@@ -622,7 +611,7 @@ async function deleteFromEditor(id) {
   }
 }
 
-/* ---------- Token-Einrichtung und Umzug ---------- */
+/* ---------- Zugang prüfen und Umzug ---------- */
 
 // Prüft echtes Schreibrecht: legt einen losen Datenblock an, der in keiner
 // Datei und keinem Stand auftaucht (öffentliche Speicher lesen darf jeder)
@@ -709,45 +698,6 @@ function openMoveDialog() {
   };
 }
 
-function openTokenSetup() {
-  enterOverlay('token');
-  const has = !!ghToken();
-  const el = edEl();
-  el.innerHTML = `
-  <div class="ed-body">
-    <h2>Bearbeiten am Handy</h2>
-    <p class="ed-text">${has
-      ? 'Bearbeiten ist auf diesem Gerät <strong>aktiv</strong>. In jeder Rezept-Ansicht gibt es den ✏️-Knopf, in der Übersicht die „＋ Neues Rezept“-Kachel.'
-      : 'Damit dieses Gerät Rezepte bearbeiten darf, braucht es einmalig einen GitHub-Schlüssel (Token). Er wird nur hier auf dem Gerät gespeichert.'}</p>
-    ${has ? '' : `<p class="ed-text">Den Token bekommst du von jemandem, der diese Bibliothek schon nutzt.</p>`}
-    <div class="ed-field"><label>GitHub-Token</label>
-      <input id="ed-token" type="password" placeholder="github_pat_…" value="" autocomplete="off"></div>
-    <div class="ed-buttons">
-      <button type="button" class="ed-cancel">Schließen</button>
-      <button type="button" class="ed-save">Speichern & testen</button>
-    </div>
-    ${has ? '<button type="button" class="ed-delete">Token von diesem Gerät entfernen</button>' : ''}
-  </div>`;
-  el.querySelector('.ed-cancel').onclick = leaveEditorPage;
-  el.querySelector('.ed-save').onclick = async () => {
-    const t = $('#ed-token').value.trim();
-    if (!t) return toast('Bitte Token einfügen');
-    toast('Prüfe Token …');
-    if (!await tokenCanWrite(GH_REPO, t)) return toast('Dieser Token darf hier nicht schreiben');
-    localStorage.setItem(TOKEN_KEY, t);
-    leaveEditorPage();
-    render();
-    toast('Bearbeiten aktiviert ✓');
-  };
-  const del = el.querySelector('.ed-delete');
-  if (del) del.onclick = () => {
-    leaveEditorPage();
-    window.clearToken();
-  };
-  el.hidden = false;
-  el.scrollTop = 0;
-  document.body.style.overflow = 'hidden';
-}
 
 /* ---------- Anbindung an die App ---------- */
 
@@ -1039,7 +989,7 @@ let libQuery = '';
 
 function libraryAllowed() {
   if (isEditModeEnabled() || (ghToken() && localStorage.getItem(OFFLINE_MODE_KEY) !== 'true')) return true;
-  toast('Dafür braucht es einen Token und eine Online-Verbindung');
+  toast('Dafür braucht es einen Zugang und eine Online-Verbindung');
   return false;
 }
 
@@ -1057,6 +1007,7 @@ function libShell(page, title, hint) {
     </div>
     <div class="lib-bar" id="lib-bar" hidden>
       <span id="lib-count"></span>
+      <button type="button" id="lib-copy" hidden>Kopieren</button>
       <button type="button" id="lib-action"></button>
     </div>`;
   el.querySelector('.ed-close').onclick = leaveEditorPage;
@@ -1089,12 +1040,18 @@ async function libCommit(message, mutate) {
 function openLibraryRecipes() {
   if (!libraryAllowed()) return;
   const el = libShell('library-recipes', 'Rezepte verwalten',
-    'Rezepte antippen, die weg sollen. Gelöscht wird erst nach einer Rückfrage.');
+    libraries().length > 1
+      ? 'Rezepte antippen, dann kopieren oder löschen. Gelöscht wird erst nach einer Rückfrage.'
+      : 'Rezepte antippen, die weg sollen. Gelöscht wird erst nach einer Rückfrage.');
   el.querySelector('#lib-content').innerHTML = `
     <input type="search" id="lib-search" class="lib-search" placeholder="Rezept oder Kategorie suchen" autocomplete="off" value="${esc(libQuery)}">
     <div class="lib-list" id="lib-list"></div>`;
   el.querySelector('#lib-search').oninput = ev => { libQuery = ev.target.value; renderLibRecipeList(); };
   el.querySelector('#lib-action').onclick = libDeleteRecipes;
+  el.querySelector('#lib-copy').onclick = () => openCopyDialog(data.recipes.filter(r => libSelected.has(r.id)), () => {
+    libSelected = new Set();
+    renderLibRecipeList();
+  });
   renderLibRecipeList();
 }
 
@@ -1130,6 +1087,7 @@ function updateLibRecipeBar() {
   const btn = $('#lib-action');
   btn.textContent = 'Löschen';
   btn.className = 'danger';
+  $('#lib-copy').hidden = libraries().length < 2;
 }
 
 async function libDeleteRecipes() {

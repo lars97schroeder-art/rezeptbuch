@@ -9,18 +9,21 @@
 
 import { readRecipeFromLink, LinkError } from './link.js';
 
-// Zugang: Nur wer in einen dieser Daten-Speicher schreiben darf, darf die KI
-// benutzen (jede Anfrage kostet Geld). Neue Bibliotheken hier ergänzen.
-const ALLOWED_REPOS = [
+// Zugang: Nur wer in den Speicher einer Bibliothek schreiben darf, darf die KI
+// benutzen (Fotos kosten Geld). Neue Bibliotheken zählen automatisch, wenn ihr
+// Speicher so heißt.
+const LIBRARY_REPO = /^lars97schroeder-art\/schlemmer-daten-[\w.-]+$/;
+const DEFAULT_REPOS = [
   'lars97schroeder-art/schlemmer-daten-lars-annika',
   'lars97schroeder-art/rezeptbuch', // Geräte vor dem Umzug
 ];
 
 // Echte Prüfung auf Schreibrecht: einen losen Datenblock anlegen, der in keiner
 // Datei auftaucht (lesen darf bei öffentlichen Speichern jeder)
-async function hasAccess(token) {
+async function hasAccess(token, wanted) {
   if (typeof token !== 'string' || !/^[\w]{20,255}$/.test(token)) return false;
-  for (const repo of ALLOWED_REPOS) {
+  const repos = typeof wanted === 'string' && LIBRARY_REPO.test(wanted) ? [wanted] : DEFAULT_REPOS;
+  for (const repo of repos) {
     const res = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
       method: 'POST',
       headers: {
@@ -91,8 +94,8 @@ export default {
 
     // "images" (mehrere Fotos, z.B. mehrseitiges Rezept) oder das ältere
     // einzelne "image" — beide werden unterstützt
-    const { image, mediaType, images, url, token } = body || {};
-    if (!await hasAccess(token)) {
+    const { image, mediaType, images, url, token, repo } = body || {};
+    if (!await hasAccess(token, repo)) {
       return new Response(JSON.stringify({ error: 'Kein Zugang: Bitte App updaten und Token in den Einstellungen prüfen' }),
         { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } });
     }

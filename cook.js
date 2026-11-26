@@ -456,7 +456,8 @@ function openHelp() {
         ['', [
           ['Foto antippen', 'Groß ansehen. Mit zwei Fingern oder doppeltem Tippen zoomen, nach unten wischen zum Schließen.'],
           ['Teilen', 'Der Pfeil oben rechts macht aus dem Rezept ein Bild zum Verschicken.'],
-          ['Bearbeiten', 'Mit Zugang: über den Stift. Neue Rezepte legst du über die Plus-Kachel an.'],
+          ['Bearbeiten', 'Über den Stift. Neue Rezepte legst du über die Plus-Kachel an.'],
+          ['Mehrere auf einmal', 'Beim neuen Rezept oder unter Einstellungen → Rezepte: pro Zeile ein Name oder ein Link.'],
           ['Aus Foto oder Link', 'Beim neuen Rezept liest die KI Fotos oder Rezeptseiten aus. Bitte kurz prüfen.']]]])}
 
       ${helpTopic('Kochmodus', 'Schritt für Schritt am Herd', [
@@ -473,6 +474,13 @@ function openHelp() {
           ['Verschieben', 'Den Griff links kurz gedrückt halten, dann auf einen anderen Tag oder ins Backlog ziehen.'],
           ['Tag ausblenden', 'Das Minus am Tag, falls ihr nicht kocht.'],
           ['Wochen wechseln', 'Mit den Pfeilen oben. Alle in der Bibliothek sehen denselben Plan.']]]])}
+
+      ${helpTopic('Bibliotheken', 'Mehrere Sammlungen, mit anderen teilen', [
+        ['', [
+          ['Beitreten', 'Einstellungen → Bibliotheken → Code eingeben.'],
+          ['Wechseln', 'Oben auf den Titel tippen. Jede Bibliothek hat eigene Rezepte und einen eigenen Wochenplan.'],
+          ['Teilen', '„Zugang teilen“ erzeugt den Code. Wer ihn hat, darf alles in dieser Bibliothek.'],
+          ['Kopieren', 'Einstellungen → Rezepte → Rezepte verwalten: ankreuzen und in eine andere Bibliothek kopieren.']]]])}
     </div>`;
   el.querySelector('.detail-close').onclick = () => closeOverlay();
   el.hidden = false;

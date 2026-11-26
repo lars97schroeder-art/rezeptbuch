@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-27T14:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-27T18:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -185,6 +185,7 @@ function saveLocal() {
    sonst über GitHub Pages (Fallback, kann nach einem Save ein paar Minuten
    hinterherhängen). Wurde vorher für jede Datei einzeln dupliziert. */
 async function fetchRemoteJSON(path) {
+  if (!activeLibrary().repo) return null; // noch kein Code eingegeben
   if (typeof ghGet === 'function' && typeof ghToken === 'function' && ghToken()) {
     try {
       const info = await ghGet(path);
@@ -589,8 +590,8 @@ function render() {
   const items = sortItems(groupedList());
 
   if (!data.recipes.length) {
-    grid.innerHTML = `<div class="empty">Noch keine Rezepte geladen.<br>
-      Tippe oben auf <strong>⟳</strong>, wenn du Internet hast.</div>`;
+    grid.innerHTML = `<div class="empty">Noch keine Rezepte.<br>
+      ${isEditModeEnabled() ? 'Leg mit dem Plus los, auch viele auf einmal.' : 'Mit Internetverbindung werden sie geladen.'}</div>`;
   } else if (!items.length) {
     grid.innerHTML = `<div class="empty">Nichts gefunden.</div>`;
   }
@@ -1266,7 +1267,7 @@ function renderOverlayPage(page) {
   if (page === 'settings' || page.startsWith('settings-')) openSettings(page.slice('settings-'.length));
   else if (page === 'library-recipes') openLibraryRecipes();
   else if (page === 'library-categories') openLibraryCategories();
-  else if (page === 'token') openTokenSetup();
+  else if (page === 'bulk') openBulkAdd();
   else if (page === 'help') openHelp();
   else closeEditor();
 }
@@ -2991,7 +2992,7 @@ const SETTINGS_TITLES = {
   kochen: 'Kochmodus',
   rezepte: 'Rezepte',
   daten: 'Daten und Offline',
-  zugang: 'Zugang',
+  bibliotheken: 'Bibliotheken',
 };
 
 function openSettings(section) {
@@ -3028,7 +3029,7 @@ function openSettings(section) {
         + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Zutaten'))}
       ${card(link('go-rezepte', 'Rezepte', 'Verwalten, Kategorien, Food Match')
         + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
-        + link('go-zugang', 'Zugang', needsMove ? 'Umzug steht noch aus' : hasToken ? 'Token eingerichtet' : 'Kein Token'))}
+        + link('go-bibliotheken', 'Bibliotheken', needsMove ? 'Umzug steht noch aus' : 'Wechseln, beitreten, teilen'))}
       ${card(link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
 
       <div class="set-bottom">
@@ -3043,19 +3044,14 @@ function openSettings(section) {
       ${link('name-btn', 'Mein Name', esc(userName() || 'Noch nicht eingetragen'))}
       ${hasToken && !offline
         ? link('libname-btn', 'Name der Bibliothek', esc(libraryName()))
-        : `<div class="set-block"><span class="set-title">Name der Bibliothek</span><span class="set-hint">${esc(libraryName())} · ändern geht nur online und mit Token</span></div>`}
-      ${libraries().length > 1 ? `<div class="set-block">
-        <span class="set-title">Bibliothek</span>
-        <span class="set-select-wrap"><select id="library-select" class="set-select">${libraries().map(l =>
-          `<option value="${esc(l.id)}" ${l.id === activeLibrary().id ? 'selected' : ''}>${esc(libraryName(l))}</option>`).join('')}</select></span>
-      </div>` : ''}`),
+        : `<div class="set-block"><span class="set-title">Name der Bibliothek</span><span class="set-hint">${esc(libraryName())} · ändern geht nur online und mit Token</span></div>`}`),
 
     anzeige: () => card(`
       <div class="set-block">
         <span class="set-title">Erscheinungsbild</span>
         ${segment('theme', currentTheme, [
-          ['light', 'Annika<small>Hell</small>'],
-          ['dark', 'Lars<small>Dunkel</small>'],
+          ['light', activeLibrary().id === 'main' ? 'Annika<small>Hell</small>' : 'Hell<small>Immer</small>'],
+          ['dark', activeLibrary().id === 'main' ? 'Lars<small>Dunkel</small>' : 'Dunkel<small>Immer</small>'],
           ['auto', 'System<small>Automatisch</small>']])}
       </div>
       <div class="set-block">
@@ -3085,9 +3081,9 @@ function openSettings(section) {
 
     rezepte: () => card(`
       ${hasToken && !offline
-        ? link('lib-recipes-btn', 'Rezepte verwalten', 'Mehrere auf einmal löschen')
+        ? link('bulk-btn', 'Mehrere hinzufügen', 'Namen oder Links als Liste') + link('lib-recipes-btn', 'Rezepte verwalten', 'Kopieren oder löschen')
           + link('lib-cats-btn', 'Kategorien verwalten', 'Umbenennen, zusammenführen, entfernen')
-        : `<div class="set-block"><span class="set-hint">Rezepte und Kategorien verwalten: ${offline ? 'im Offline-Modus nicht möglich' : 'braucht einen Token (siehe Zugang)'}</span></div>`}
+        : `<div class="set-block"><span class="set-hint">Rezepte und Kategorien verwalten: ${offline ? 'im Offline-Modus nicht möglich' : 'braucht einen Zugang (siehe Bibliotheken)'}</span></div>`}
       ${link('tinder-cats-btn', 'Food Match', 'Kategorien vom Tindern ausschließen')}`),
 
     daten: () => card(`
@@ -3095,16 +3091,22 @@ function openSettings(section) {
       ${link('backup-btn', 'Rezepte sichern', 'Rezepte, Wochenplan und Backlog als Datei, ohne Fotos', 'action')}
       ${link('photos-btn', 'Fotos offline speichern', 'Wird geprüft …', 'action')}`),
 
-    zugang: () => offline
-      ? card('<div class="set-block"><span class="set-hint">Im Offline-Modus nicht möglich (siehe Daten und Offline).</span></div>')
-      : card(activeLibrary().id !== 'main'
-        ? toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)
-        : hasToken
-        ? (needsMove ? link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action') : '')
-          + toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)
-          + link('share-token', 'Zugang teilen', 'Anderen Zugriff auf diese Bibliothek geben')
-          + link('clear-token', 'Token entfernen', '', 'danger')
-        : link('setup-token', 'Token einrichten', 'Nötig zum Bearbeiten und Synchronisieren')),
+    bibliotheken: () => card(libraries().map(l => `<div class="set-library${l.id === activeLibrary().id ? ' active' : ''}">
+        <button type="button" class="set-row lib-open" data-id="${esc(l.id)}">
+          <span class="set-text"><span class="set-title">${esc(libraryName(l))}</span><span class="set-hint">${l.id === activeLibrary().id ? 'Geöffnet' : 'Antippen zum Öffnen'}</span></span>
+        </button>
+        <button type="button" class="lib-forget" data-id="${esc(l.id)}" aria-label="${esc(libraryName(l))} vom Gerät entfernen">✕</button>
+      </div>`).join('') || '<div class="set-block"><span class="set-hint">Noch keine Bibliothek auf diesem Gerät.</span></div>')
+      + card(`
+        ${link('join-btn', 'Code eingeben', 'Einer weiteren Bibliothek beitreten', 'action')}
+        ${hasToken ? link('share-btn', 'Zugang teilen', `Code für „${esc(libraryName())}“`) : ''}
+        ${needsMove ? link('move-btn', 'Umzug: neuen Token eingeben', 'Eigener Speicher für eure Rezepte', 'action') : ''}`)
+      + (hasToken ? card(offline
+          ? '<div class="set-block"><span class="set-hint">Bearbeiten ist im Offline-Modus aus.</span></div>'
+          : toggle('edit-toggle', 'Bearbeitungsmodus', 'Rezepte hinzufügen und ändern', editEnabled)) : '')
+      // neue Speicher legt nur an, wer die erste Bibliothek verwaltet
+      + (activeLibrary().id === 'main' && hasToken && !needsMove
+        ? card(link('newlib-btn', 'Neue Bibliothek anlegen', 'Code für Freunde erzeugen')) : ''),
   };
 
   const el = $('#editor'); // Reuse editor div für Modal
@@ -3126,7 +3128,6 @@ function openSettings(section) {
 
   on('help-btn', 'click', () => openHelp());
   on('name-btn', 'click', () => openNameDialog());
-  on('library-select', 'change', ev => switchLibrary(ev.target.value));
   on('libname-btn', 'click', () => openLibraryNameDialog());
 
   onChoice('theme', applyTheme);
@@ -3155,64 +3156,16 @@ function openSettings(section) {
   on('photos-btn', 'click', () => downloadPhotos());
 
   on('move-btn', 'click', () => openMoveDialog());
+  on('bulk-btn', 'click', () => openBulkAdd());
   on('edit-toggle', 'change', ev => {
     localStorage.setItem(EDIT_ENABLED_KEY, ev.target.checked ? 'true' : 'false');
     render();
   });
-  on('clear-token', 'click', () => {
-    if (window.clearToken && confirm('⚠️ Token wirklich entfernen? Dann kann die App keine Daten mehr synchronisieren.')) {
-      window.clearToken();
-      openSettings('zugang');
-    }
-  });
-  on('share-token', 'click', () => {
-    const token = ghToken();
-    if (!token) {
-      toast('❌ Kein Token vorhanden');
-      return;
-    }
-
-    // Modal mit Token
-    const modal = document.createElement('div');
-    modal.className = 'token-share-modal';
-    // Vor dem Umzug ist es noch der alte Token, der mehr darf als diese Bibliothek
-    const wide = activeLibrary().id === 'main' && !mainMoved();
-    modal.innerHTML = `
-      <div class="token-share-content">
-        <button class="token-share-close" aria-label="Schließen">✕</button>
-        <h3>Zugang teilen</h3>
-        <p>Wer diesen Token hat, darf in <strong>${esc(libraryName())}</strong>:</p>
-        <ul class="token-share-rights">
-          <li>Rezepte und Fotos hinzufügen, ändern und löschen</li>
-          <li>Kategorien, Wochenplan und Backlog bearbeiten</li>
-          <li>die Bibliothek umbenennen</li>
-          <li>die KI-Erkennung nutzen</li>
-        </ul>
-        <p>${wide ? 'Achtung: Dieser alte Token darf auch die App selbst ändern. Teile erst nach dem Umzug.'
-          : 'Gib ihn nur Personen, denen du vertraust. Ein Zugang lässt sich nicht für Einzelne zurücknehmen.'}</p>
-        <input type="text" readonly value="${esc(token)}" class="token-share-input">
-        <button class="token-share-copy">In Zwischenablage kopieren</button>
-        <p class="token-share-hint">Eingeben unter Einstellungen → Zugang → Token einrichten.</p>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    modal.querySelector('.token-share-close').onclick = () => modal.remove();
-    modal.querySelector('.token-share-copy').onclick = () => {
-      const input = modal.querySelector('.token-share-input');
-      input.select();
-      document.execCommand('copy');
-      toast('✅ Token kopiert!');
-    };
-
-    // Modal schließen bei Klick außen
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.remove();
-    });
-  });
-
-  on('setup-token', 'click', () => openTokenSetup());
+  on('join-btn', 'click', () => openJoinDialog());
+  on('share-btn', 'click', () => openShareDialog());
+  on('newlib-btn', 'click', () => openNewLibraryDialog());
+  for (const b of el.querySelectorAll('.lib-open')) b.onclick = () => switchLibrary(b.dataset.id);
+  for (const b of el.querySelectorAll('.lib-forget')) b.onclick = () => removeLibrary(b.dataset.id);
 
   on('refresh-btn', 'click', async () => {
     showToastWithoutTimeout('🔄 Überprüfe Updates...');
@@ -3472,6 +3425,8 @@ async function checkAppUpdateAvailable() {
 function renderLibraryTitle() {
   const words = libraryName().split(' ');
   $('.h1-text').classList.toggle('long-word', words.some(w => w.length > 15));
+  // das Köche-Paar gehört zu Lars und Annika
+  $('.h1-emoji').hidden = activeLibrary().id !== 'main';
   const last = words.pop();
   $('.h1-text').innerHTML = `${esc(words.join(' '))} <em>${esc(last)}</em>`;
   if (libraries().length < 2) return;
@@ -3524,13 +3479,19 @@ function openNameDialog() {
     box.remove();
     const hint = $('#name-btn .set-hint');
     if (hint) hint.textContent = userName();
-    if (first) offerMove();
+    if (first) continueSetup();
   };
 }
 
 // Gerät noch am alten Speicherort: nach dem neuen Token fragen
 function offerMove() {
   if (localStorage.getItem(OFFLINE_MODE_KEY) !== 'true') openMoveDialog();
+}
+
+// Nach dem Namen: ohne Bibliothek erst einen Code erfragen
+function continueSetup() {
+  if (!activeLibrary().repo) openJoinDialog(true);
+  else offerMove();
 }
 
 // Neuer Name für die Bibliothek: gilt für alle, die sie nutzen
@@ -3568,7 +3529,7 @@ loadLocal();
 render();
 // Erster Start auf diesem Gerät (oder nach dem Update): nach dem Namen fragen
 if (!userName()) openNameDialog();
-else offerMove();
+else continueSetup();
 
 // Nach dem Umzug liegen die Fotos unter neuer Adresse: einmal offline sichern
 if (mainMoved() && activeLibrary().id === 'main' && data.recipes.length
@@ -3814,5 +3775,6 @@ document.getElementById('edge-swipe-guard')?.addEventListener('touchstart', (e) 
 
 // Gewählte Startansicht öffnen (steht bewusst ganz am Ende: alles ist definiert).
 // "Zurück" führt von dort auf die Startseite
-if (startPage() === 'weekplan') openWeekplan();
+if (!activeLibrary().repo) { /* erst beitreten */ }
+else if (startPage() === 'weekplan') openWeekplan();
 else if (startPage() === 'tinder' && filtered().length >= 2) openTinder();

@@ -12,6 +12,8 @@ const SHELL_FILES = [
   'libraries.js',
   'editor.js',
   'cook.js',
+  'sharing.js',
+  'bulk.js',
   'style.css',
   'fonts/fraunces-latin.woff2',
   'fonts/fraunces-italic-latin.woff2',

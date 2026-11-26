@@ -2940,3 +2940,46 @@ html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove {
 .token-share-content { max-height: 86vh; overflow-y: auto; }
 /* nur sehr lange Wörter in Bibliotheksnamen dürfen umbrechen */
 .topbar h1 .h1-text.long-word { min-width: 0; overflow-wrap: anywhere; word-break: normal; }
+
+/* ---------- Bibliotheken verwalten, Kopieren, Mehrere hinzufügen ---------- */
+
+.set-library { display: flex; align-items: stretch; }
+.set-library .set-row { flex: 1; min-width: 0; }
+.set-library.active .set-title { color: var(--accent); font-weight: 600; }
+.lib-forget { flex: 0 0 56px; border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+#lib-copy { margin-left: auto; background: var(--bg); color: var(--text); }
+.ed-bulk-link {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: -4px 0 18px;
+  border: 1px dashed var(--accent);
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: calc(14px * var(--fs, 1));
+  font-weight: 600;
+  cursor: pointer;
+}
+.bulk-go {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  margin: 12px 0;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: calc(16px * var(--fs, 1));
+  font-weight: 700;
+  cursor: pointer;
+}
+.bulk-go:disabled { opacity: 0.55; }
+.bulk-body textarea { width: 100%; }
+.bulk-failed { opacity: 0.65; }
+.bulk-failed small { color: var(--bad); }
+.bulk-body .lib-text { overflow-wrap: anywhere; }
+.join-dialog.setup .ed-modal-buttons button { width: 100%; }
+.token-share-send { margin-bottom: 8px; }
