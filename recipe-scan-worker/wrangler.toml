@@ -13,3 +13,5 @@ id = "7f01ce7f5aa54a5aa384ffc341a60e25" # angelegt am 27.11.2026, keine geheime 
 
 # ANTHROPIC_API_KEY wird NICHT hier eingetragen, sondern als Secret gesetzt:
 #   wrangler secret put ANTHROPIC_API_KEY
+# Ebenso das Passwort für die Entwickler-Ansicht der Wünsche:
+#   wrangler secret put WISH_ADMIN_KEY

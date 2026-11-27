@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-27T21:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-27T22:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -3033,7 +3033,7 @@ function openSettings(section) {
         + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
         + link('go-bibliotheken', 'Bibliotheken', needsMove ? 'Umzug steht noch aus' : 'Wechseln, beitreten, teilen'))}
       ${card(link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun')
-        + link('wish-btn', 'Wünsch dir was', 'Ideen und Wünsche an den Entwickler'))}
+        + link('wish-btn', 'Wünsch dir was von Lars', 'Ideen und Wünsche für die App'))}
 
       <div class="set-bottom">
         <button type="button" class="set-update" id="refresh-btn">Nach Updates suchen</button>

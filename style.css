@@ -2977,3 +2977,4 @@ html.color-rainbow .weekplan-tag-drag, html.color-rainbow .weekplan-tag-remove {
 a.ed-modal-ok { padding: 10px 18px; border-radius: var(--r-sm); font-size: calc(14px * var(--fs, 1)); font-weight: 600; text-decoration: none; }
 .wish-item { flex: 1; min-width: 0; gap: 4px; }
 .wish-text { font-size: calc(15px * var(--fs, 1)); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wish-dev { align-self: center; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-size: calc(13px * var(--fs, 1)); text-decoration: underline; cursor: pointer; }

@@ -101,7 +101,7 @@ export default {
         { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
     if (typeof body.action === 'string' && body.action.startsWith('wish')) {
-      const [status, answer] = await handleWish(body, env, () => hasAccess(token, DEFAULT_REPOS[0]));
+      const [status, answer] = await handleWish(body, env);
       return new Response(JSON.stringify(answer),
         { status, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
