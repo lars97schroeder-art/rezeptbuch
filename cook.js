@@ -1,6 +1,6 @@
 'use strict';
 
-/* Kochmodus (ein Schritt pro Seite, Zutaten abhaken, Timer, Bildschirm an)
+/* Kochmodus (ein Schritt pro Seite, Zutaten abhaken, iPhone-Timer, Bildschirm an)
    sowie Textgröße, Datensicherung, Offline-Fotos und Hilfe.
    Nutzt zur Laufzeit die Funktionen und Daten aus app.js. */
 
@@ -69,7 +69,6 @@ function openCook(id) {
       <button type="button" class="cook-icon cook-list" aria-label="Zutaten anzeigen">☰</button>
     </div>
     <div class="cook-progress"><span></span></div>
-    <div class="cook-timers"></div>
     <div class="cook-body"></div>
     <div class="cook-foot">
       <button type="button" class="cook-back" aria-label="Zurück">←</button>
@@ -101,7 +100,7 @@ function openCook(id) {
   // Seitlich wischen blättert
   let start = null;
   box.addEventListener('touchstart', e => {
-    start = e.touches.length === 1 && q('.cook-sheet').hidden && !e.target.closest('.cook-timers')
+    start = e.touches.length === 1 && q('.cook-sheet').hidden
       ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
   }, { passive: true });
   box.addEventListener('touchend', e => {
@@ -113,7 +112,6 @@ function openCook(id) {
   });
 
   renderCook();
-  renderCookTimers();
   keepScreenOn();
   if (resume && cook.page > 0) toast('Weiter, wo du aufgehört hast');
 }
@@ -200,19 +198,18 @@ function renderCook() {
       ${cook.steps.length ? '' : '<p class="cook-note">Für dieses Rezept sind noch keine Zubereitungsschritte eingetragen.</p>'}`;
     renderCookIngredients(body.querySelector('div'));
   } else if (page.type === 'step') {
-    const times = stepTimes(page.text);
+    // Timer stellt die Uhr des iPhones; unter einer Minute lohnt das nicht
+    const times = isIPhone() ? stepTimes(page.text).filter(t => t.seconds >= 60) : [];
     // Aktueller Schritt groß, darunter die folgenden ausgegraut (wie Songtexte)
     const upcoming = cook.pages.map((p, index) => ({ ...p, index })).filter(p => p.type === 'step' && p.index > cook.page);
     body.innerHTML = `<div class="cook-flow"><p class="cook-step">${esc(page.text)}</p>
-      <div class="cook-timer-buttons">${times.map((t, i) => `<button type="button" data-i="${i}">Timer ${esc(t.label)} starten</button>`).join('')}</div>
+      <div class="cook-timer-buttons">${times.map(t => timerLink(Math.round(t.seconds / 60), `Timer ${esc(t.label)} stellen`)).join('')}</div>
       ${upcoming.length ? `<div class="cook-upcoming">${upcoming.map(p =>
         `<button type="button" data-page="${p.index}" aria-label="Zu Schritt ${p.i + 1}">${esc(p.text)}</button>`).join('')}</div>` : ''}</div>`;
     for (const b of body.querySelectorAll('.cook-upcoming button')) {
       b.onclick = () => { cook.page = Number(b.dataset.page); renderCook(); };
     }
-    for (const b of body.querySelectorAll('.cook-timer-buttons button')) {
-      b.onclick = () => startTimer(times[Number(b.dataset.i)], `Schritt ${page.i + 1}`);
-    }
+    wireTimerLinks(body);
   } else {
     const mayEdit = isEditModeEnabled();
     body.innerHTML = `<div class="cook-done"><div class="cook-done-emoji">${emojiFor(cook.recipe)}</div>
@@ -244,7 +241,7 @@ function releaseScreen() {
 }
 // Das System gibt die Sperre frei, sobald die App in den Hintergrund geht
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { keepScreenOn(); tickTimers(); }
+  if (document.visibilityState === 'visible') keepScreenOn();
 });
 
 /* ---------- Timer ---------- */
@@ -266,78 +263,50 @@ function stepTimes(text) {
   return found;
 }
 
-let timers = [];
-let timerTick = null;
-let audio = null;
+/* Web-Apps dürfen den iPhone-Timer nicht selbst stellen. Das übernimmt ein
+   Kurzbefehl, den man einmal anlegt; die App übergibt ihm die Minuten */
+const TIMER_SHORTCUT = 'Schlemmer Timer';
+const TIMER_READY_KEY = 'rezeptbuch-timer-ready';
+const isIPhone = () => /iPhone|iPad/.test(navigator.userAgent);
+const timerURL = minutes =>
+  `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT)}&input=text&text=${minutes}`;
+const timerLink = (minutes, label) =>
+  `<a class="cook-timer-link" href="${timerURL(minutes)}" data-minutes="${minutes}">${label}</a>`;
 
-function startTimer(time, where) {
-  // Ton darf auf dem iPhone nur nach einem Antippen vorbereitet werden
-  try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    audio.resume();
-  } catch (e) { /* ohne Ton */ }
-  timers.push({ end: Date.now() + time.seconds * 1000, label: time.label, where, done: false });
-  if (!timerTick) timerTick = setInterval(tickTimers, 500);
-  renderCookTimers();
-}
-
-function timerAlarm() {
-  if (!audio) return;
-  audio.resume();
-  for (let i = 0; i < 6; i++) {
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    const at = audio.currentTime + i * 0.35;
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.0001, at);
-    gain.gain.exponentialRampToValueAtTime(0.4, at + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.25);
-    osc.connect(gain).connect(audio.destination);
-    osc.start(at);
-    osc.stop(at + 0.27);
+// Beim ersten Mal erst die Anleitung zeigen
+function wireTimerLinks(container) {
+  for (const link of container.querySelectorAll('.cook-timer-link')) {
+    link.onclick = e => {
+      if (localStorage.getItem(TIMER_READY_KEY) === 'true') return;
+      e.preventDefault();
+      openTimerSetup(Number(link.dataset.minutes));
+    };
   }
 }
 
-function tickTimers() {
-  for (const t of timers) {
-    if (t.done || Date.now() < t.end) continue;
-    t.done = true;
-    timerAlarm();
-    toast(`Timer fertig: ${t.label} (${t.where})`);
-  }
-  if (!timers.some(t => !t.done)) { clearInterval(timerTick); timerTick = null; }
-  renderCookTimers();
-}
-
-function renderCookTimers() {
-  const row = cook?.box.querySelector('.cook-timers');
-  if (!row) return;
-  const clock = ms => {
-    const s = Math.max(0, Math.ceil(ms / 1000));
-    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = String(s % 60).padStart(2, '0');
-    return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+function openTimerSetup(minutes) {
+  const modal = document.createElement('div');
+  modal.className = 'ed-modal-overlay timer-dialog';
+  modal.innerHTML = `<div class="ed-modal">
+    <h3>Timer einmal einrichten</h3>
+    <ol class="timer-steps">
+      <li>Öffne die App <strong>Kurzbefehle</strong> und tippe auf <strong>+</strong>.</li>
+      <li>Nenne den Kurzbefehl genau <strong>${TIMER_SHORTCUT}</strong>.</li>
+      <li>Füge die Aktion <strong>Timer starten</strong> hinzu.</li>
+      <li>Tippe auf die Zahl bei der Dauer, wähle <strong>Kurzbefehleingabe</strong> und stelle die Einheit auf <strong>Minuten</strong>.</li>
+      <li>Tippe auf <strong>Fertig</strong>.</li>
+    </ol>
+    <a class="timer-open" href="shortcuts://">Kurzbefehle öffnen</a>
+    <div class="ed-modal-buttons"><button type="button" class="ed-modal-cancel">Schließen</button>
+      <a class="ed-modal-ok timer-done" href="${timerURL(minutes || 1)}">${minutes ? `${minutes} Min stellen` : 'Mit 1 Min testen'}</a></div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('.ed-modal-cancel').onclick = () => modal.remove();
+  modal.querySelector('.timer-done').onclick = () => {
+    localStorage.setItem(TIMER_READY_KEY, 'true');
+    setTimeout(() => modal.remove(), 300);
   };
-  // Knöpfe nur neu bauen, wenn sich die Anzahl ändert (sonst verpufft ein Antippen)
-  if (row.children.length !== timers.length) {
-    row.innerHTML = timers.map((t, i) => `<button type="button" class="cook-timer" data-i="${i}"><small></small><strong></strong><span aria-hidden="true">✕</span></button>`).join('');
-    for (const b of row.children) {
-      b.onclick = () => {
-        const [removed] = timers.splice(Number(b.dataset.i), 1);
-        renderCookTimers();
-        if (!removed.done) toastUndo('Timer gestoppt', () => {
-          timers.push(removed);
-          if (!timerTick) timerTick = setInterval(tickTimers, 500);
-          tickTimers();
-        });
-      };
-    }
-  }
-  timers.forEach((t, i) => {
-    const b = row.children[i];
-    b.classList.toggle('done', t.done);
-    b.querySelector('small').textContent = t.where;
-    b.querySelector('strong').textContent = t.done ? 'Fertig' : clock(t.end - Date.now());
-  });
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
 }
 
 /* ---------- Datensicherung ---------- */
@@ -465,7 +434,7 @@ function openHelp() {
           ['Starten', '„Kochen starten“ im Rezept. Erst Zutaten abhaken, dann folgt ein Schritt nach dem anderen.'],
           ['Blättern', 'Mit „Weiter“ oder seitlich wischen. Tippe auf einen blassen Schritt, um dorthin zu springen.'],
           ['Zutaten nachsehen', 'Das Symbol oben rechts zeigt die Liste, ohne den Schritt zu verlassen.'],
-          ['Timer', 'Zeitangaben im Schritt werden zu Timer-Knöpfen. Der Ton kommt nur bei offener App und lautem iPhone.'],
+          ['Timer', 'Zeitangaben im Schritt werden zu Knöpfen, die den Timer des iPhones stellen. Einmal einrichten unter Einstellungen → Kochmodus.'],
           ['Foto zum Schluss', 'Am Ende die Kamera öffnen, das Foto landet beim Rezept.']]]])}
 
       ${helpTopic('Wochenplan und Backlog', 'Planen und Ideen sammeln', [

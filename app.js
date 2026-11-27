@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-27T18:30:00+01:00';
+const APP_BUILD_TIME = '2026-11-27T20:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -1269,6 +1269,7 @@ function renderOverlayPage(page) {
   else if (page === 'library-categories') openLibraryCategories();
   else if (page === 'bulk') openBulkAdd();
   else if (page === 'help') openHelp();
+  else if (page === 'wish') openWish();
   else closeEditor();
 }
 
@@ -3030,7 +3031,8 @@ function openSettings(section) {
       ${card(link('go-rezepte', 'Rezepte', 'Verwalten, Kategorien, Food Match')
         + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
         + link('go-bibliotheken', 'Bibliotheken', needsMove ? 'Umzug steht noch aus' : 'Wechseln, beitreten, teilen'))}
-      ${card(link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun'))}
+      ${card(link('help-btn', 'Hilfe und Gesten', 'Was Wischen, Halten und Tippen tun')
+        + link('wish-btn', 'Wünsch dir was', 'Ideen und Wünsche an den Entwickler'))}
 
       <div class="set-bottom">
         <button type="button" class="set-update" id="refresh-btn">Nach Updates suchen</button>
@@ -3077,7 +3079,8 @@ function openSettings(section) {
         <span class="set-title">Schriftgröße beim Kochen</span>
         ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
       </div>
-      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}`),
+      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}
+      ${link('timer-setup-btn', 'iPhone-Timer einrichten', 'Einmal einen Kurzbefehl anlegen')}`),
 
     rezepte: () => card(`
       ${hasToken && !offline
@@ -3127,6 +3130,8 @@ function openSettings(section) {
   for (const key of Object.keys(SETTINGS_TITLES)) on('go-' + key, 'click', () => openSettings(key));
 
   on('help-btn', 'click', () => openHelp());
+  on('wish-btn', 'click', () => openWish());
+  on('timer-setup-btn', 'click', () => openTimerSetup());
   on('name-btn', 'click', () => openNameDialog());
   on('libname-btn', 'click', () => openLibraryNameDialog());
 

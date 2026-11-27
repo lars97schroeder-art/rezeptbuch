@@ -6,5 +6,9 @@ compatibility_date = "2026-01-01"
 [ai]
 binding = "AI"
 
+# Speicher für die Wünsche an den Entwickler (wird beim Veröffentlichen angelegt)
+[[kv_namespaces]]
+binding = "WISHES"
+
 # ANTHROPIC_API_KEY wird NICHT hier eingetragen, sondern als Secret gesetzt:
 #   wrangler secret put ANTHROPIC_API_KEY

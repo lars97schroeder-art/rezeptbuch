@@ -8,6 +8,7 @@
 //    sichtbar.
 
 import { readRecipeFromLink, LinkError } from './link.js';
+import { handleWish } from './wishes.js';
 
 // Zugang: Nur wer in den Speicher einer Bibliothek schreiben darf, darf die KI
 // benutzen (Fotos kosten Geld). Neue Bibliotheken zählen automatisch, wenn ihr
@@ -99,6 +100,12 @@ export default {
       return new Response(JSON.stringify({ error: 'Kein Zugang: Bitte App updaten und Token in den Einstellungen prüfen' }),
         { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
+    if (typeof body.action === 'string' && body.action.startsWith('wish')) {
+      const [status, answer] = await handleWish(body, env, () => hasAccess(token, DEFAULT_REPOS[0]));
+      return new Response(JSON.stringify(answer),
+        { status, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
+
     const imageList = Array.isArray(images) && images.length
       ? images
       : (image ? [{ data: image, mediaType: mediaType || 'image/jpeg' }] : []);
