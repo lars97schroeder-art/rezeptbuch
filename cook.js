@@ -434,7 +434,7 @@ function openHelp() {
           ['Starten', '„Kochen starten“ im Rezept. Erst Zutaten abhaken, dann folgt ein Schritt nach dem anderen.'],
           ['Blättern', 'Mit „Weiter“ oder seitlich wischen. Tippe auf einen blassen Schritt, um dorthin zu springen.'],
           ['Zutaten nachsehen', 'Das Symbol oben rechts zeigt die Liste, ohne den Schritt zu verlassen.'],
-          ['Timer', 'Zeitangaben im Schritt werden zu Knöpfen, die den Timer des iPhones stellen. Einmal einrichten unter Einstellungen → Kochmodus.'],
+          ['Timer', 'Zeitangaben im Schritt werden zu Knöpfen, die den Timer des iPhones stellen. Einmal einrichten unter Einstellungen → Timer einrichten.'],
           ['Foto zum Schluss', 'Am Ende die Kamera öffnen, das Foto landet beim Rezept.']]]])}
 
       ${helpTopic('Wochenplan und Backlog', 'Planen und Ideen sammeln', [

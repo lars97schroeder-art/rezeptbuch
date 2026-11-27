@@ -2,7 +2,7 @@
 
 // FUNKTIONALITÄTEN-TIMESTAMP: bei JEDER Code-Änderung aktualisieren (App allgemein, Wochenplan, Tindern)
 // ISO-Format mit Berlin-Zeitzone, Vergleich läuft über Datums-Parsing (nie String-Vergleich!)
-const APP_BUILD_TIME = '2026-11-27T20:00:00+01:00';
+const APP_BUILD_TIME = '2026-11-27T21:00:00+01:00';
 
 // Alte index.html aus dem Zwischenspeicher (ohne libraries.js): einmal frisch laden
 if (typeof libKey !== 'function' && !location.search.includes('force')) {
@@ -3027,7 +3027,8 @@ function openSettings(section) {
     '': () => `
       ${card(link('go-profil', 'Mein Profil', esc([userName() || 'Name fehlt', libraryName()].join(' · '))))}
       ${card(link('go-anzeige', 'Anzeige', 'Farben, Textgröße, Startansicht')
-        + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Zutaten'))}
+        + link('go-kochen', 'Kochmodus', 'Always on, Schriftgröße, Zutaten')
+        + link('timer-setup-btn', 'Timer einrichten', 'Einmalig für den iPhone-Timer'))}
       ${card(link('go-rezepte', 'Rezepte', 'Verwalten, Kategorien, Food Match')
         + link('go-daten', 'Daten und Offline', offline ? 'Offline-Modus ist an' : 'Offline-Modus, Sicherung, Fotos')
         + link('go-bibliotheken', 'Bibliotheken', needsMove ? 'Umzug steht noch aus' : 'Wechseln, beitreten, teilen'))}
@@ -3079,8 +3080,7 @@ function openSettings(section) {
         <span class="set-title">Schriftgröße beim Kochen</span>
         ${segment('cooksize', cookSize(), [['normal', 'Normal'], ['large', 'Groß'], ['xl', 'Sehr groß']])}
       </div>
-      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}
-      ${link('timer-setup-btn', 'iPhone-Timer einrichten', 'Einmal einen Kurzbefehl anlegen')}`),
+      ${toggle('cook-ing', 'Mit Zutaten beginnen', 'Erst alles abhaken, dann Schritt 1', cookFlag(COOK_ING_KEY))}`),
 
     rezepte: () => card(`
       ${hasToken && !offline
